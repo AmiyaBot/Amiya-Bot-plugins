@@ -47,9 +47,18 @@
                     <div v-else>未知</div>
                 </div>
                 <div>
+                    <div class="title" style="width: 120px;margin-top: 5px">画师</div>
+                    <div>{{ data.info.drawer || '未知' }}</div>
+                </div>
+                <div>
                     <div class="title" style="width: 120px;margin-top: 5px">CV</div>
                     <template v-if="Object.keys(data.info.cv).length">
-                        <div v-for="(item, lang) in data.info.cv">{{ lang }}：{{ item }}</div>
+                        <table>
+                            <tr v-for="(item, lang) in data.info.cv">
+                                <td>{{ lang }}：</td>
+                                <td>{{ item }}</td>
+                            </tr>
+                        </table>
                     </template>
                     <div v-else>未知</div>
                 </div>

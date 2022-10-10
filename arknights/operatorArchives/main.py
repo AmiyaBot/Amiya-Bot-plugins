@@ -21,7 +21,7 @@ class OperatorPluginInstance(PluginInstance):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -331,7 +331,7 @@ async def _(data: Message):
         result, tokens = await OperatorData.get_operator_detail(info)
         if result:
             if '召唤物' not in data.text:
-                reply = reply.html(f'{curr_dir}/template/operatorInfo.html', result)
+                reply = reply.html(f'{curr_dir}/template/operatorInfo.html', result, width=1600)
             elif not tokens['tokens']:
                 return Chain(data).text('博士，干员%s未拥有召唤物' % result['info']['name'])
             if tokens['tokens']:

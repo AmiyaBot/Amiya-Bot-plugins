@@ -33,7 +33,7 @@ async def guess_start(referee: GuessReferee,
                       level_rate: int):
     ask = Chain(data, at=False)
 
-    if referee.round == 1:
+    if referee.round == 0:
         ask.text(f'博士，这是哪位干员的{title}呢，请发送干员名猜一猜吧！').text('\n')
 
     if level == '初级':
@@ -76,23 +76,20 @@ async def guess_start(referee: GuessReferee,
         ask.image(skill_icon)
 
     if level == '高级':
-        await data.send(Chain(data, at=False, reference=True).text('抱歉博士，语音模块暂未开放，请选择其他难度'))
-        return GuessResult(answer=data, state=GameState.systemClose)
+        voices = operator.voices()
+        if not voices:
+            return GuessResult(answer=data)
 
-        # voices = operator.voices()
-        # if not voices:
-        #     return GuessResult(data)
-        #
-        # voice = random.choice(voices)
-        # voice_path = await ArknightsGameDataResource.get_voice_file(operator, voice['voice_title'])
-        #
-        # ask.text('\n\n语音：').text(voice['voice_text'].replace(operator.name, 'XXX'))
-        #
-        # if not voice_path:
-        #     await data.send(Chain(data, at=False).text('非常抱歉博士，语音文件下载失败。本次游戏结束~[face:9]'))
-        #     return GuessResult(data, GuessStatus.systemClose)
-        # else:
-        #     ask.voice(voice_path)
+        voices = [n for n in voices if n['voice_title'] not in ['标题', '戳一下']]
+        voice = random.choice(voices)
+        voice_path = await ArknightsGameDataResource.get_voice_file(operator, voice['voice_title'])
+
+        ask.text('语音：').text(voice['voice_text'].replace(operator.name, 'XXX'))
+
+        if not voice_path:
+            ask.text('\n\n语音文件下载失败')
+        else:
+            ask.voice(voice_path)
 
     if level == '资深':
         stories = operator.stories()

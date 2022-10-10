@@ -39,6 +39,7 @@ class OperatorData:
                 'name': operator.name,
                 'en_name': operator.en_name,
                 'real_name': real_name,
+                'drawer': operator.drawer,
                 'rarity': operator.rarity,
                 'range': operator.range,
                 'classes': operator.classes,

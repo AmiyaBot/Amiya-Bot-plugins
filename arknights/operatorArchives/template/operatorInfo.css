@@ -8,7 +8,7 @@ body {
 }
 
 #template {
-    width: 1280px;
+    width: 100vw;
     background: url(./img/operator_bg.png) center / cover no-repeat;
     overflow: hidden;
     position: relative;
@@ -24,6 +24,7 @@ body {
 
 .left {
     width: 40%;
+    min-height: 800px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -67,7 +68,7 @@ body {
 }
 
 .operator-name {
-    margin-top: 25px;
+    margin-top: 30px;
     display: flex;
     flex-direction: column;
 }
