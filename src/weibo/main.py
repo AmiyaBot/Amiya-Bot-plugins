@@ -1,19 +1,18 @@
 import time
 import asyncio
 
-from amiyabot import PluginInstance
+from amiyabot import PluginInstance, TencentBotInstance
 
 from core.database.group import GroupSetting
 from core.database.messages import *
 from core.util import TimeRecorder
-from core import send_to_console_channel, tasks_control, Message, Chain, SourceServer, TencentBotInstance, \
-    bot as main_bot
+from core import send_to_console_channel, tasks_control, Message, Chain, SourceServer, bot as main_bot
 
 from .helper import WeiboUser, weibo_conf, curr_dir
 
 bot = PluginInstance(
     name='微博自动推送',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群/频道',
@@ -34,10 +33,15 @@ async def send_by_index(index: int, weibo: WeiboUser, data: Message):
     if not result:
         return Chain(data).text('博士…暂时无法获取微博呢…请稍后再试吧')
     else:
-        return Chain(data) \
+        chain = Chain(data) \
             .text(result.user_name + '\n') \
             .text(result.html_text + '\n') \
             .image(result.pics_list)
+
+        if type(data.instance) is not TencentBotInstance:
+            chain.text(f'\n\n{result.detail_url}')
+
+        return chain
 
 
 @bot.on_message(group_id='weibo', keywords=['开启微博推送'])
@@ -142,11 +146,13 @@ async def _():
             if not instance:
                 continue
 
-            if type(instance.instance) is TencentBotInstance:
-                data.builder = SourceServer()
-
             data.text(f'来自 {result.user_name} 的最新微博\n\n{result.html_text}')
             data.image(result.pics_list)
+
+            if type(instance.instance) is TencentBotInstance:
+                data.builder = SourceServer()
+            else:
+                data.text(f'\n\n{result.detail_url}')
 
             await instance.send_message(data, channel_id=item.group_id)
             await asyncio.sleep(0.2)
