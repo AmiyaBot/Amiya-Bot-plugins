@@ -21,7 +21,7 @@ class OperatorPluginInstance(PluginInstance):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -230,7 +230,7 @@ async def _(data: Message):
             index = get_index_from_text(wait.text_digits, voices)
 
     if index is not None:
-        info.voice_key = voices[index]['voice_title']
+        info.voice_key = info.voice_key or voices[index]['voice_title']
 
     if not info.voice_key:
         return None
@@ -283,7 +283,7 @@ async def _(data: Message):
             index = get_index_from_text(wait.text_digits, stories)
 
     if index is not None:
-        info.story_key = stories[index]['story_title']
+        info.story_key = info.story_key or stories[index]['story_title']
 
     if not info.story_key:
         return None
