@@ -59,8 +59,9 @@ class ScriptModulesFinder:
         return module
 
 
-finder = ScriptModulesFinder(
-    'resource/env/python-standard-lib.zip',
-    'resource/env/python-dlls',
-    'resource/../'
-)
+if __name__ == '__main__':
+    finder = ScriptModulesFinder(
+        'resource/env/python-standard-lib.zip',
+        'resource/env/python-dlls',
+        'resource/../'
+    )

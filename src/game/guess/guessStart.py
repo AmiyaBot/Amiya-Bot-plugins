@@ -109,11 +109,12 @@ async def guess_start(referee: GuessReferee,
     tips = [
         f'TA是{operator.rarity}星干员',
         f'TA的画师是{operator.drawer}',
-        f'TA的CV有{random.choice(list(operator.cv.values()))}',
         f'TA的职业是{operator.classes}',
         f'TA的分支职业是{operator.classes_sub}',
         f'TA的标签是%s' % ','.join(operator.tags)
     ]
+    if operator.cv:
+        tips.append(f'TA的CV有{random.choice(list(operator.cv.values()))}')
     if len(operator.name) > 1:
         tips.append(f'TA的代号里有一个字是"{random.choice(operator.name)}"')
     if operator.limit:
