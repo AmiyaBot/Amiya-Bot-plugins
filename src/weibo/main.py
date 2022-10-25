@@ -12,7 +12,7 @@ from .helper import WeiboUser, weibo_conf, curr_dir
 
 bot = PluginInstance(
     name='微博自动推送',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群/频道',
@@ -147,12 +147,12 @@ async def _():
                 continue
 
             data.text(f'来自 {result.user_name} 的最新微博\n\n{result.html_text}')
-            data.image(result.pics_list)
 
             if type(instance.instance) is TencentBotInstance:
                 data.builder = SourceServer()
+                data.image(result.pics_list)
             else:
-                data.text(f'\n\n{result.detail_url}')
+                data.image(result.pics_list).text(f'\n\n{result.detail_url}')
 
             await instance.send_message(data, channel_id=item.group_id)
             await asyncio.sleep(0.2)
