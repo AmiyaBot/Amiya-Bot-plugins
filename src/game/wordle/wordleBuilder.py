@@ -269,5 +269,5 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                     ]
                     await data.send(Chain(answer, at=False).text('\n'.join(text), auto_convert=False))
         finally:
-            if not event:
+            if event:
                 event.close_event()
