@@ -80,11 +80,24 @@ async def guess_start(referee: GuessReferee,
         if not voices:
             return GuessResult(answer=data)
 
+        voice_type = random.choice(list(operator.cv.keys()))
+        type_v = ''
+        type_d = {
+            '中文-普通话': '_cn',
+            '中文-方言': '_custom',
+            '日文': '',
+            '英文': '_en',
+            '韩文': '_kr',
+            '联动': ''
+        }
+        if voice_type in type_d:
+            type_v = type_d[voice_type]
+
         voices = [n for n in voices if n['voice_title'] not in ['标题', '戳一下']]
         voice = random.choice(voices)
-        voice_path = await ArknightsGameDataResource.get_voice_file(operator, voice['voice_title'])
+        voice_path = await ArknightsGameDataResource.get_voice_file(operator, voice['voice_title'], type_v)
 
-        ask.text('语音：').text(voice['voice_text'].replace(operator.name, 'XXX'))
+        ask.text(f'{voice_type}语音：').text(voice['voice_text'].replace(operator.name, 'XXX'))
 
         if not voice_path:
             ask.text('\n\n语音文件下载失败')
@@ -96,7 +109,8 @@ async def guess_start(referee: GuessReferee,
         if not stories:
             return GuessResult(answer=data)
 
-        stories = [n for n in stories if n['story_title'] not in ['基础档案', '综合体检测试', '综合性能检测结果', '临床诊断分析']]
+        stories = [n for n in stories if
+                   n['story_title'] not in ['基础档案', '综合体检测试', '综合性能检测结果', '临床诊断分析']]
         story = random.choice(stories)['story_text'].replace(operator.name, 'XXX')
         section = story.split('。')
 

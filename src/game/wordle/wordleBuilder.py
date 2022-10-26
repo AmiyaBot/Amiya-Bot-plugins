@@ -9,7 +9,6 @@ from operator import itemgetter
 from typing import Dict, Union
 
 from core import Message, Chain
-from core.database.user import UserInfo
 from core.resource.arknightsGameData import ArknightsGameData, Operator
 from core.util import any_match, read_yaml
 

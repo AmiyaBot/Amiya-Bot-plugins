@@ -1,33 +1,36 @@
 import asyncio
 import random
-import datetime
 
 from amiyabot import PluginInstance
-from amiyabot.adapters.mirai import MiraiBotInstance
+from amiyabot.adapters.tencent import TencentBotInstance
+from core.database.user import UserInfo
+
 from .wordleBuilder import *
-from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, Operator
+
 
 class WordlePluginInstance(PluginInstance):
     def install(self):
         pass
 
+
 bot = WordlePluginInstance(
-    name='兔兔Wordle',
+    name='兔兔猜字谜',
     version='1.1',
     plugin_id='amiyabot-game-wordle',
     plugin_type='official',
-    description='让兔兔可以玩猜干员游戏',
+    description='干员竞猜小游戏，可获得合成玉',
     document=f'{curr_dir}/README.md'
 )
 
-@bot.on_message(keywords=['猜字谜', '字谜', '字谜猜猜乐'],level=1)
+
+@bot.on_message(keywords=['猜字谜', '字谜', '字谜猜猜乐'], level=1)
 async def _(data: Message):
-    if type(data.instance) is MiraiBotInstance:
-        if not data.is_admin:
-            return Chain(data).text('抱歉博士，只能由管理员发起游戏哦~')
-    else:
+    if type(data.instance) is TencentBotInstance:
         if not data.is_admin and data.channel_id != '6901789':
             return Chain(data).text('抱歉博士，非【小游戏专区】只能由管理员发起游戏哦~')
+    else:
+        if not data.is_admin:
+            return Chain(data).text('抱歉博士，只能由管理员发起游戏哦~')
 
     level = {
         '简单': '简单',
@@ -123,7 +126,8 @@ async def _(data: Message):
             break
 
     if referee.count < wordle_config.finish_min:
-        return Chain(data, at=False).text(f'游戏结束，本轮共进行了{referee.count}次游戏，不进行结算，最少需要进行{wordle_config.finish_min}轮。')
+        return Chain(data, at=False).text(
+            f'游戏结束，本轮共进行了{referee.count}次游戏，不进行结算，最少需要进行{wordle_config.finish_min}轮。')
 
     rewards_rate = (100 + (referee.total_point if referee.total_point > -90 else -90)) / 100
     text, reward_list = calc_rank(referee)
