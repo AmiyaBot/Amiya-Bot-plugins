@@ -11,8 +11,8 @@ from core import send_to_console_channel, tasks_control, Message, Chain, SourceS
 from .helper import WeiboUser, weibo_conf, curr_dir
 
 bot = PluginInstance(
-    name='微博自动推送',
-    version='1.3',
+    name='微博推送',
+    version='1.4',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群/频道',

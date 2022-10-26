@@ -39,11 +39,16 @@ class WeiboContent:
 class WeiboUser:
     def __init__(self, weibo_id: int):
         self.headers = {
-            'User-Agent': ua.random if ua else None,
             'Content-Type': 'application/json; charset=utf-8',
             'Referer': f'https://m.weibo.cn/u/{weibo_id}',
             'Accept-Language': 'zh-CN,zh;q=0.9'
         }
+        if ua:
+            self.headers = {
+                **self.headers,
+                'User-Agent': ua.random
+            }
+
         self.url = 'https://m.weibo.cn/api/container/getIndex'
         self.weibo_id = weibo_id
         self.user_name = ''
