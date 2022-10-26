@@ -3,13 +3,13 @@ import asyncio
 
 from core.database.user import UserInfo
 from amiyabot import PluginInstance
-from amiyabot.adapters.mirai import MiraiBotInstance
+from amiyabot.adapters.tencent import TencentBotInstance
 
 from .guessStart import *
 
 bot = PluginInstance(
-    name='猜干员游戏',
-    version='1.4',
+    name='兔兔猜干员',
+    version='1.5',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -19,12 +19,12 @@ bot = PluginInstance(
 
 @bot.on_message(keywords=['猜干员'])
 async def _(data: Message):
-    if type(data.instance) is MiraiBotInstance:
-        if not data.is_admin:
-            return Chain(data).text('抱歉博士，只能由管理员发起游戏哦~')
-    else:
+    if type(data.instance) is TencentBotInstance:
         if not data.is_admin and data.channel_id != '6901789':
             return Chain(data).text('抱歉博士，非【小游戏专区】只能由管理员发起游戏哦~')
+    else:
+        if not data.is_admin:
+            return Chain(data).text('抱歉博士，只能由管理员发起游戏哦~')
 
     level = {
         '初级': '立绘',
