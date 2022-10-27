@@ -1,6 +1,7 @@
 import copy
 import re
 import os
+import datetime
 
 from dataclasses import dataclass, field
 from itertools import groupby
@@ -104,7 +105,7 @@ def calc_rank(cls: WordleReferee):
     return text, reward_list
 
 
-async def wordle_start(data: Message, operator: Operator, level: str, level_rate: int):
+async def wordle_start(data: Message, operator: Operator, level: str, level_rate: int, referee_count: int):
     rarity_ans = 'XXX'
     classes_ans = 'XXX'
     classes_sub_ans = 'XXX'
@@ -121,7 +122,7 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
         max_count = 8
 
     text = [
-        '博士，快来猜猜这是谁吧！',
+        f'博士，快来猜猜这是谁吧！第{referee_count}题：',
         f'（{level}模式共有{max_count}次猜测机会）',
         '',
         f'稀有度：{rarity_ans}星',
@@ -149,26 +150,38 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                 if race == '卡特斯/奇美拉':
                     race = '卡特斯'
 
+    
+    last_talk = datetime.datetime.now()
+    operator_list = copy.deepcopy(ArknightsGameData().operators)
+    hint_used = False
+
     while True:
         # answer = await data.wait(force=True, target='group', max_time=120)
         event = await data.wait_channel(ask,
                                         force=True,
                                         clean=bool(ask),
-                                        max_time=120)
+                                        max_time=5)
 
         ask = None
         race_guess = ''
 
         try:
-
             if not event:
-                await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
-                result.status = WordleStatus.systemClose
-                return result
+                time_delta = datetime.datetime.now()
+                if  time_delta - last_talk < datetime.timedelta(seconds=95) and time_delta - last_talk > datetime.timedelta(seconds=90):
+                    await data.send(Chain(data, at=False).text(f'30秒内没有博士回答任何答案的话，本游戏就要结束咯~ 猜不出来的话，可以发送“下一题”来跳过本题。'))
+                    continue
+                elif datetime.datetime.now() - last_talk > datetime.timedelta(seconds=120):
+                    await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
+                    result.status = WordleStatus.systemClose
+                    return result
+                else:
+                    continue
 
+            last_talk = datetime.datetime.now()
             result.answer = answer = event.message
 
-            if any_match(answer.text, ['下一题', '跳过']):
+            if any_match(answer.text, ['下一题', '跳过','下一个']):
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，结算奖励-10%'))
                 set_point(result, answer.user_id, -10)
                 result.answer = answer
@@ -179,6 +192,35 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                 await data.send(Chain(answer, at=False).text(f'答案是{operator.name}，游戏结束~'))
                 result.status = WordleStatus.userClose
                 return result
+            
+            if any_match(answer.text, ['提示']):
+                
+                if hint_used == False:
+                    hint_used = True
+                    set_point(result, answer.user_id, -5)
+                    hint_text = [ f'您使用了提示，结算奖励-5%，猜过的干员如下：' ]
+
+                    for operator_hint_name in ans_names:
+                        operator_hint = operator_list[operator_hint_name]
+                        for story in operator_hint.stories():
+
+                            if story['story_title'] == '基础档案':
+                                r = re.search(r'\n【种族】.*?(\S+).*?\n', story['story_text'])
+
+                                if r:
+                                    race_hint_guess = str(r.group(1))
+
+                                    if race_hint_guess == '卡特斯/奇美拉':
+                                        race_hint_guess = '卡特斯'
+
+                        nation_hint = nations_config[operator_hint.nation][0]
+                        hint_text.append(f'{operator_hint.name}：\t{operator_hint.rarity}星\t{operator_hint.classes}\t{operator_hint.classes_sub}\t{nation_hint}\t{race_hint_guess}\t{operator_hint.drawer}')
+
+                    await data.send(Chain(answer, at=False).text('\n'.join(hint_text), auto_convert=False))
+                    continue
+                else:
+                    await data.send(Chain(answer, at=False).text(f'您在本题已经使用过提示~'))
+                    continue
 
             if answer.text in ans_names:
                 await data.send(Chain(answer, at=False).text(f'博士，{answer.text}已经被猜过了，换个干员试试吧~'))
@@ -191,7 +233,7 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
 
                 rewards = int(wordle_config.rewards.bingo * level_rate * (100 + result.total_point) / 100)
 
-                await data.send(Chain(answer, at=False).text(f'回答正确！分数+1，合成玉+{rewards}'))
+                await data.send(Chain(answer, at=False).text(f'{data.nickname}博士回答正确！答案是{operator.name}。分数+1，合成玉+{rewards}'))
 
                 result.answer = answer
                 result.status = WordleStatus.bingo
@@ -204,8 +246,7 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                     set_point(result, 0, -5)
                     return result
                 else:
-                    operator_list = copy.deepcopy(ArknightsGameData().operators)
-                    operator_guess = operator_list.pop(answer.text)
+                    operator_guess = operator_list[answer.text]
 
                     for story in operator_guess.stories():
 
@@ -243,16 +284,16 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                         drawer_ans = operator.drawer
 
                     if match == 1 or match == 2:
-                        reply_text = '博士的猜测离答案不远了~'
+                        reply_text = '博士的猜测离答案不远了（1-2项匹配）~'
 
                     elif match == 3 or match == 4:
-                        reply_text = '博士的猜测离答案非常接近了~'
+                        reply_text = '博士的猜测离答案非常接近了（3-4项匹配）~'
 
                     elif match == 5 or match == 6:
-                        reply_text = '博士！就快要猜对了哦！'
+                        reply_text = '博士！就快要猜对了哦（5-6项匹配）！'
 
                     else:
-                        reply_text = '博士，所有的线索都对不上哦~'
+                        reply_text = '博士，所有的线索都对不上哦（0项匹配）~'
 
                     ans_list += ' ' + answer.text
                     ans_names.append(answer.text)
@@ -268,5 +309,5 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                     ]
                     await data.send(Chain(answer, at=False).text('\n'.join(text), auto_convert=False))
         finally:
-            if not event:
+            if event:
                 event.close_event()

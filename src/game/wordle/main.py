@@ -15,7 +15,7 @@ class WordlePluginInstance(PluginInstance):
 
 bot = WordlePluginInstance(
     name='兔兔猜字谜',
-    version='1.0',
+    version='1.1',
     plugin_id='amiyabot-game-wordle',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -42,7 +42,7 @@ async def _(data: Message):
                    '请回复【难度等级】开始游戏。\n' \
                    '所有群员均可参与游戏，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n' \
                    '请回复干员名称参与作答，正确将获得积分，错误将获得提示。\n' \
-                   '输入“跳过”或“下一题”将公布答案并跳过本题，输入“结束”或“不玩了”提前结束游戏。\n'
+                   '输入“跳过”或“下一题”将公布答案并跳过本题，输入“提示”获取提示，输入“结束”或“不玩了”提前结束游戏。\n'
 
     choice = await data.wait(Chain(data).text(select_level))
 
@@ -96,7 +96,7 @@ async def _(data: Message):
             await data.send(text)
             await asyncio.sleep(2)
 
-        result = await wordle_start(data, operator, choice.text, level_rate)
+        result = await wordle_start(data, operator, choice.text, level_rate, referee.count + 1)
         end = False
         skip = False
 
