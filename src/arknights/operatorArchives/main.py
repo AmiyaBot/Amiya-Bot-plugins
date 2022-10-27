@@ -60,6 +60,31 @@ def search_info(words: list, source_keys: list = None, text: str = ''):
         for name in OperatorInfo.operator_one_char_list:
             if name in text:
                 info.name = name
+        for index, item in enumerate(words):
+            for source in info_source['name']:
+                if item in source:
+                    value = source[item] if type(source) is dict else item
+                    log.info('name:'+value)
+                    setattr(info, 'name', value)
+
+    #如果找到了Name，则直接获取干员
+    operators = ArknightsGameData().operators
+
+    if info.name not in operators:
+        info.name = ''
+    else:
+        opt = operators[info.name]
+        info.skin_key=''
+        
+        for index, item in enumerate(words):
+            #精确皮肤识别
+            if 'skin_key' in source_keys:
+                skins=map(lambda s:s['skin_name'],opt.skins())
+                for skin_name in skins:                 
+                    if item == skin_name:
+                        log.info('skin_key set:'+skin_name)
+                        info.skin_key = skin_name
+                        #setattr(info, 'skin_key', item)
 
     while True:
         try:
@@ -72,12 +97,16 @@ def search_info(words: list, source_keys: list = None, text: str = ''):
                         if name == 'skill':
                             res, rate = find_similar_list(item, source.keys(), _random=True)
                             if res:
+                                log.info('attr set:'+name+" = "+source[res])
                                 setattr(info, name, source[res])
                                 raise LoopBreak(index, name, source[res])
-
+                        elif name == 'name':
+                            continue
+                        elif name == 'skin_key':
+                            continue
                         elif item in source:
                             value = source[item] if type(source) is dict else item
-
+                            log.info(f'attr set:{name}={value}')
                             setattr(info, name, value)
                             raise LoopBreak(index, name, value)
 
@@ -137,28 +166,39 @@ async def _(data: Message):
 
     opt = operators[info.name]
     skins = opt.skins()
-    index = get_index_from_text(data.text_digits, skins)
+    skin_item = None
 
-    if index is None:
-        text = f'博士，这是干员{info.name}的立绘列表\n\n'
-        for i, item in enumerate(skins):
-            text += f'[{i + 1}] %s\n' % item['skin_name']
-        text += '\n回复【序号】查询对应的立绘资料'
+    if info.skin_key and info.skin_key !='':
+        for skin in skins:
+            if skin['skin_name'] == info.skin_key:
+                skin_item = skin
+                break
+    
+    if not skin_item:
+        index = get_index_from_text(data.text_digits, skins)
 
-        wait = await data.wait(Chain(data).text(text))
-        if wait:
-            index = get_index_from_text(wait.text_digits, skins)
+        if index is None:
+            text = f'博士，这是干员{info.name}的立绘列表\n\n'
+            for i, item in enumerate(skins):
+                text += f'[{i + 1}] %s\n' % item['skin_name']
+            text += '\n回复【序号】查询对应的立绘资料'
 
-    if index is not None:
-        skin_item = skins[index]
+            wait = await data.wait(Chain(data).text(text))
+            if wait:
+                index = get_index_from_text(wait.text_digits, skins)
+
+        if index is not None:
+            skin_item = skins[index]
+
+    if skin_item:
         skin_data = {
-            'name': info.name,
-            'data': skin_item,
-            'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
-        }
+                    'name': info.name,
+                    'data': skin_item,
+                    'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
+                }
 
-        return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
-
+        return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data) 
+              
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=2)
 async def _(data: Message):
