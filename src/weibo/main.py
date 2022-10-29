@@ -12,10 +12,10 @@ from .helper import WeiboUser, weibo_conf, curr_dir
 
 bot = PluginInstance(
     name='微博推送',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
-    description='可在微博更新时自动推送到群/频道',
+    description='可在微博更新时自动推送到群',
     document=f'{curr_dir}/README.md'
 )
 
@@ -49,16 +49,25 @@ async def _(data: Message):
     if not data.is_admin:
         return Chain(data).text('抱歉，微博推送只能由管理员设置')
 
-    channel: GroupSetting = GroupSetting.get_or_none(group_id=data.channel_id, bot_id=data.instance.appid)
+    channel: GroupSetting = GroupSetting.get_or_none(
+        group_id=data.channel_id, bot_id=data.instance.appid
+    )
     if channel:
-        GroupSetting.update(send_weibo=1).where(GroupSetting.group_id == data.channel_id,
-                                                GroupSetting.bot_id == data.instance.appid).execute()
+        GroupSetting.update(send_weibo=1).where(
+            GroupSetting.group_id == data.channel_id,
+            GroupSetting.bot_id == data.instance.appid,
+        ).execute()
     else:
-        GroupSetting.create(group_id=data.channel_id,
-                            bot_id=data.instance.appid,
-                            send_weibo=1)
+        if GroupSetting.get_or_none(group_id=data.channel_id):
+            GroupSetting.update(bot_id=data.instance.appid, send_weibo=1).where(
+                GroupSetting.group_id == data.channel_id
+            ).execute()
+        else:
+            GroupSetting.create(
+                group_id=data.channel_id, bot_id=data.instance.appid, send_weibo=1
+            )
 
-    return Chain(data).text('已在本频道开启微博推送')
+    return Chain(data).text('已在本群开启微博推送')
 
 
 @bot.on_message(group_id='weibo', keywords=['关闭微博推送'])
@@ -69,7 +78,7 @@ async def _(data: Message):
     GroupSetting.update(send_weibo=0).where(GroupSetting.group_id == data.channel_id,
                                             GroupSetting.bot_id == data.instance.appid).execute()
 
-    return Chain(data).text('已在本频道关闭微博推送')
+    return Chain(data).text('已在本群关闭微博推送')
 
 
 @bot.on_message(group_id='weibo', keywords=['微博'])
@@ -119,13 +128,14 @@ async def _():
         if record:
             continue
 
-        WeiboRecord.create(
-            user_id=user,
-            blog_id=new_id,
-            record_time=int(time.time())
+        WeiboRecord.create(user_id=user, blog_id=new_id, record_time=int(time.time()))
+
+        target: List[GroupSetting] = GroupSetting.select().where(
+            GroupSetting.send_weibo == 1
         )
 
-        target: List[GroupSetting] = GroupSetting.select().where(GroupSetting.send_weibo == 1)
+        if not target:
+            continue
 
         time_rec = TimeRecorder()
         result = await weibo.get_weibo_content(0)

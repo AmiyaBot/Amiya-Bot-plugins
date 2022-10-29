@@ -25,6 +25,10 @@
                     <div class="attr" title="阻挡数" v-html="attr('blockCnt')"></div>
                     <div class="attr" title="部署费用" v-html="attr('cost')"></div>
                     <div class="attr" title="再部署时间" v-html="attr('respawnTime') + '秒'"></div>
+                    <div class="attr" title="种族">{{ data.info.race }}</div>
+                    <div class="attr" title="阵营">{{ nations[data.info.nation] }}</div>
+                    <div class="attr" title="画师">{{ data.info.drawer }}</div>
+                    <div class="attr" title="生日">{{ data.info.birthday }}</div>
                 </div>
                 <div>
                     <div class="title" style="width: 120px">潜能提升</div>
@@ -36,19 +40,11 @@
                     </div>
                 </div>
                 <div>
-                    <div class="title" style="width: 120px;margin-top: 5px">生日</div>
-                    <div>{{ data.info.birthday || '未知' }}</div>
-                </div>
-                <div>
                     <div class="title" style="width: 120px;margin-top: 5px">真名</div>
                     <template v-if="data.info.real_name.length">
                         <div v-for="item in data.info.real_name">{{ item }}</div>
                     </template>
                     <div v-else>未知</div>
-                </div>
-                <div>
-                    <div class="title" style="width: 120px;margin-top: 5px">画师</div>
-                    <div>{{ data.info.drawer || '未知' }}</div>
                 </div>
                 <div>
                     <div class="title" style="width: 120px;margin-top: 5px">CV</div>
@@ -78,9 +74,12 @@
                         <div>{{ data.info.classes }} - {{ data.info.classes_sub }}</div>
                     </div>
                 </div>
+                <div class="tags">
+                    <span v-for="item in data.info.tags">{{ item }}</span>
+                </div>
                 <div class="trait" v-html="colorSpan(data.detail.operator_trait, false)"></div>
-                <div class="name" style="font-size: 30px">{{ data.info.en_name }}</div>
-                <div class="name" style="font-size: 60px">{{ data.info.name }}</div>
+                <div class="name" style="padding-top: 10px; font-size: 30px">{{ data.info.en_name }}</div>
+                <div class="name" style="padding-bottom: 10px; font-size: 60px">{{ data.info.name }}</div>
             </div>
         </div>
         <div class="right">
@@ -202,6 +201,27 @@
                     0: '被动',
                     1: '手动触发',
                     2: '自动触发'
+                },
+                nations: {
+                    laterano: '拉特兰',
+                    kazimierz: '卡西米尔',
+                    columbia: '哥伦比亚',
+                    lungmen: '龙门',
+                    higashi: '东国',
+                    victoria: '维多利亚',
+                    sargon: '萨尔贡',
+                    rhodes: '罗德岛',
+                    yan: '炎国',
+                    iberia: '伊比利亚',
+                    ursus: '乌萨斯',
+                    siracusa: '叙拉古',
+                    kjerag: '谢拉格',
+                    egir: '阿戈尔',
+                    rim: '雷姆必拓',
+                    minos: '米诺斯',
+                    bolivar: '玻利瓦尔',
+                    sami: '萨米',
+                    leithanien: '莱塔尼亚'
                 }
             }
         },

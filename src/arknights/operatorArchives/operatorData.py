@@ -36,15 +36,18 @@ class OperatorData:
             'info': {
                 'id': operator.id,
                 'cv': operator.cv,
+                'race': operator.race,
                 'name': operator.name,
                 'en_name': operator.en_name,
                 'real_name': real_name,
+                'nation': operator.nation,
                 'drawer': operator.drawer,
                 'rarity': operator.rarity,
                 'range': operator.range,
                 'classes': operator.classes,
                 'classes_sub': operator.classes_sub,
-                'birthday': operator.birthday
+                'birthday': operator.birthday,
+                'tags': operator.tags
             },
             'skin': await ArknightsGameDataResource.get_skin_file(operator.skins()[0], encode_url=True),
             'trust': trust,

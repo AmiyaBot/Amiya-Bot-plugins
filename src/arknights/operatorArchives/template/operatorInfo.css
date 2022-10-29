@@ -17,13 +17,13 @@ body {
 .background {
     width: 100%;
     padding: 10px;
-    background: rgb(255 255 255 / 30%) bottom 50px left 15% / 600px no-repeat;
+    background: rgb(255 255 255 / 30%) bottom 25px left 25% / 700px no-repeat;
     display: flex;
     justify-content: space-between;
 }
 
 .left {
-    width: 40%;
+    width: 50%;
     min-height: 800px;
     display: flex;
     flex-direction: column;
@@ -31,7 +31,7 @@ body {
 }
 
 .right {
-    width: 57%;
+    width: 47%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -44,7 +44,7 @@ body {
 }
 
 .operator-attr .attr {
-    width: 50%;
+    width: calc(100% / 3);
     margin-bottom: 5px;
     background: rgb(236 236 236 / 80%);
 }
@@ -76,6 +76,7 @@ body {
 .operator-name .name {
     border-radius: 2px;
     background: rgb(255 255 255 / 50%);
+    padding: 0 10px;
 }
 
 .class-info {
@@ -91,9 +92,21 @@ body {
     background: rgb(255 255 255 / 50%);
 }
 
+.tags {
+    margin: 10px 0;
+}
+
+.tags span {
+    padding: 5px 10px;
+    margin-right: 5px;
+    background: #000;
+    color: #fff;
+    border-radius: 4px;
+}
+
 .trait {
     font-size: 16px;
-    padding: 10px 10px 10px 0;
+    padding: 10px;
     margin-bottom: 10px;
     display: flex;
     align-items: center;

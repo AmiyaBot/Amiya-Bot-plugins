@@ -21,7 +21,7 @@ class OperatorPluginInstance(PluginInstance):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -64,27 +64,24 @@ def search_info(words: list, source_keys: list = None, text: str = ''):
             for source in info_source['name']:
                 if item in source:
                     value = source[item] if type(source) is dict else item
-                    log.info('name:'+value)
                     setattr(info, 'name', value)
 
-    #如果找到了Name，则直接获取干员
+    # 如果找到了Name，则直接获取干员
     operators = ArknightsGameData().operators
 
     if info.name not in operators:
         info.name = ''
     else:
         opt = operators[info.name]
-        info.skin_key=''
-        
+        info.skin_key = ''
+
         for index, item in enumerate(words):
-            #精确皮肤识别
+            # 精确皮肤识别
             if 'skin_key' in source_keys:
-                skins=map(lambda s:s['skin_name'],opt.skins())
-                for skin_name in skins:                 
+                skins = map(lambda s: s['skin_name'], opt.skins())
+                for skin_name in skins:
                     if item == skin_name:
-                        log.info('skin_key set:'+skin_name)
                         info.skin_key = skin_name
-                        #setattr(info, 'skin_key', item)
 
     while True:
         try:
@@ -97,7 +94,6 @@ def search_info(words: list, source_keys: list = None, text: str = ''):
                         if name == 'skill':
                             res, rate = find_similar_list(item, source.keys(), _random=True)
                             if res:
-                                log.info('attr set:'+name+" = "+source[res])
                                 setattr(info, name, source[res])
                                 raise LoopBreak(index, name, source[res])
                         elif name == 'name':
@@ -106,7 +102,6 @@ def search_info(words: list, source_keys: list = None, text: str = ''):
                             continue
                         elif item in source:
                             value = source[item] if type(source) is dict else item
-                            log.info(f'attr set:{name}={value}')
                             setattr(info, name, value)
                             raise LoopBreak(index, name, value)
 
@@ -168,12 +163,12 @@ async def _(data: Message):
     skins = opt.skins()
     skin_item = None
 
-    if info.skin_key and info.skin_key !='':
+    if info.skin_key and info.skin_key != '':
         for skin in skins:
             if skin['skin_name'] == info.skin_key:
                 skin_item = skin
                 break
-    
+
     if not skin_item:
         index = get_index_from_text(data.text_digits, skins)
 
@@ -192,13 +187,13 @@ async def _(data: Message):
 
     if skin_item:
         skin_data = {
-                    'name': info.name,
-                    'data': skin_item,
-                    'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
-                }
+            'name': info.name,
+            'data': skin_item,
+            'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
+        }
 
-        return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data) 
-              
+        return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
+
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=2)
 async def _(data: Message):
@@ -276,7 +271,8 @@ async def _(data: Message):
         return None
 
     if info.voice_key in voices_map:
-        text = f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n' + voices_map[info.voice_key]['voice_text']
+        text = f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n' \
+               + voices_map[info.voice_key]['voice_text']
         text = text.replace('{@nickname}', data.nickname)
 
         reply = Chain(data).text(text)
