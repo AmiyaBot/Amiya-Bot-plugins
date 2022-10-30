@@ -49,7 +49,6 @@ async def game_begin(data: Message, operator: Operator):
         if not event:
             # 超时没人回答，游戏结束
             over_time = time.time() - time_rec
-            print(over_time)
             if over_time >= 60:
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
                 return None
