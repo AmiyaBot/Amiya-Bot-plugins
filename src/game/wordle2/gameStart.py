@@ -1,4 +1,5 @@
 import os
+import time
 
 from amiyabot import Message, Chain
 from core.database.user import UserInfo
@@ -25,8 +26,9 @@ async def game_begin(data: Message, operator: Operator):
     process = GuessProcess(operator)
 
     event = None
-    time_rec = 0
+    time_rec = time.time()
     count_rec = process.count
+    alert_step = 0
 
     while not process.bingo or process.max_count <= process.count:
         ask = None
@@ -40,19 +42,22 @@ async def game_begin(data: Message, operator: Operator):
                                         max_time=5,
                                         data_filter=guess_filter)
         if process.count != count_rec:
-            time_rec = 0
+            time_rec = time.time()
             count_rec = process.count
-
-        time_rec += 5
+            alert_step = 0
 
         if not event:
             # 超时没人回答，游戏结束
-            if time_rec >= 60:
+            over_time = time.time() - time_rec
+            print(over_time)
+            if over_time >= 60:
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
                 return None
-            elif time_rec == 50:
+            elif over_time >= 50 and alert_step == 1:
+                alert_step = 2
                 await data.send(Chain(data, at=False).text('还剩10秒...>.<'))
-            elif time_rec == 30:
+            elif over_time >= 30 and alert_step == 0:
+                alert_step = 1
                 await data.send(Chain(data, at=False).text('还剩30秒...'))
 
             continue
