@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link type="text/css" rel="styleSheet" href="font.css"/>
+    <link type="text/css" rel="styleSheet" href="hardcode.css"/>
+    <title>template</title>
+</head>
+<body>
+<div id="template" v-if="Object.keys(data).length">
+    <div class="left">
+        <div class="title"></div>
+        <div class="tags">
+            <div class="tag1">稀有度: {{ data.tags.rarity.show ? data.tags.rarity.value + '星' : '？？？' }}</div>
+            <div class="tag2">职业: {{ data.tags.classes.show ? data.tags.classes.value : '？？？' }}</div>
+            <div class="tag1">子职业: {{ data.tags.classes_sub.show ? data.tags.classes_sub.value : '？？？' }}</div>
+            <div class="tag4">种族: {{ data.tags.race.show ? data.tags.race.value : '？？？' }}</div>
+            <div class="tag3">画师: {{ data.tags.drawer.show ? data.tags.drawer.value : '？？？' }}</div>
+            <div class="tag4">势力: {{ data.tags.nation.show ? data.tags.nation.value : '？？？' }}</div>
+        </div>
+    </div>
+    <div class="right">
+        <div class="opts">
+            <div style="height: 50px"></div>
+            <div class="tag-bg">稀有度</div>
+            <div class="tag-bg">职业</div>
+            <div class="tag-bg">子职业</div>
+            <div class="tag-bg">种族</div>
+            <div class="tag-bg">画师</div>
+            <div class="tag-bg">势力</div>
+        </div>
+        <div class="opts" v-for="(item, code) in data.wrongs">
+            <div class="avatar">
+                <img :src="'../../../resource/gamedata/avatar/' + code + '.png'" :alt="code">
+            </div>
+            <div class="tip-icon" :class="item.rarity"></div>
+            <div class="tip-icon" :class="item.classes"></div>
+            <div class="tip-icon" :class="item.classes_sub"></div>
+            <div class="tip-icon" :class="item.race"></div>
+            <div class="tip-icon" :class="item.drawer"></div>
+            <div class="tip-icon" :class="item.nation"></div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<script>
+    const template = new Vue({
+        el: '#template',
+        methods: {
+            init(data) {
+                this.$set(this, 'data', data)
+            }
+        },
+        data() {
+            return {
+                data: {}
+            }
+        },
+        mounted() {
+            window.init = this.init
+        }
+    })
+</script>
+</html>

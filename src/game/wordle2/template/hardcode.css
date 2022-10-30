@@ -1,0 +1,119 @@
+* {
+    font-size: 18px;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#template {
+    width: 1280px;
+    height: 720px;
+    background: url(img/advanced.a272bf.jpg) center / cover no-repeat;
+    display: flex;
+}
+
+#template > div {
+    height: 100%;
+}
+
+.left {
+    width: 45%;
+}
+
+.right {
+    width: 55%;
+    padding: 20px 20px 20px 90px;
+}
+
+.title {
+    height: 150px;
+    background: url(img/title_content.15ad7d.png) center left 50px / 300px no-repeat;
+}
+
+.tags {
+    height: calc(100% - 150px);
+    display: flex;
+    flex-wrap: wrap;
+    padding: 180px 0 130px 100px;
+}
+
+.tags > div {
+    width: 50%;
+    background: center / 200px no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tag1, .tag2 {
+    background-position-y: 27px !important;
+}
+
+.tag3, .tag4 {
+    background-position-y: 19px !important;
+}
+
+.tag1 {
+    background-image: url(img/advanced_tag_bg_1.4d40f6.png) !important;
+}
+
+.tag2 {
+    background-image: url(img/advanced_tag_bg_2.5578a1.png) !important;
+}
+
+.tag3 {
+    background-image: url(img/advanced_tag_bg_3.5d6e8d.png) !important;
+}
+
+.tag4 {
+    background-image: url(img/advanced_tag_bg_4.8fbfee.png) !important;
+}
+
+.opts {
+    display: flex;
+}
+
+.opts > div {
+    width: calc(100% / 7);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(47 47 47 / 50%);
+}
+
+.tag-bg {
+    height: 50px !important;
+    font-size: 14px;
+    background: url(img/again.8b9776.png) center / 70px no-repeat;
+}
+
+.avatar {
+    justify-content: flex-end !important;
+}
+
+.avatar > img {
+    height: 100%;
+}
+
+.tip-icon {
+    background: center / 40px no-repeat;
+}
+
+.tip-icon.down {
+    background-image: url(img/icon/hand-down.svg) !important;
+}
+
+.tip-icon.up {
+    background-image: url(img/icon/hand-up.svg) !important;
+}
+
+.tip-icon.ok {
+    background-image: url(img/icon/thumbs-up.svg) !important;
+}
+
+.tip-icon.ng {
+    background-image: url(img/icon/thumbs-down.svg) !important;
+}

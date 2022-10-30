@@ -140,17 +140,13 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
     # await data.send(ask)
 
     for story in operator.stories():
-
         if story['story_title'] == '基础档案':
             r = re.search(r'\n【种族】.*?(\S+).*?\n', story['story_text'])
-
             if r:
                 race = str(r.group(1))
-
                 if race == '卡特斯/奇美拉':
                     race = '卡特斯'
 
-    
     last_talk = datetime.datetime.now()
     operator_list = copy.deepcopy(ArknightsGameData().operators)
     hint_used = False
@@ -168,7 +164,8 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
         try:
             if not event:
                 time_delta = datetime.datetime.now()
-                if  time_delta - last_talk < datetime.timedelta(seconds=95) and time_delta - last_talk > datetime.timedelta(seconds=90):
+                if time_delta - last_talk < datetime.timedelta(
+                    seconds=95) and time_delta - last_talk > datetime.timedelta(seconds=90):
                     await data.send(Chain(data, at=False).text(f'30秒内没有博士回答任何答案的话，本游戏就要结束咯~ 猜不出来的话，可以发送“下一题”来跳过本题。'))
                     continue
                 elif datetime.datetime.now() - last_talk > datetime.timedelta(seconds=120):
@@ -181,7 +178,7 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
             last_talk = datetime.datetime.now()
             result.answer = answer = event.message
 
-            if any_match(answer.text, ['下一题', '跳过','下一个']):
+            if any_match(answer.text, ['下一题', '跳过', '下一个']):
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，结算奖励-10%'))
                 set_point(result, answer.user_id, -10)
                 result.answer = answer
@@ -192,13 +189,13 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                 await data.send(Chain(answer, at=False).text(f'答案是{operator.name}，游戏结束~'))
                 result.status = WordleStatus.userClose
                 return result
-            
+
             if any_match(answer.text, ['提示']):
-                
+
                 if hint_used == False:
                     hint_used = True
                     set_point(result, answer.user_id, -5)
-                    hint_text = [ f'您使用了提示，结算奖励-5%，猜过的干员如下：' ]
+                    hint_text = [f'您使用了提示，结算奖励-5%，猜过的干员如下：']
 
                     for operator_hint_name in ans_names:
                         operator_hint = operator_list[operator_hint_name]
@@ -214,7 +211,8 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
                                         race_hint_guess = '卡特斯'
 
                         nation_hint = nations_config[operator_hint.nation][0]
-                        hint_text.append(f'{operator_hint.name}：\t{operator_hint.rarity}星\t{operator_hint.classes}\t{operator_hint.classes_sub}\t{nation_hint}\t{race_hint_guess}\t{operator_hint.drawer}')
+                        hint_text.append(
+                            f'{operator_hint.name}：\t{operator_hint.rarity}星\t{operator_hint.classes}\t{operator_hint.classes_sub}\t{nation_hint}\t{race_hint_guess}\t{operator_hint.drawer}')
 
                     await data.send(Chain(answer, at=False).text('\n'.join(hint_text), auto_convert=False))
                     continue
@@ -233,7 +231,8 @@ async def wordle_start(data: Message, operator: Operator, level: str, level_rate
 
                 rewards = int(wordle_config.rewards.bingo * level_rate * (100 + result.total_point) / 100)
 
-                await data.send(Chain(answer, at=False).text(f'{data.nickname}博士回答正确！答案是{operator.name}。分数+1，合成玉+{rewards}'))
+                await data.send(
+                    Chain(answer, at=False).text(f'{data.nickname}博士回答正确！答案是{operator.name}。分数+1，合成玉+{rewards}'))
 
                 result.answer = answer
                 result.status = WordleStatus.bingo

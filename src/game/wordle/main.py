@@ -15,7 +15,7 @@ class WordlePluginInstance(PluginInstance):
 
 bot = WordlePluginInstance(
     name='兔兔猜字谜',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-game-wordle',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -60,31 +60,13 @@ async def _(data: Message):
     await data.send(Chain(choice).text(f'{choice.text}难度，奖励倍数 {level_rate}'))
 
     while True:
-
         if not operators:
             operators = copy.deepcopy(ArknightsGameData().operators)
 
         operator = operators.pop(random.choice(list(operators.keys())))
-        race = ''
 
-        for story in operator.stories():
-
-            if story['story_title'] == '基础档案':
-                r = re.search(r'\n【种族】.*?(\S+).*?\n', story['story_text'])
-
-                if r:
-                    race = str(r.group(1))
-
-        while not race or not operator.nation or '未知' in race or not operator.drawer:
+        while operator.race == '未知' or not operator.nation or not operator.drawer:
             operator = operators.pop(random.choice(list(operators.keys())))
-
-            for story in operator.stories():
-
-                if story['story_title'] == '基础档案':
-                    r = re.search(r'\n【种族】.*?(\S+).*?\n', story['story_text'])
-
-                    if r:
-                        race = str(r.group(1))
 
         if curr != referee.count:
             curr = referee.count
@@ -112,13 +94,11 @@ async def _(data: Message):
             set_rank(referee, result.answer, 1)
 
         if result.user_point:
-
             for user_id, point in result.user_point.items():
                 set_point(referee, user_id, point)
 
         if not skip:
             referee.count += 1
-
             if referee.count >= wordle_config.questions:
                 end = True
 
@@ -127,14 +107,13 @@ async def _(data: Message):
 
     if referee.count < wordle_config.finish_min:
         return Chain(data, at=False).text(
-            f'游戏结束，本轮共进行了{referee.count}次游戏，不进行结算，最少需要进行{wordle_config.finish_min}轮。')
+            f'游戏结束，本轮共进行了{referee.count}次游戏，不进行结算，最少需要进行{wordle_config.finish_min}次。')
 
     rewards_rate = (100 + (referee.total_point if referee.total_point > -90 else -90)) / 100
     text, reward_list = calc_rank(referee)
     text += '\n\n'
 
     for r, l in reward_list.items():
-
         if r == 0:
             rewards = int(wordle_config.rewards.golden * level_rate * rewards_rate)
             text += f'第一名获得{rewards}合成玉；\n'
