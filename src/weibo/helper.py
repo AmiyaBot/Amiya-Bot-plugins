@@ -7,15 +7,14 @@ from dataclasses import dataclass
 from amiyabot.network.download import download_async
 from amiyabot.network.httpRequests import http_requests
 from core.util import remove_xml_tag, char_seat, read_yaml, create_dir
-from core import log
 
 ua = None
 try:
     from fake_useragent import UserAgent
 
     ua = UserAgent()
-except Exception as e:
-    log.error(e)
+except:
+    pass
 
 curr_dir = os.path.dirname(__file__)
 

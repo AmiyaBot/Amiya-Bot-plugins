@@ -7,7 +7,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = PluginInstance(
     name='大帝的CYPHER挑战',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -35,7 +35,13 @@ async def _(data: Message):
 
     pool = OperatorPool()
 
-    while pool.is_empty:
+    while True:
+        if pool.is_empty:
+            await data.send(
+                Chain(data, at=False).text('竟然把所有干员都猜完了...这可怕的毅力，不愧是巴别塔的恶灵！再来！'))
+            pool = OperatorPool()
+            await asyncio.sleep(2)
+
         await data.send(Chain(data, at=False).text('题目准备中...共有10次机会竞猜！'))
         await asyncio.sleep(2)
 

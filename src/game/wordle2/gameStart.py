@@ -30,7 +30,7 @@ async def game_begin(data: Message, operator: Operator):
     count_rec = process.count
     alert_step = 0
 
-    while not process.bingo or process.max_count <= process.count:
+    while not process.bingo and process.count < process.max_count:
         ask = None
         if process.display:
             ask = Chain(data, at=False).html(f'{curr_dir}/template/hardcode.html', process.view_data)
@@ -91,12 +91,17 @@ async def game_begin(data: Message, operator: Operator):
 
         match, unlock = process.guess(answer)
         if match == -1:
-            rewards = 300 * len([item for _, item in process.tags.items() if item['show'] is False])
+            rewards = 300 * (len(process.closed_tags) + 1)
             UserInfo.add_jade_point(data.user_id, rewards, max_rewards)
             await send(f'回答正确！奖励合成玉{rewards}')
             event.close_event()
             return data
         else:
+            if process.count >= process.max_count:
+                await data.send(Chain(data, at=False).text(f'机会耗尽，答案是{operator.name}'))
+                event.close_event()
+                return data
+
             text = f'匹配了{match}个线索'
             if match >= 5:
                 text += '，基本可以肯定是哪位干员了'
@@ -117,8 +122,5 @@ async def game_begin(data: Message, operator: Operator):
 
     if event:
         event.close_event()
-
-    if process.max_count <= process.count:
-        await data.send(Chain(data, at=False).text(f'机会耗尽，答案是{operator.name}'))
 
     return data

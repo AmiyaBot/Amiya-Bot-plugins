@@ -32,7 +32,7 @@ class OperatorPool:
 
     @property
     def is_empty(self):
-        return len(self.operators.keys())
+        return not len(self.operators.keys())
 
     def pick_one(self):
         return self.operators.pop(
@@ -67,6 +67,10 @@ class GuessProcess:
         return len(self.wrongs.keys())
 
     @property
+    def closed_tags(self):
+        return [item for _, item in self.tags.items() if item['show'] is False]
+
+    @property
     def view_data(self):
         return {
             'tags': self.tags,
@@ -77,7 +81,7 @@ class GuessProcess:
         if self.tips_lock:
             return None
 
-        disclosed = random.choice([item for _, item in self.tags.items() if item['show'] is False])
+        disclosed = random.choice(self.closed_tags)
         disclosed['show'] = True
 
         return disclosed

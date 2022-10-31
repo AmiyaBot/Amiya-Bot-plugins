@@ -1,6 +1,7 @@
 import copy
 import asyncio
 
+from core.util import TimeRecorder
 from core.database.user import UserInfo
 from amiyabot import PluginInstance
 from amiyabot.adapters.tencent import TencentBotInstance
@@ -9,7 +10,7 @@ from .guessStart import *
 
 bot = PluginInstance(
     name='兔兔猜干员',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -57,6 +58,7 @@ async def _(data: Message):
     await choice.send(Chain(choice).text(f'{choice_level}难度，难度结算倍率 {level_rate}'))
 
     target = choice
+    time_rec = TimeRecorder()
 
     while True:
         if not operators:
@@ -108,7 +110,11 @@ async def _(data: Message):
     finish_rate = round(referee.round / guess_config.questions, 2)
     rewards_rate = (100 + (referee.total_rate if referee.total_rate > -50 else -50)) / 100
     text, reward_list = referee.calc_rank()
-    text += f'\n难度倍率：{level_rate}\n进度倍率：{finish_rate}\n结算倍率：{rewards_rate}\n\n'
+
+    text += f'\n通关速度：{time_rec.total()}' \
+            f'\n难度倍率：{level_rate * 100}%' \
+            f'\n进度倍率：{finish_rate * 100}%' \
+            f'\n结算倍率：{rewards_rate * 100}%\n\n'
 
     for r, l in reward_list.items():
         if r == 0:
