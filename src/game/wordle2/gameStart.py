@@ -49,15 +49,18 @@ async def game_begin(data: Message, operator: Operator):
         if not event:
             # 超时没人回答，游戏结束
             over_time = time.time() - time_rec
-            if over_time >= 60:
+            if over_time >= 120:
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
                 return None
-            elif over_time >= 50 and alert_step == 1:
-                alert_step = 2
+            elif over_time >= 110 and alert_step == 2:
+                alert_step = 3
                 await data.send(Chain(data, at=False).text('还剩10秒...>.<'))
-            elif over_time >= 30 and alert_step == 0:
-                alert_step = 1
+            elif over_time >= 90 and alert_step == 1:
+                alert_step = 2
                 await data.send(Chain(data, at=False).text('还剩30秒...'))
+            elif over_time >= 60 and alert_step == 0:
+                alert_step = 1
+                await data.send(Chain(data, at=False).text('还剩60秒...'))
 
             continue
 
@@ -106,7 +109,7 @@ async def game_begin(data: Message, operator: Operator):
 
             if unlock:
                 UserInfo.add_jade_point(data.user_id, unlock * 100, max_rewards)
-                await send(f'解锁了{unlock}项线索，奖励{unlock * 100}合成玉')
+                await send(f'解锁了{unlock}个线索，奖励{unlock * 100}合成玉')
 
             await send(f'{text}，请再猜猜吧~（{process.count}/{process.max_count}）')
             process.display = True

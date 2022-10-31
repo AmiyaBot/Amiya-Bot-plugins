@@ -91,7 +91,10 @@ class GuessProcess:
 
         unlock = 0
         for field, item in self.tags.items():
-            if getattr(answer, field) == item['value']:
+            answer_value = getattr(answer, field)
+            if field == 'nation':
+                answer_value = nations.get(answer_value, '未知')
+            if answer_value == item['value']:
                 if item['show'] is False:
                     unlock += 1
                 item['show'] = True
