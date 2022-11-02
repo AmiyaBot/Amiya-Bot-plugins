@@ -94,7 +94,7 @@ class EnemyPluginInstance(PluginInstance):
 
 bot = EnemyPluginInstance(
     name='明日方舟敌方单位查询',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -103,7 +103,7 @@ bot = EnemyPluginInstance(
 
 
 async def verify(data: Message):
-    name = any_match(data.text, list(ArknightsGameData.enemies.keys()))
+    name = any_match(data.text_origin, list(ArknightsGameData.enemies.keys()))
     keyword = any_match(data.text, ['敌人', '敌方'])
 
     if name or keyword:
@@ -124,7 +124,7 @@ async def _(data: Message):
     for reg in ['敌人(资料)?(.*)', '敌方(资料)?(.*)']:
         r = re.search(re.compile(reg), message)
         if r:
-            enemy_name = r.group(2)
+            enemy_name = r.group(2).strip()
 
     if not enemy_name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的敌方单位名称'))
@@ -144,7 +144,8 @@ async def _(data: Message):
             }
 
             wait = await data.wait(
-                Chain(data).html(f'{curr_dir}/template/enemyIndex.html', init_data).text('回复【序号】查询对应的敌方单位资料')
+                Chain(data).html(f'{curr_dir}/template/enemyIndex.html', init_data).text(
+                    '回复【序号】查询对应的敌方单位资料')
             )
 
             if wait:
