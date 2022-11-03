@@ -26,7 +26,8 @@
                     <div class="attr" title="部署费用" v-html="attr('cost')"></div>
                     <div class="attr" title="再部署时间" v-html="attr('respawnTime') + '秒'"></div>
                     <div class="attr" title="种族">{{ data.info.race }}</div>
-                    <div class="attr" title="势力">{{ nations[data.info.nation] }}</div>
+                    <div class="attr" title="势力">{{ data.info.nation }}</div>
+                    <div class="attr" title="阵营">{{ data.info.group }}</div>
                     <div class="attr" title="画师">{{ data.info.drawer }}</div>
                     <div class="attr" title="生日">{{ data.info.birthday }}</div>
                 </div>
@@ -75,19 +76,25 @@
                     </div>
                 </div>
                 <div class="tags">
+                    <span v-if="data.info.is_sp" style="background: #9c27b0">异格干员</span>
                     <span v-for="item in data.info.tags">{{ item }}</span>
                 </div>
                 <div class="trait" v-html="colorSpan(data.detail.operator_trait, false)"></div>
                 <div class="name" style="padding-top: 10px; font-size: 30px">{{ data.info.en_name }}</div>
-                <div class="name" style="padding-bottom: 10px; font-size: 60px">{{ data.info.name }}</div>
+                <div class="name" style="padding-bottom: 10px; font-size: 50px">{{ data.info.name }}</div>
             </div>
         </div>
         <div class="right">
             <div>
+                <div class="title">干员印象</div>
+                <div class="exInfo">{{ data.info.profile }}</div>
+                <i class="exInfo">「{{ data.info.impression }}」</i>
+            </div>
+            <div>
                 <div class="title">天赋</div>
                 <div class="exInfo" v-for="item in data.talents">
-                    <div style="width: 100px">{{ item.talents_name }}</div>
-                    <div style="width: calc(100% - 100px);padding-left: 10px" v-html="item.talents_desc"></div>
+                    <div style="width: 120px">{{ item.talents_name }}</div>
+                    <div style="width: calc(100% - 120px);padding-left: 10px" v-html="item.talents_desc"></div>
                 </div>
             </div>
             <div>
@@ -201,27 +208,6 @@
                     0: '被动',
                     1: '手动触发',
                     2: '自动触发'
-                },
-                nations: {
-                    laterano: '拉特兰',
-                    kazimierz: '卡西米尔',
-                    columbia: '哥伦比亚',
-                    lungmen: '龙门',
-                    higashi: '东国',
-                    victoria: '维多利亚',
-                    sargon: '萨尔贡',
-                    rhodes: '罗德岛',
-                    yan: '炎国',
-                    iberia: '伊比利亚',
-                    ursus: '乌萨斯',
-                    siracusa: '叙拉古',
-                    kjerag: '谢拉格',
-                    egir: '阿戈尔',
-                    rim: '雷姆必拓',
-                    minos: '米诺斯',
-                    bolivar: '玻利瓦尔',
-                    sami: '萨米',
-                    leithanien: '莱塔尼亚'
                 }
             }
         },

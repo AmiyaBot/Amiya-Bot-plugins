@@ -3,28 +3,6 @@ import random
 
 from core.resource.arknightsGameData import ArknightsGameData, Operator
 
-nations = {
-    'laterano': '拉特兰',
-    'kazimierz': '卡西米尔',
-    'columbia': '哥伦比亚',
-    'lungmen': '龙门',
-    'higashi': '东国',
-    'victoria': '维多利亚',
-    'sargon': '萨尔贡',
-    'rhodes': '罗德岛',
-    'yan': '炎国',
-    'iberia': '伊比利亚',
-    'ursus': '乌萨斯',
-    'siracusa': '叙拉古',
-    'kjerag': '谢拉格',
-    'egir': '阿戈尔',
-    'rim': '雷姆必拓',
-    'minos': '米诺斯',
-    'bolivar': '玻利瓦尔',
-    'sami': '萨米',
-    'leithanien': '莱塔尼亚'
-}
-
 
 class OperatorPool:
     def __init__(self):
@@ -51,8 +29,8 @@ class GuessProcess:
             'classes': {'title': '职业', 'value': operator.classes, 'show': False},
             'classes_sub': {'title': '子职业', 'value': operator.classes_sub, 'show': False},
             'race': {'title': '种族', 'value': operator.race, 'show': False},
-            'drawer': {'title': '画师', 'value': operator.drawer, 'show': False},
-            'nation': {'title': '势力', 'value': nations.get(operator.nation, '未知'), 'show': False},
+            'group': {'title': '阵营', 'value': operator.group, 'show': False},
+            'nation': {'title': '势力', 'value': operator.nation, 'show': False},
         }
         self.wrongs = {}
         self.max_count = 10
@@ -95,10 +73,7 @@ class GuessProcess:
 
         unlock = 0
         for field, item in self.tags.items():
-            answer_value = getattr(answer, field)
-            if field == 'nation':
-                answer_value = nations.get(answer_value, '未知')
-            if answer_value == item['value']:
+            if getattr(answer, field) == item['value']:
                 if item['show'] is False:
                     unlock += 1
                 item['show'] = True
@@ -108,7 +83,7 @@ class GuessProcess:
             'classes': 'ok' if answer.classes == self.operator.classes else 'ng',
             'classes_sub': 'ok' if answer.classes_sub == self.operator.classes_sub else 'ng',
             'race': 'ok' if answer.race == self.operator.race else 'ng',
-            'drawer': 'ok' if answer.drawer == self.operator.drawer else 'ng',
+            'group': 'ok' if answer.group == self.operator.group else 'ng',
             'nation': 'ok' if answer.nation == self.operator.nation else 'ng',
         }
 

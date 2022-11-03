@@ -12,12 +12,13 @@ class OperatorData:
     @classmethod
     async def get_operator_detail(cls, info: OperatorSearchInfo):
         operators = ArknightsGameData.operators
-        real_name = await PRTS.get_real_name(info.name)
 
         if not info.name or info.name not in operators:
             return None, None
 
         operator = operators[info.name]
+
+        real_name = await PRTS.get_real_name(operator.origin_name)
 
         detail, trust = operator.detail()
         modules = operator.modules()
@@ -36,18 +37,30 @@ class OperatorData:
             'info': {
                 'id': operator.id,
                 'cv': operator.cv,
-                'race': operator.race,
+                'type': operator.type,
+                'tags': operator.tags,
+                'range': operator.range,
+                'rarity': operator.rarity,
                 'name': operator.name,
                 'en_name': operator.en_name,
                 'real_name': real_name,
-                'nation': operator.nation,
-                'drawer': operator.drawer,
-                'rarity': operator.rarity,
-                'range': operator.range,
+                'wiki_name': operator.wiki_name,
+                'index_name': operator.index_name,
+                'origin_name': operator.origin_name,
                 'classes': operator.classes,
                 'classes_sub': operator.classes_sub,
+                'classes_code': operator.classes_code,
+                'race': operator.race,
+                'drawer': operator.drawer,
+                'group': operator.group,
+                'nation': operator.nation,
                 'birthday': operator.birthday,
-                'tags': operator.tags
+                'profile': operator.profile,
+                'impression': operator.impression,
+                'limit': operator.limit,
+                'unavailable': operator.unavailable,
+                'is_recruit': operator.is_recruit,
+                'is_sp': operator.is_sp
             },
             'skin': await ArknightsGameDataResource.get_skin_file(operator.skins()[0], encode_url=True),
             'trust': trust,
