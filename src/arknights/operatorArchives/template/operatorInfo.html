@@ -16,20 +16,51 @@
         <div class="left">
             <div>
                 <div class="operator-attr">
-                    <div class="attr" title="最大生命值" v-html="attr('maxHp')"></div>
-                    <div class="attr" title="攻击力" v-html="attr('atk')"></div>
-                    <div class="attr" title="防御力" v-html="attr('def')"></div>
-                    <div class="attr" title="魔法抗性" v-html="attr('magicResistance')"></div>
-                    <div class="attr" title="攻击速度" v-html="attr('attackSpeed')"></div>
-                    <div class="attr" title="攻击间隔" v-html="attr('baseAttackTime')"></div>
-                    <div class="attr" title="阻挡数" v-html="attr('blockCnt')"></div>
-                    <div class="attr" title="部署费用" v-html="attr('cost')"></div>
-                    <div class="attr" title="再部署时间" v-html="attr('respawnTime') + '秒'"></div>
-                    <div class="attr" title="种族">{{ data.info.race }}</div>
-                    <div class="attr" title="势力">{{ data.info.nation }}</div>
-                    <div class="attr" title="阵营">{{ data.info.group }}</div>
-                    <div class="attr" title="画师">{{ data.info.drawer }}</div>
-                    <div class="attr" title="生日">{{ data.info.birthday }}</div>
+                    <div class="attr" title="最大生命值">
+                        <div v-html="attr('maxHp')"></div>
+                    </div>
+                    <div class="attr" title="攻击力">
+                        <div v-html="attr('atk')"></div>
+                    </div>
+                    <div class="attr" title="防御力">
+                        <div v-html="attr('def')"></div>
+                    </div>
+                    <div class="attr" title="魔法抗性">
+                        <div v-html="attr('magicResistance')"></div>
+                    </div>
+                    <div class="attr" title="攻击速度">
+                        <div v-html="attr('attackSpeed')"></div>
+                    </div>
+                    <div class="attr" title="攻击间隔">
+                        <div v-html="attr('baseAttackTime')"></div>
+                    </div>
+                    <div class="attr" title="阻挡数">
+                        <div v-html="attr('blockCnt')"></div>
+                    </div>
+                    <div class="attr" title="部署费用">
+                        <div v-html="attr('cost')"></div>
+                    </div>
+                    <div class="attr" title="再部署时间">
+                        <div v-html="attr('respawnTime') + '秒'"></div>
+                    </div>
+                    <div class="attr" title="势力">
+                        <div>{{ data.info.nation }}</div>
+                    </div>
+                    <div class="attr" title="阵营">
+                        <div>{{ data.info.group }}</div>
+                    </div>
+                    <div class="attr" title="队伍">
+                        <div>{{ data.info.team }}</div>
+                    </div>
+                    <div class="attr" title="种族">
+                        <div>{{ data.info.race }}</div>
+                    </div>
+                    <div class="attr" title="画师">
+                        <div>{{ data.info.drawer }}</div>
+                    </div>
+                    <div class="attr" title="生日">
+                        <div>{{ data.info.birthday }}</div>
+                    </div>
                 </div>
                 <div>
                     <div class="title" style="width: 120px">潜能提升</div>
@@ -80,8 +111,11 @@
                     <span v-for="item in data.info.tags">{{ item }}</span>
                 </div>
                 <div class="trait" v-html="colorSpan(data.detail.operator_trait, false)"></div>
-                <div class="name" style="padding-top: 10px; font-size: 30px">{{ data.info.en_name }}</div>
-                <div class="name" style="padding-bottom: 10px; font-size: 50px">{{ data.info.name }}</div>
+                <div class="name" style="padding-top: 10px; font-size: 50px">{{ data.info.name }}</div>
+                <div class="name" style="padding-bottom: 10px; font-size: 30px">
+                    <span>{{ data.info.number }}</span>
+                    {{ data.info.en_name }}
+                </div>
             </div>
         </div>
         <div class="right">
@@ -89,6 +123,10 @@
                 <div class="title">干员印象</div>
                 <div class="exInfo">{{ data.info.profile }}</div>
                 <i class="exInfo">「{{ data.info.impression }}」</i>
+            </div>
+            <div v-if="data.info.potential_item">
+                <div class="title">信物</div>
+                <div class="exInfo">{{ data.info.potential_item }}</div>
             </div>
             <div>
                 <div class="title">天赋</div>

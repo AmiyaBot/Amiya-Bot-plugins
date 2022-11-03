@@ -123,6 +123,9 @@ async def guess_start(referee: GuessReferee,
 
     tips = [
         f'TA是{operator.rarity}星干员',
+        f'TA的所属队伍是{operator.team}',
+        f'TA的所属阵营是{operator.group}',
+        f'TA的所属势力是{operator.nation}',
         f'TA的画师是{operator.drawer}',
         f'TA的职业是{operator.classes}',
         f'TA的分支职业是{operator.classes_sub}',

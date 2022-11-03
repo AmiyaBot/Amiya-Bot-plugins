@@ -41,6 +41,7 @@ class OperatorData:
                 'tags': operator.tags,
                 'range': operator.range,
                 'rarity': operator.rarity,
+                'number': operator.number,
                 'name': operator.name,
                 'en_name': operator.en_name,
                 'real_name': real_name,
@@ -52,6 +53,7 @@ class OperatorData:
                 'classes_code': operator.classes_code,
                 'race': operator.race,
                 'drawer': operator.drawer,
+                'team': operator.team,
                 'group': operator.group,
                 'nation': operator.nation,
                 'birthday': operator.birthday,
@@ -59,6 +61,7 @@ class OperatorData:
                 'impression': operator.impression,
                 'limit': operator.limit,
                 'unavailable': operator.unavailable,
+                'potential_item': operator.potential_item,
                 'is_recruit': operator.is_recruit,
                 'is_sp': operator.is_sp
             },
