@@ -26,7 +26,7 @@
                     <div class="attr" title="部署费用" v-html="attr('cost')"></div>
                     <div class="attr" title="再部署时间" v-html="attr('respawnTime') + '秒'"></div>
                     <div class="attr" title="种族">{{ data.info.race }}</div>
-                    <div class="attr" title="阵营">{{ nations[data.info.nation] }}</div>
+                    <div class="attr" title="势力">{{ nations[data.info.nation] }}</div>
                     <div class="attr" title="画师">{{ data.info.drawer }}</div>
                     <div class="attr" title="生日">{{ data.info.birthday }}</div>
                 </div>
@@ -87,7 +87,7 @@
                 <div class="title">天赋</div>
                 <div class="exInfo" v-for="item in data.talents">
                     <div style="width: 100px">{{ item.talents_name }}</div>
-                    <div style="width: calc(100% - 100px);padding-left: 10px">{{ item.talents_desc }}</div>
+                    <div style="width: calc(100% - 100px);padding-left: 10px" v-html="item.talents_desc"></div>
                 </div>
             </div>
             <div>
@@ -170,10 +170,10 @@
             },
             colorSpan(text, tag = true) {
                 text = text.replace('<', '&lt;').replace('>', '&gt;')
+                text = text.replace(/\n/g, '<br/>')
                 text = text.replace(/\s/g, '')
                 text = text.replace(/\[cl/g, tag ? '<span class="mark">' : '')
                 text = text.replace(/@#174CC6cle]/g, tag ? '</span>' : '')
-                text = text.replace(/\n/g, '<br/>')
 
                 return text
             }

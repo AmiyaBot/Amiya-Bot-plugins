@@ -85,9 +85,10 @@ async def guess_start(referee: GuessReferee,
         type_d = {
             '中文-普通话': '_cn',
             '中文-方言': '_custom',
-            '日文': '',
+            '意大利语': '_ita',
             '英文': '_en',
             '韩文': '_kr',
+            '日文': '',
             '联动': ''
         }
         if voice_type in type_d:

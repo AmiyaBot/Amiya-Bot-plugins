@@ -21,7 +21,7 @@ class OperatorPluginInstance(PluginInstance):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -224,19 +224,22 @@ async def _(data: Message):
     info = search_info(data.text_words, source_keys=['voice_key', 'name'], text=data.text)
 
     voice_type = ''
-    voice_name = '日文'
+    voice_name = '日语'
     if '中文' in data.text:
         voice_type = '_cn'
         voice_name = '中文'
     if '英' in data.text:
         voice_type = '_en'
-        voice_name = '英文'
+        voice_name = '英语'
     if '韩' in data.text:
         voice_type = '_kr'
-        voice_name = '韩文'
+        voice_name = '韩语'
     if '方言' in data.text:
         voice_type = '_custom'
         voice_name = '方言'
+    if '意大利' in data.text:
+        voice_type = '_ita'
+        voice_name = '意大利语'
 
     if not info.name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
