@@ -19,11 +19,11 @@ async def guess_filter(data: Message):
     ]
 
 
-async def game_begin(data: Message, operator: Operator):
+async def game_begin(data: Message, operator: Operator, hardcode: bool):
     async def send(content: str):
         await data.send(Chain(data, at=False, reference=True).text(content))
 
-    process = GuessProcess(operator)
+    process = GuessProcess(operator, hardcode)
 
     event = None
     time_rec = time.time()
@@ -70,7 +70,7 @@ async def game_begin(data: Message, operator: Operator):
         if data.text in ['线索', '提示']:
             tips = process.get_tips()
             if tips:
-                await send('揭示了一个线索：【{title}】{value}'.format(**tips))
+                await send(f'揭示了一个线索：【{tips.title}】{tips.value}')
                 process.tips_lock = True
                 process.display = True
             else:

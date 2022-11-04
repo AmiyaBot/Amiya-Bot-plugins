@@ -12,10 +12,25 @@ body {
     height: 720px;
     background: url(img/advanced.a272bf.jpg) center / cover no-repeat;
     display: flex;
+    position: relative;
 }
 
-#template > div {
+#template > div:not(.hardcode) {
     height: 100%;
+}
+
+.hardcode {
+    width: 200px;
+    height: 75px;
+    color: #9d9d9d;
+    font-weight: bold;
+    background: url(img/advance_entry.28df44.png) center / 100% no-repeat;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .left {
@@ -47,15 +62,15 @@ body {
     justify-content: center;
 }
 
-.tag1, .tag2 {
+.tag1, .tag2, .tag3 {
     background-position-y: 27px !important;
 }
 
-.tag3, .tag4 {
+.tag4, .tag5, .tag6 {
     background-position-y: 19px !important;
 }
 
-.tag1 {
+.tag1, .tag3 {
     background-image: url(img/advanced_tag_bg_1.4d40f6.png) !important;
 }
 
@@ -63,11 +78,11 @@ body {
     background-image: url(img/advanced_tag_bg_2.5578a1.png) !important;
 }
 
-.tag3 {
+.tag5 {
     background-image: url(img/advanced_tag_bg_3.5d6e8d.png) !important;
 }
 
-.tag4 {
+.tag4, .tag6 {
     background-image: url(img/advanced_tag_bg_4.8fbfee.png) !important;
 }
 

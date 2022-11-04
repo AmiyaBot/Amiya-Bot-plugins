@@ -1,6 +1,7 @@
 import asyncio
 
 from amiyabot import PluginInstance, Message, Chain, TencentBotInstance
+from core.util import any_match
 
 from .gameBuilder import OperatorPool
 from .gameStart import game_begin, curr_dir
@@ -29,9 +30,15 @@ async def _(data: Message):
                 '只用一条线索就能破解谜底，这样的强者是否真的存在？\n' \
                 '更COOL的接力，更HOT的秘密，只为最懂这片大地的你！\n' \
                 '所有群员均可参与游戏，游戏一旦开始，将暂停其他功能的使用哦！\n' \
-                'PUT UR HANDS UP！'
+                'PUT UR HANDS UP！\n\n' \
+                '请选择难度：\n\n【普通】\n【硬核】'
 
-    await data.send(Chain(data, at=False).text(main_text))
+    choice = await data.wait(Chain(data).text(main_text))
+    if not choice:
+        return None
+    choice_level = any_match(choice.text, ['普通', '硬核'])
+    if not choice_level:
+        return Chain(choice).text('博士，您没有选择难度哦，游戏取消。')
 
     pool = OperatorPool()
 
@@ -49,6 +56,6 @@ async def _(data: Message):
         while not operator.nation or not operator.drawer or operator.race == '未知':
             operator = pool.pick_one()
 
-        data = await game_begin(data, operator)
+        data = await game_begin(data, operator, hardcode=choice_level == '硬核')
         if not data:
             break

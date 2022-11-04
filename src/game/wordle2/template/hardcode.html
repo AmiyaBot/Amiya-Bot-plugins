@@ -11,37 +11,30 @@
 </head>
 <body>
 <div id="template" v-if="Object.keys(data).length">
+    <div class="hardcode" v-if="data.hardcode">HARDCODE</div>
     <div class="left">
         <div class="title"></div>
         <div class="tags">
-            <div class="tag1">稀有度: {{ data.tags.rarity.show ? data.tags.rarity.value + '星' : '？？？' }}</div>
-            <div class="tag2">职业: {{ data.tags.classes.show ? data.tags.classes.value : '？？？' }}</div>
-            <div class="tag1">子职业: {{ data.tags.classes_sub.show ? data.tags.classes_sub.value : '？？？' }}</div>
-            <div class="tag4">种族: {{ data.tags.race.show ? data.tags.race.value : '？？？' }}</div>
-            <div class="tag3">阵营: {{ data.tags.group.show ? data.tags.group.value : '？？？' }}</div>
-            <div class="tag4">势力: {{ data.tags.nation.show ? data.tags.nation.value : '？？？' }}</div>
+            <div :class="'tag' + (Object.keys(data.tags).indexOf(field) + 1)" v-for="(item, field) in data.tags">
+                <template v-if="item.show_title">{{ item.title }}:</template>
+                <template v-if="item.show_value">{{ item.value }}</template>
+                <template v-else>？？？</template>
+            </div>
         </div>
     </div>
     <div class="right">
         <div class="opts">
             <div style="height: 50px"></div>
-            <div class="tag-bg">稀有度</div>
-            <div class="tag-bg">职业</div>
-            <div class="tag-bg">子职业</div>
-            <div class="tag-bg">种族</div>
-            <div class="tag-bg">阵营</div>
-            <div class="tag-bg">势力</div>
+            <div class="tag-bg" v-for="item in data.tags">
+                <template v-if="item.show_title">{{ item.title }}</template>
+                <template v-else>？？？</template>
+            </div>
         </div>
         <div class="opts" v-for="(item, code) in data.wrongs">
             <div class="avatar">
                 <img :src="'../../../resource/gamedata/avatar/' + code + '.png'" :alt="code">
             </div>
-            <div class="tip-icon" :class="item.rarity"></div>
-            <div class="tip-icon" :class="item.classes"></div>
-            <div class="tip-icon" :class="item.classes_sub"></div>
-            <div class="tip-icon" :class="item.race"></div>
-            <div class="tip-icon" :class="item.group"></div>
-            <div class="tip-icon" :class="item.nation"></div>
+            <div class="tip-icon" v-for="(tag, field) in data.tags" :class="item[field]"></div>
         </div>
     </div>
 </div>

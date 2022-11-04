@@ -1,6 +1,8 @@
 import copy
 import random
 
+from typing import Dict
+from dataclasses import dataclass, asdict
 from core.resource.arknightsGameData import ArknightsGameData, Operator
 
 
@@ -22,23 +24,66 @@ class OperatorPool:
         )
 
 
+@dataclass
+class TagElement:
+    title: str
+    value: str
+    show_title: bool = True
+    show_value: bool = False
+
+    def show(self):
+        self.show_title = True
+        self.show_value = True
+
+
 class GuessProcess:
-    def __init__(self, operator: Operator):
-        self.tags = {
-            'rarity': {'title': '稀有度', 'value': operator.rarity, 'show': False},
-            'classes': {'title': '职业', 'value': operator.classes, 'show': False},
-            'classes_sub': {'title': '子职业', 'value': operator.classes_sub, 'show': False},
-            'race': {'title': '种族', 'value': operator.race, 'show': False},
-            'group': {'title': '阵营', 'value': operator.group, 'show': False},
-            'nation': {'title': '势力', 'value': operator.nation, 'show': False},
-        }
+    def __init__(self, operator: Operator, hardcode: bool = False):
         self.wrongs = {}
+
         self.max_count = 10
         self.operator = operator
+        self.hardcode = hardcode
 
         self.bingo = False
         self.display = True
         self.tips_lock = False
+
+        if hardcode:
+            self.tags = self.__build_hardcode()
+        else:
+            self.tags = self.__build_normal()
+
+    def __build_normal(self, show_title: bool = True) -> Dict[str, TagElement]:
+        return {
+            'rarity': TagElement('稀有度', self.operator.rarity, show_title),
+            'classes': TagElement('职业', self.operator.classes, show_title),
+            'classes_sub': TagElement('子职业', self.operator.classes_sub, show_title),
+            'race': TagElement('种族', self.operator.race, show_title),
+            'nation': TagElement('势力', self.operator.nation, show_title),
+            'drawer': TagElement('画师', self.operator.drawer, show_title),
+        }
+
+    def __build_hardcode(self) -> Dict[str, TagElement]:
+        tags = {
+            **self.__build_normal(False),
+            'team': TagElement('队伍', self.operator.team, False),
+            'group': TagElement('阵营', self.operator.group, False),
+        }
+        res = {}
+
+        while len(res.keys()) < 6:
+            if not tags.keys():
+                break
+
+            field = random.choice(list(tags.keys()))
+            item = tags.pop(field)
+
+            if item.value == '未知':
+                continue
+
+            res[field] = item
+
+        return res
 
     @property
     def count(self):
@@ -46,21 +91,22 @@ class GuessProcess:
 
     @property
     def closed_tags(self):
-        return [item for _, item in self.tags.items() if item['show'] is False]
+        return [item for _, item in self.tags.items() if item.show_value is False]
 
     @property
     def view_data(self):
         return {
-            'tags': self.tags,
-            'wrongs': self.wrongs
+            'tags': {field: asdict(item) for field, item in self.tags.items()},
+            'wrongs': self.wrongs,
+            'hardcode': self.hardcode
         }
 
     def get_tips(self):
         if self.tips_lock:
             return None
 
-        disclosed = random.choice(self.closed_tags)
-        disclosed['show'] = True
+        disclosed: TagElement = random.choice(self.closed_tags)
+        disclosed.show()
 
         return disclosed
 
@@ -72,25 +118,25 @@ class GuessProcess:
             return -1, 0
 
         unlock = 0
+        wrong = {}
+
         for field, item in self.tags.items():
-            if getattr(answer, field) == item['value']:
-                if item['show'] is False:
+            answer_value = getattr(answer, field)
+            if answer_value == item.value:
+                if item.show_value is False:
                     unlock += 1
-                item['show'] = True
 
-        wrong = {
-            'rarity': 'ok',
-            'classes': 'ok' if answer.classes == self.operator.classes else 'ng',
-            'classes_sub': 'ok' if answer.classes_sub == self.operator.classes_sub else 'ng',
-            'race': 'ok' if answer.race == self.operator.race else 'ng',
-            'group': 'ok' if answer.group == self.operator.group else 'ng',
-            'nation': 'ok' if answer.nation == self.operator.nation else 'ng',
-        }
+                item.show()
 
-        if answer.rarity > self.operator.rarity:
-            wrong['rarity'] = 'down'
-        if answer.rarity < self.operator.rarity:
-            wrong['rarity'] = 'up'
+                wrong[field] = 'ok'
+            else:
+                if field == 'rarity':
+                    if answer_value > item.value:
+                        wrong[field] = 'down'
+                    if answer_value < item.value:
+                        wrong[field] = 'up'
+                else:
+                    wrong[field] = 'ng'
 
         self.wrongs[answer.id] = wrong
 
