@@ -41,7 +41,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -61,6 +61,8 @@ async def _(data: Message):
     if replace:
         text = data.text_origin
         for item in reversed(list(replace)):
+            if item.origin in text:
+                continue
             text = text.replace(item.replace, item.origin)
 
         return text_convert(data, text, data.text_origin)
@@ -219,4 +221,5 @@ def save_replace(data: Message, origin, replace, is_global=0):
         in_time=int(time.time()),
         is_global=is_global
     )
-    return Chain(data).text(f'审核通过！%s将使用 [{replace}] 作为 [{origin}] 的别名' % ('本频道' if not is_global else '全局'))
+    return Chain(data).text(
+        f'审核通过！%s将使用 [{replace}] 作为 [{origin}] 的别名' % ('本频道' if not is_global else '全局'))
