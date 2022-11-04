@@ -8,7 +8,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = PluginInstance(
     name='大帝的CYPHER挑战',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
