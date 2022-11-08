@@ -20,9 +20,8 @@ class OperatorInfo:
     skill_map = {}
     skill_operator = {}
 
-    operator_keywords = []
-    operator_list = []
     operator_map = {}
+    operator_keywords = []
     operator_one_char_list = []
 
     @staticmethod
@@ -48,8 +47,8 @@ class OperatorInfo:
             append_word(name)
             append_word(e_name)
 
-            OperatorInfo.operator_list.append(name)
-            OperatorInfo.operator_map[e_name] = name
+            OperatorInfo.operator_map[name.lower()] = name
+            OperatorInfo.operator_map[e_name.replace(' ', '')] = name
 
             if len(name) == 1:
                 OperatorInfo.operator_one_char_list.append(name)

@@ -1,6 +1,6 @@
 import asyncio
 
-from amiyabot import PluginInstance, Message, Chain, TencentBotInstance
+from amiyabot import PluginInstance, Message, Chain
 from core.util import any_match
 
 from .gameBuilder import OperatorPool
@@ -8,7 +8,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = PluginInstance(
     name='大帝的CYPHER挑战',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -18,13 +18,6 @@ bot = PluginInstance(
 
 @bot.on_message(keywords=['大帝挑战', '大帝的挑战', '大帝CYPHER挑战', '大帝的CYPHER挑战'])
 async def _(data: Message):
-    if type(data.instance) is TencentBotInstance:
-        if not data.is_admin and data.channel_id != '6901789':
-            return Chain(data).text('抱歉博士，非【小游戏专区】只能由管理员发起游戏哦~')
-    else:
-        if not data.is_admin:
-            return Chain(data).text('抱歉博士，只能由管理员发起游戏哦~')
-
     main_text = '承蒙大家的热情好意！感谢大帝的不胜酒意（？）！\n' \
                 'WHATEVER，《大帝的CYPHER挑战》限量测试好评如潮，游戏版本迎来重大更新！\n' \
                 '只用一条线索就能破解谜底，这样的强者是否真的存在？\n' \

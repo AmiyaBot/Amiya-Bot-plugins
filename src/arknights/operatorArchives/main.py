@@ -1,7 +1,7 @@
 import copy
 import asyncio
 
-from amiyabot import GroupConfig, PluginInstance
+from amiyabot import GroupConfig, PluginInstance, TencentBotInstance
 
 from core import Message, Chain
 from core.util import find_similar_list, any_match, get_index_from_text
@@ -42,7 +42,7 @@ class LoopBreak(Exception):
 
 def search_info(words: list, source_keys: list = None, text: str = ''):
     info_source = {
-        'name': [OperatorInfo.operator_map, OperatorInfo.operator_list],
+        'name': [OperatorInfo.operator_map],
         'level': [InitData.skill_level_list],
         'skill': [OperatorInfo.skill_map],
         'skill_index': [InitData.skill_index_list],
@@ -170,7 +170,7 @@ async def _(data: Message):
                 break
 
     if not skin_item:
-        index = get_index_from_text(data.text_digits, skins)
+        index = get_index(data.text_digits, skins)
 
         if index is None:
             text = f'博士，这是干员{info.name}的立绘列表\n\n'
@@ -180,7 +180,7 @@ async def _(data: Message):
 
             wait = await data.wait(Chain(data).text(text))
             if wait:
-                index = get_index_from_text(wait.text_digits, skins)
+                index = get_index(wait.text_digits, skins)
 
         if index is not None:
             skin_item = skins[index]
@@ -192,7 +192,18 @@ async def _(data: Message):
             'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
         }
 
-        return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
+        if type(data.instance) is TencentBotInstance:
+            return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
+        else:
+            text = f'博士，为您找到干员{info.name}的立绘档案：\n\n'
+            text += '系列：' + skin_item['skin_group'] + '\n'
+            text += '名称：' + skin_item['skin_name'] + '\n'
+            text += '获得途径：' + skin_item['skin_source'] + '\n\n'
+            text += skin_item['skin_usage'] + '\n'
+            text += skin_item['skin_content'] + '\n\n'
+            text += skin_item['skin_desc']
+
+            return Chain(data).text(text).image(skin_data['path'])
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=2)
@@ -255,7 +266,7 @@ async def _(data: Message):
     opt = operators[info.name]
     voices = opt.voices()
     voices_map = {item['voice_title']: item for item in voices}
-    index = get_index_from_text(data.text_digits, voices)
+    index = get_index(data.text_digits, voices)
 
     if not info.voice_key and index is None:
         text = f'博士，这是干员{opt.name}的语音列表\n\n'
@@ -265,7 +276,7 @@ async def _(data: Message):
 
         wait = await data.wait(Chain(data).text(text))
         if wait:
-            index = get_index_from_text(wait.text_digits, voices)
+            index = get_index(wait.text_digits, voices)
 
     if index is not None:
         info.voice_key = info.voice_key or voices[index]['voice_title']
@@ -309,7 +320,7 @@ async def _(data: Message):
     opt = operators[info.name]
     stories = opt.stories()
     stories_map = {item['story_title']: item['story_text'] for item in stories}
-    index = get_index_from_text(data.text_digits, stories)
+    index = get_index(data.text_digits, stories)
 
     if not info.story_key and index is None:
         text = f'博士，这是干员{opt.name}的档案列表\n\n'
@@ -319,7 +330,7 @@ async def _(data: Message):
 
         wait = await data.wait(Chain(data).text(text))
         if wait:
-            index = get_index_from_text(wait.text_digits, stories)
+            index = get_index(wait.text_digits, stories)
 
     if index is not None:
         info.story_key = info.story_key or stories[index]['story_title']
@@ -378,3 +389,14 @@ async def _(data: Message):
             return reply
 
     return Chain(data).text('博士，请仔细描述想要查询的信息哦')
+
+
+def get_index(text: str, array: list):
+    filter_text = [
+        'lancet2',
+        'castle3'
+    ]
+    for item in filter_text:
+        text = text.lower().replace(item, '')
+
+    return get_index_from_text(text, array)
