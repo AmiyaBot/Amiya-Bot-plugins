@@ -7,7 +7,7 @@ import random
 from amiyabot.network.download import download_async
 from amiyabot import GroupConfig, PluginInstance
 
-from core import send_to_console_channel, tasks_control, Message, Chain, Equal
+from core import send_to_console_channel, Message, Chain, Equal
 from core.util import read_yaml, check_sentence_by_re, any_match
 from core.database.bot import Admin
 from core.database.user import User, UserInfo, UserGachaInfo
@@ -17,7 +17,7 @@ curr_dir = os.path.dirname(__file__)
 talking = read_yaml(f'{curr_dir}/talking.yaml')
 bot = PluginInstance(
     name='兔兔互动',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-user',
     plugin_type='official',
     description='包含签到、问候和好感等日常互动',
@@ -226,7 +226,7 @@ async def _(data: Message):
 
 
 @bot.before_bot_reply
-async def _(data: Message):
+async def _(data: Message, _):
     user: UserInfo = UserInfo.get_user(data.user_id)
 
     if user.user_id.black == 1:
@@ -239,7 +239,7 @@ async def _(data: Message):
 
 
 @bot.after_bot_reply
-async def _(data: Chain):
+async def _(data: Chain, _):
     user_id = data.data.user_id
     feeling = 2
 
@@ -268,8 +268,8 @@ async def _(data: Chain):
     ).where(UserInfo.user_id == user_id).execute()
 
 
-@tasks_control.timed_task(each=60)
-async def _():
+@bot.timed_task(each=60)
+async def _(instance):
     now = time.localtime(time.time())
     hour = now.tm_hour
     mint = now.tm_min

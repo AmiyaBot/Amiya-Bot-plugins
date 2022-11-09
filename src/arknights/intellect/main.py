@@ -5,14 +5,14 @@ import time
 from typing import List
 from amiyabot import PluginInstance
 
-from core import bot as main_bot, tasks_control, Message, Chain
+from core import bot as main_bot, Message, Chain
 from core.database.user import Intellect
 
 curr_dir = os.path.dirname(__file__)
 
 bot = PluginInstance(
     name='理智恢复提醒',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-intellect',
     plugin_type='official',
     description='可以记录理智量并在回复满时发送提醒',
@@ -85,8 +85,8 @@ async def _(data: Message):
                 return reply.text('阿米娅还没有帮博士记录理智提醒哦')
 
 
-@tasks_control.timed_task(each=10)
-async def _():
+@bot.timed_task(each=10)
+async def _(instance):
     conditions = (Intellect.status == 0, Intellect.full_time <= int(time.time()))
     results: List[Intellect] = Intellect.select().where(*conditions)
     if results:

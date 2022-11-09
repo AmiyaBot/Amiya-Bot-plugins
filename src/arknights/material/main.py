@@ -6,7 +6,7 @@ import asyncio
 from amiyabot import PluginInstance
 from amiyabot.network.httpRequests import http_requests
 
-from core import log, Message, Chain, tasks_control
+from core import log, Message, Chain
 from core.util import any_match, find_similar_list
 from core.resource import remote_config
 from core.database.bot import *
@@ -148,7 +148,7 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
@@ -193,6 +193,6 @@ async def _(data: Message):
             return Chain(data).html(f'{curr_dir}/template/material.html', result)
 
 
-@tasks_control.timed_task(each=3600)
-async def _():
+@bot.timed_task(each=3600)
+async def _(instance):
     await MaterialData.save_penguin_data()

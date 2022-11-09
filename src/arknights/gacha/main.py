@@ -13,7 +13,7 @@ from core.resource import remote_config
 from core.database.user import UserInfo, UserGachaInfo
 from core.database.bot import OperatorConfig, Admin
 
-from .gachaBuilder import GachaBuilder, curr_dir, Pool
+from .gachaBuilder import GachaBuilder, curr_dir, Pool, PoolSpOperator
 from .box import get_user_box
 
 
@@ -29,12 +29,12 @@ class GachaPluginInstance(PluginInstance):
             async with log.catch('pool sync error:'):
                 res = json.loads(res)['data']
 
+                OperatorConfig.delete().execute()
+                PoolSpOperator.delete().execute()
                 Pool.delete().execute()
-                Pool.truncate_table()
-                Pool.batch_insert(res['Pool'])
 
-                OperatorConfig.truncate_table()
                 OperatorConfig.batch_insert(res['OperatorConfig'])
+                Pool.batch_insert(res['Pool'])
 
                 return True
 
@@ -44,7 +44,7 @@ class GachaPluginInstance(PluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -221,7 +221,8 @@ async def _(data: Message):
     text += pools_table
 
     wait = await data.wait(
-        Chain(data).text_image(text).text('要切换卡池，请回复【序号】或和阿米娅说「阿米娅切换卡池 "卡池名称" 」\n或「阿米娅切换第 N 个卡池」')
+        Chain(data).text_image(text).text(
+            '要切换卡池，请回复【序号】或和阿米娅说「阿米娅切换卡池 "卡池名称" 」\n或「阿米娅切换第 N 个卡池」')
     )
     if wait:
         r = re.search(r'(\d+)', wait.text_digits)

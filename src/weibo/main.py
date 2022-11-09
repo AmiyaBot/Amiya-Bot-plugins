@@ -6,13 +6,13 @@ from amiyabot import PluginInstance, TencentBotInstance
 from core.database.group import GroupSetting
 from core.database.messages import *
 from core.util import TimeRecorder
-from core import send_to_console_channel, tasks_control, Message, Chain, SourceServer, bot as main_bot
+from core import send_to_console_channel, Message, Chain, SourceServer, bot as main_bot
 
 from .helper import WeiboUser, weibo_conf, curr_dir
 
 bot = PluginInstance(
     name='微博推送',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
@@ -116,8 +116,8 @@ async def _(data: Message):
                 return await send_by_index(index, weibo, wait)
 
 
-@tasks_control.timed_task(each=30)
-async def _():
+@bot.timed_task(each=30)
+async def _(instance):
     for user in weibo_conf.listen:
         weibo = WeiboUser(user)
         new_id = await weibo.get_weibo_id(0)
