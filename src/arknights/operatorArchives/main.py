@@ -21,7 +21,7 @@ class OperatorPluginInstance(PluginInstance):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='1.8',
+    version='2.0',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -192,18 +192,12 @@ async def _(data: Message):
             'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
         }
 
-        if type(data.instance) is TencentBotInstance:
-            return Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
-        else:
-            text = f'博士，为您找到干员{info.name}的立绘档案：\n\n'
-            text += '系列：' + skin_item['skin_group'] + '\n'
-            text += '名称：' + skin_item['skin_name'] + '\n'
-            text += '获得途径：' + skin_item['skin_source'] + '\n\n'
-            text += skin_item['skin_usage'] + '\n'
-            text += skin_item['skin_content'] + '\n\n'
-            text += skin_item['skin_desc']
+        reply = Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
 
-            return Chain(data).text(text).image(skin_data['path'])
+        if type(data.instance) is not TencentBotInstance:
+            reply.image(skin_data['path'].replace('%23', '#'))
+
+        return reply
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=2)
@@ -394,7 +388,8 @@ async def _(data: Message):
 def get_index(text: str, array: list):
     filter_text = [
         'lancet2',
-        'castle3'
+        'castle3',
+        '4月'
     ]
     for item in filter_text:
         text = text.lower().replace(item, '')
