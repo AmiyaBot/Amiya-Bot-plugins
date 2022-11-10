@@ -19,9 +19,11 @@ class OperatorPluginInstance(PluginInstance):
         asyncio.create_task(OperatorInfo.init_stories_titles())
 
 
+default_level = 3
+
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='2.0',
+    version='2.2',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -141,10 +143,10 @@ async def level_up(data: Message):
 
 async def operator(data: Message):
     info = search_info(data.text_words, source_keys=['name'], text=data.text)
-    return bool(info.name), 2 if info.name != '阿米娅' else 0
+    return bool(info.name), default_level if info.name != '阿米娅' else 0
 
 
-@bot.on_message(group_id='operator', keywords=['皮肤', '立绘'], level=2)
+@bot.on_message(group_id='operator', keywords=['皮肤', '立绘'], level=default_level)
 async def _(data: Message):
     info = search_info(data.text_words, source_keys=['skin_key', 'name'], text=data.text)
 
@@ -200,7 +202,7 @@ async def _(data: Message):
         return reply
 
 
-@bot.on_message(group_id='operator', keywords=['模组'], level=2)
+@bot.on_message(group_id='operator', keywords=['模组'], level=default_level)
 async def _(data: Message):
     info = search_info(data.text_words, source_keys=['name'], text=data.text)
 
@@ -224,7 +226,7 @@ async def _(data: Message):
         return Chain(data).html(f'{curr_dir}/template/operatorModule.html', result)
 
 
-@bot.on_message(group_id='operator', keywords=['语音'], level=2)
+@bot.on_message(group_id='operator', keywords=['语音'], level=default_level)
 async def _(data: Message):
     info = search_info(data.text_words, source_keys=['voice_key', 'name'], text=data.text)
 
@@ -296,7 +298,7 @@ async def _(data: Message):
         return Chain(data).text(f'博士，没有找到干员{info.name}《{info.voice_key}》的语音档案')
 
 
-@bot.on_message(group_id='operator', keywords=['档案', '资料'], level=2)
+@bot.on_message(group_id='operator', keywords=['档案', '资料'], level=default_level)
 async def _(data: Message):
     info = search_info(data.text_words, source_keys=['story_key', 'name'], text=data.text)
 
