@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import base64
 import zipfile
 import importlib
 
@@ -20,7 +21,7 @@ def build(dist, upload=False):
     profiles = []
     for root, dirs, _ in os.walk(os.path.dirname(os.path.abspath(__file__)) + '/src'):
         for item in dirs:
-            plugin = os.path.join(root, item)
+            plugin: str = os.path.join(root, item)
 
             if not os.path.exists(f'{plugin}/__init__.py') or '__pycache__' in plugin:
                 continue
@@ -35,13 +36,20 @@ def build(dist, upload=False):
                     module = importlib.import_module(path_split[-1])
                     instance: PluginInstance = getattr(module, 'bot')
 
-            profiles.append({
+            profile = {
                 'name': instance.name,
                 'version': instance.version,
                 'plugin_id': instance.plugin_id,
                 'plugin_type': instance.plugin_type,
-                'description': instance.description
-            })
+                'description': instance.description,
+                'logo': ''
+            }
+
+            if os.path.exists(os.path.join(plugin, 'logo.png')):
+                with open(os.path.join(plugin, 'logo.png'), mode='rb') as logo:
+                    profile['logo'] = 'data:image/png;base64,' + base64.b64encode(logo.read()).decode()
+
+            profiles.append(profile)
 
             package = f'{dist}/{instance.plugin_id}-{instance.version}.zip'
 
