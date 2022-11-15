@@ -21,8 +21,8 @@
                 <div class="nickname">{{ data.nickname }}</div>
             </div>
             <div class="info">
-                <div>今日{{ data.user_info.sign_in ? '已' : '未' }}签到</div>
-                <div>累计签到：{{ data.user_info.sign_times }}</div>
+                <div>最后签到日期：{{ data.user_info.sign_date }}</div>
+                <div>累计签到次数：{{ data.user_info.sign_times }}</div>
                 <div>阿米娅的信赖值：{{ (data.user_info.user_feeling / 10).toFixed(0) }}%</div>
                 <div>阿米娅的心情值：{{ (data.user_info.user_mood / 15 * 100).toFixed(0) }}%</div>
             </div>
@@ -39,7 +39,8 @@
         <div class="gacha-info">
             <div>干员拥有数：{{ operatorNum }}</div>
             <div>剩余寻访凭证：{{ data.user_gacha_info.coupon }}</div>
-            <div>已经抽取了 <span class="mark">{{ data.user_gacha_info.gacha_break_even }}</span> 次而未获得六星干员</div>
+            <div>已经抽取了 <span class="mark">{{ data.user_gacha_info.gacha_break_even }}</span> 次而未获得六星干员
+            </div>
             <div>抽卡总次数：{{ total }}</div>
             <div class="pie" ref="pie"></div>
         </div>

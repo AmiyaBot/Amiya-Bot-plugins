@@ -7,9 +7,8 @@ import random
 from amiyabot.network.download import download_async
 from amiyabot import GroupConfig, PluginInstance
 
-from core import send_to_console_channel, Message, Chain, Equal
+from core import Message, Chain
 from core.util import read_yaml, check_sentence_by_re, any_match
-from core.database.bot import Admin
 from core.database.user import User, UserInfo, UserGachaInfo
 
 curr_dir = os.path.dirname(__file__)
@@ -17,7 +16,7 @@ curr_dir = os.path.dirname(__file__)
 talking = read_yaml(f'{curr_dir}/talking.yaml')
 bot = PluginInstance(
     name='兔兔互动',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-user',
     plugin_type='official',
     description='包含签到、问候和好感等日常互动',
@@ -37,14 +36,18 @@ def get_face():
 def sign_in(data: Message, sign_type=0):
     info: UserInfo = UserInfo.get_user(data.user_id)
 
-    if info.sign_in == 0:
+    today = time.strftime('%Y-%m-%d', time.localtime())
+
+    if info.sign_date != today:
         coupon = 50
         feeling = 50
 
         UserInfo.update(
-            sign_in=1,
+            sign_date=today,
             user_feeling=UserInfo.user_feeling + feeling,
-            sign_times=UserInfo.sign_times + 1
+            user_mood=15,
+            sign_times=UserInfo.sign_times + 1,
+            jade_point_max=0
         ).where(UserInfo.user_id == data.user_id).execute()
 
         UserGachaInfo.get_or_create(user_id=data.user_id)
@@ -57,7 +60,7 @@ def sign_in(data: Message, sign_type=0):
             'status': True
         }
 
-    if sign_type and info.sign_in == 1:
+    if sign_type and info.sign_date == today:
         return {
             'text': '博士今天已经签到了哦',
             'status': False
@@ -92,8 +95,11 @@ def compose_talk_verify(words, names):
 
 
 async def user_info(data: Message):
-    avatar = await download_async(data.avatar)
-    image = 'data:image/jpg;base64,' + base64.b64encode(avatar).decode('ascii')
+    image = ''
+    if data.avatar:
+        avatar = await download_async(data.avatar)
+        if avatar:
+            image = 'data:image/jpg;base64,' + base64.b64encode(avatar).decode('ascii')
 
     info = {
         'avatar': image,
@@ -117,14 +123,6 @@ async def only_name(data: Message):
     text = re.sub(r'\W', '', text).strip()
 
     return text == '', 2
-
-
-async def reset():
-    UserInfo.update(sign_in=0, user_mood=15, jade_point_max=0).execute()
-
-    await send_to_console_channel(
-        Chain().text(f'维护完成：%s' % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-    )
 
 
 @bot.on_message(group_id='user', verify=only_name)
@@ -219,12 +217,6 @@ async def _(data: Message):
     return await user_info(data)
 
 
-@bot.on_message(group_id='user', keywords=Equal('手动维护'))
-async def _(data: Message):
-    if Admin.get_or_none(account=data.user_id):
-        await reset()
-
-
 @bot.before_bot_reply
 async def _(data: Message, _):
     user: UserInfo = UserInfo.get_user(data.user_id)
@@ -266,13 +258,3 @@ async def _(data: Chain, _):
         user_mood=user_mood,
         user_feeling=UserInfo.user_feeling + feeling,
     ).where(UserInfo.user_id == user_id).execute()
-
-
-@bot.timed_task(each=60)
-async def _(instance):
-    now = time.localtime(time.time())
-    hour = now.tm_hour
-    mint = now.tm_min
-
-    if hour == 4 and mint == 0:
-        await reset()
