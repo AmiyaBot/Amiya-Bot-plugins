@@ -42,8 +42,16 @@ def build(dist, upload=False):
                 'plugin_id': instance.plugin_id,
                 'plugin_type': instance.plugin_type,
                 'description': instance.description,
+                'document': instance.description,
                 'logo': ''
             }
+
+            doc = instance.document
+            if doc and os.path.isfile(doc):
+                with open(doc, mode='r', encoding='utf-8') as doc_file:
+                    profile['document'] = doc_file.read()
+            else:
+                profile['document'] = doc
 
             if os.path.exists(os.path.join(plugin, 'logo.png')):
                 with open(os.path.join(plugin, 'logo.png'), mode='rb') as logo:
