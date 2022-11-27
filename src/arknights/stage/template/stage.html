@@ -105,6 +105,9 @@
             },
             displayDetailRewards(type) {
                 return this.data.stageDropInfo.displayDetailRewards.filter(item => {
+                    if (item.dropType === 1 && !item.detail) {
+                        return false
+                    }
                     if (item.dropType === 1 && type === 't8') {
                         item.detail.iconId = item.detail.potentialItemId || item.detail.iconId
                         return item
