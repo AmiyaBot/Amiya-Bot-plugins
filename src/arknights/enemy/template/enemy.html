@@ -19,6 +19,7 @@
                 <div class="tags">
                     <span style="font-size: 40px">{{ data.info.name }}</span>
                     <span class="tag" :class="data.info.enemyLevel">{{ level[data.info.enemyLevel] }}</span>
+                    <span class="tag race" v-if="data.info.enemyRace">{{ data.info.enemyRace }}</span>
                     <span class="tag attackType" v-for="n in data.info.attackType.split(' ')">{{ n }}</span>
                     <span class="tag enemyIndex">{{ data.info.enemyIndex }}</span>
                 </div>
@@ -85,10 +86,11 @@
             },
             ability(text) {
                 return text
-                    .replace(/<[/]+>/g, '[end]')
-                    .replace(/<[^>]+>/gim, '<span class="mark">')
-                    .replace(/\[end]/g, '</span>')
+                    .replace(/<\$ba.+?>/g, '<span class="mark"><u>')
+                    .replace(/<@eb.key>/g, '<span class="mark">')
+                    .replace(/<\/>/g, '</u></span>')
                     .replace(/；/g, '<br/>')
+                    .replace(/;/g, '<br/>')
             }
         },
         data() {
