@@ -31,7 +31,7 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -71,6 +71,15 @@ async def _(data: Message):
             **stage_data,
             'name': stage_data['name'] + level_str
         }
+
+        if level == '_easy':
+            main_level = ArknightsGameData.stages.get(stage_id.replace('easy', 'main'))
+            if main_level:
+                res['levelData'] = main_level['levelData']
+
+        if not os.path.exists('resource/gamedata/map/%s.png' % res['stageId'].replace('#f#', '')):
+            res['stageId'] = res['stageId'].replace('tough', 'main').replace('easy', 'main')
+
         return Chain(data).html(f'{curr_dir}/template/stage.html', res)
     else:
         return Chain(data).text('抱歉博士，没有查询到相关地图信息')
