@@ -106,7 +106,7 @@
             displayDetailRewards(type) {
                 return this.data.stageDropInfo.displayDetailRewards.filter(item => {
                     if (item.dropType === 1 && type === 't8') {
-                        item.detail.iconId = item.detail.potentialItemIdMTL_BASE || item.detail.iconId
+                        item.detail.iconId = item.detail.potentialItemId || item.detail.iconId
                         return item
                     }
                     if ('t' + item.dropType === type) {
