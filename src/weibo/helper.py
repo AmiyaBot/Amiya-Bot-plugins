@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from amiyabot.network.download import download_async
 from amiyabot.network.httpRequests import http_requests
-from core.util import remove_xml_tag, char_seat, read_yaml, create_dir
+from core.util import remove_xml_tag, char_seat, create_dir
 
 ua = None
 try:
@@ -15,10 +15,6 @@ try:
     ua = UserAgent()
 except:
     pass
-
-curr_dir = os.path.dirname(__file__)
-
-weibo_conf = read_yaml(f'{curr_dir}/weibo.yaml')
 
 
 async def get_result(url, headers):
@@ -36,7 +32,7 @@ class WeiboContent:
 
 
 class WeiboUser:
-    def __init__(self, weibo_id: int):
+    def __init__(self, weibo_id: int, setting):
         self.headers = {
             'User-Agent': ua.random if ua else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
             'Content-Type': 'application/json; charset=utf-8',
@@ -45,6 +41,7 @@ class WeiboUser:
         }
         self.url = 'https://m.weibo.cn/api/container/getIndex'
         self.weibo_id = weibo_id
+        self.setting = setting
         self.user_name = ''
 
     def __url(self, container_id=None):
@@ -153,10 +150,10 @@ class WeiboUser:
             name = pic_url.split('/')[-1]
             suffix = name.split('.')[-1]
 
-            if suffix.lower() == 'gif' and not weibo_conf.setting.sendGIF:
+            if suffix.lower() == 'gif' and not self.setting.sendGIF:
                 continue
 
-            path = f'{weibo_conf.setting.imagesCache}/{name}'
+            path = f'{self.setting.imagesCache}/{name}'
             create_dir(path, is_file=True)
 
             if not os.path.exists(path):

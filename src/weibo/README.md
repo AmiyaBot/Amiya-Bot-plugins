@@ -3,6 +3,8 @@
 
 ### 配置
 
+配置文件位置：resource/plugins/weibo.yaml
+
 ```yaml
 setting:
     # 抓取的时间间隔
