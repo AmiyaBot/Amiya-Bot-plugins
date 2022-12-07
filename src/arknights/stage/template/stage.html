@@ -97,10 +97,21 @@
                 this.$set(this, 'data', data)
             },
             description(text) {
-                return text.replace(/<@lv.fs>/g, '').replace(/<@lv.item>/g, '').split('\\n').join('<br>')
+                return text
+                    .replace(/<@lv.ez>/g, '')
+                    .replace(/<@lv.fs>/g, '')
+                    .replace(/<@lv.item>/g, '')
+                    .split('\\n').join('<br>')
             },
             displayDetailRewards(type) {
                 return this.data.stageDropInfo.displayDetailRewards.filter(item => {
+                    if (item.dropType === 1 && !item.detail) {
+                        return false
+                    }
+                    if (item.dropType === 1 && type === 't8') {
+                        item.detail.iconId = item.detail.potentialItemId || item.detail.iconId
+                        return item
+                    }
                     if ('t' + item.dropType === type) {
                         return item
                     }
@@ -113,6 +124,7 @@
                 dropType: {
                     't8': '首次掉落',
                     't2': '常规掉落',
+                    't3': '特殊掉落',
                     't4': '额外掉落'
                 },
                 level: {
@@ -123,7 +135,7 @@
                 stageType: {
                     'MAIN': '主线',
                     'SUB': '支线',
-                    'SPECIAL_STORY': '故事集',
+                    'SPECIAL_STORY': '剧情',
                     'DAILY': '日常',
                     'ACTIVITY': '活动',
                     'CAMPAIGN': '剿灭',
