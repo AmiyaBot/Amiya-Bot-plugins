@@ -1,6 +1,7 @@
 import os
 import dhash
 import jieba
+import shutil
 import asyncio
 
 from io import BytesIO
@@ -12,13 +13,19 @@ from amiyabot import PluginInstance
 from amiyabot.network.download import download_async
 
 from core import log, Message, Chain
-from core.util import all_match, read_yaml
+from core.util import all_match, read_yaml, create_dir
 from core.lib.baiduCloud import BaiduCloud
 from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
+config_path = 'resource/plugins/baiduCloud.yaml'
 
-baidu = BaiduCloud(read_yaml(f'{curr_dir}/baiduCloud.yaml'))
+if not os.path.exists(config_path):
+    create_dir(config_path, is_file=True)
+    shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
+
+baidu = BaiduCloud(read_yaml(config_path))
+
 recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
 
@@ -122,7 +129,7 @@ class RecruitPluginInstance(PluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',

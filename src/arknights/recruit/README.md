@@ -7,7 +7,7 @@
 
 ### 配置
 
-在 baiduCloud.yaml 内填写 `百度智能云配置` 开启图像识别
+在 resource/plugins/baiduCloud.yaml 内填写 `百度智能云配置` 开启图像识别
 
 ```yaml
 enable: true

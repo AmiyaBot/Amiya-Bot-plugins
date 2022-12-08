@@ -8,7 +8,7 @@
 
 ### 配置
 
-在 baiduCloud.yaml 内填写 `百度智能云配置` 开启自动审核
+在 resource/plugins/baiduCloud.yaml 内填写 `百度智能云配置` 开启自动审核
 
 ```yaml
 enable: true
