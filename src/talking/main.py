@@ -3,7 +3,7 @@ import shutil
 import configparser
 
 from amiyabot import PluginInstance, Message, Chain
-from core.util import any_match
+from core.util import any_match, create_dir
 
 curr_dir = os.path.dirname(__file__)
 ini_file = 'resource/plugins/talking/talking.ini'
@@ -12,6 +12,7 @@ ini_file = 'resource/plugins/talking/talking.ini'
 class TalkPluginInstance(PluginInstance):
     def install(self):
         if not os.path.exists(ini_file):
+            create_dir(ini_file, is_file=True)
             shutil.copy(f'{curr_dir}/talking.ini', ini_file)
 
 
