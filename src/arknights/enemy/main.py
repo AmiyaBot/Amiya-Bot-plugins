@@ -94,7 +94,7 @@ class EnemyPluginInstance(PluginInstance):
 
 bot = EnemyPluginInstance(
     name='明日方舟敌方单位查询',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -105,6 +105,9 @@ bot = EnemyPluginInstance(
 async def verify(data: Message):
     name = any_match(data.text_origin, list(ArknightsGameData.enemies.keys()))
     keyword = any_match(data.text, ['敌人', '敌方'])
+
+    if name in ['w'] and not keyword:
+        return False
 
     if name or keyword:
         return True, (5 if keyword else 1)
