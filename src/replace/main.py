@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import shutil
 import asyncio
 
 from amiyabot import PluginInstance
@@ -14,8 +15,13 @@ from core.util import read_yaml
 from core import log, Message, Chain, Equal
 
 curr_dir = os.path.dirname(__file__)
+config_path = 'resource/plugins/baiduCloud.yaml'
 
-baidu = BaiduCloud(read_yaml(f'{curr_dir}/baiduCloud.yaml'))
+if not os.path.exists(config_path):
+    create_dir(config_path, is_file=True)
+    shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
+
+baidu = BaiduCloud(read_yaml(config_path))
 
 
 class ReplacePluginInstance(PluginInstance):
@@ -41,7 +47,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
