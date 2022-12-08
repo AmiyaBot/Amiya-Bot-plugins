@@ -8,13 +8,16 @@ from amiyabot import PluginInstance
 from amiyabot import TencentBotInstance, GroupConfig
 from amiyabot.network.httpRequests import http_requests
 from core import log, Message, Chain, Equal
-from core.util import any_match
+from core.util import any_match, create_dir
 from core.resource import remote_config
 from core.database.user import UserInfo, UserGachaInfo
 from core.database.bot import OperatorConfig, Admin
 
 from .gachaBuilder import GachaBuilder, curr_dir, Pool, PoolSpOperator
 from .box import get_user_box
+
+pool_image = 'resource/plugins/gacha/pool'
+create_dir(pool_image)
 
 
 class GachaPluginInstance(PluginInstance):
@@ -80,7 +83,7 @@ def change_pool(item: Pool, user_id=None):
     task.execute()
 
     pic = []
-    for root, dirs, files in os.walk(f'{curr_dir}/pool'):
+    for root, dirs, files in os.walk(pool_image):
         for file in files:
             if item.pool_name in file:
                 pic.append(os.path.join(root, file))
