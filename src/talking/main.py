@@ -1,14 +1,23 @@
 import os
+import shutil
 import configparser
 
 from amiyabot import PluginInstance, Message, Chain
 from core.util import any_match
 
 curr_dir = os.path.dirname(__file__)
+ini_file = 'resource/plugins/talking/talking.ini'
 
-bot = PluginInstance(
+
+class TalkPluginInstance(PluginInstance):
+    def install(self):
+        if not os.path.exists(ini_file):
+            shutil.copy(f'{curr_dir}/talking.ini', ini_file)
+
+
+bot = TalkPluginInstance(
     name='自定义回复',
-    version='1.0',
+    version='1.1',
     plugin_id='amiyabot-talking',
     plugin_type='official',
     description='可以自定义一问一答的简单对话',
@@ -18,7 +27,7 @@ bot = PluginInstance(
 
 async def check_talk(data: Message):
     config = configparser.ConfigParser()
-    config.read(f'{curr_dir}/talking.ini', encoding='utf-8')
+    config.read(ini_file, encoding='utf-8')
 
     key = any_match(data.text, config.sections())
     if key:
@@ -26,7 +35,7 @@ async def check_talk(data: Message):
         return True
 
 
-@bot.on_message(verify=check_talk)
+@bot.on_message(verify=check_talk, check_prefix=False)
 async def _(data: Message):
     reply: str = getattr(data, 'reply')
 

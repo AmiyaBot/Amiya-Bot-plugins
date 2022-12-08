@@ -1,4 +1,6 @@
-按照以下格式配置插件目录下的 `talking.ini` 文件，**关键词不能重复**。
+按照以下格式配置文件 `resource/plugins/talking/talking.ini`，**关键词不能重复**。
+
+> 不校验前缀词。
 
 ```ini
 [你好]
