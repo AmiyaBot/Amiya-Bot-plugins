@@ -1,7 +1,10 @@
 import copy
 import asyncio
 
-from amiyabot import GroupConfig, PluginInstance, TencentBotInstance
+from amiyabot import GroupConfig, PluginInstance
+from amiyabot.adapters.mirai import MiraiBotInstance, MiraiForwardMessage
+from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
+from amiyabot.adapters.tencent import TencentBotInstance
 
 from core import Message, Chain
 from core.util import find_similar_list, any_match, get_index_from_text
@@ -23,7 +26,7 @@ default_level = 3
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -50,7 +53,8 @@ def search_info(words: list, source_keys: list = None, text: str = ''):
         'skill_index': [InitData.skill_index_list],
         'skin_key': [OperatorInfo.skins_keywords],
         'voice_key': [InitData.voices],
-        'story_key': [OperatorInfo.stories_title]
+        'story_key': [OperatorInfo.stories_title],
+        'group_key': [OperatorInfo.operator_group_map.keys()],
     }
 
     info = OperatorSearchInfo()
@@ -144,6 +148,11 @@ async def level_up(data: Message):
 async def operator(data: Message):
     info = search_info(data.text_words, source_keys=['name'], text=data.text)
     return bool(info.name), default_level if info.name != '阿米娅' else 0
+
+
+async def group(data: Message):
+    info = search_info(data.text_words, source_keys=['group_key'], text=data.text)
+    return bool(info.group_key), default_level
 
 
 @bot.on_message(group_id='operator', keywords=['皮肤', '立绘'], level=default_level)
@@ -385,6 +394,45 @@ async def _(data: Message):
             return reply
 
     return Chain(data).text('博士，请仔细描述想要查询的信息哦')
+
+
+@bot.on_message(group_id='operator', verify=group)
+async def _(data: Message):
+    info = search_info(data.text_words, source_keys=['group_key'], text=data.text)
+
+    if not info.group_key:
+        return
+
+    source = type(data.instance)
+    operator_group = OperatorInfo.operator_group_map[info.group_key]
+
+    if source is TencentBotInstance:
+        reply = Chain(data).text(f'查询到【{info.group_key}】拥有以下干员\n')
+
+        for item in operator_group:
+            reply.image(f'resource/gamedata/avatar/{item.id}.png').text(item.name + '\n')
+
+        return reply
+    elif source is CQHttpBotInstance:
+        reply = CQHTTPForwardMessage(data)
+    else:
+        reply = MiraiForwardMessage(data)
+
+    await data.send(Chain(data).text('正在查询，博士请稍等...'))
+    await reply.add_message(Chain().text(f'查询到【{info.group_key}】拥有以下干员'),
+                            user_id=data.instance.appid,
+                            nickname='AmiyaBot')
+
+    for item in operator_group:
+        result, tokens = await OperatorData.get_operator_detail(OperatorSearchInfo(name=item.name))
+        if result:
+            node = Chain().html(f'{curr_dir}/template/operatorInfo.html', result, width=1600)
+            if tokens['tokens']:
+                node.html(f'{curr_dir}/template/operatorToken.html', tokens)
+
+            await reply.add_message(node, user_id=data.instance.appid, nickname='AmiyaBot')
+
+    await reply.send()
 
 
 def get_index(text: str, array: list):

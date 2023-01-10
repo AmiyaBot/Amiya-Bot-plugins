@@ -7,6 +7,7 @@ class OperatorSearchInfo:
     level: int = 0
     skill: str = ''
     skin_key: str = ''
+    group_key: str = ''
     voice_key: str = ''
     story_key: str = ''
     skill_index: int = 0
