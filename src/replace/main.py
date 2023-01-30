@@ -47,7 +47,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -65,13 +65,13 @@ async def _(data: Message):
         data.is_admin = bool(Admin.get_or_none(account=data.user_id))
 
     if replace:
-        text = data.text_origin
+        text = data.text
         for item in reversed(list(replace)):
             if item.origin in text:
                 continue
             text = text.replace(item.replace, item.origin)
 
-        return text_convert(data, text, data.text_origin)
+        return text_convert(data, text, data.text)
 
 
 @bot.on_message(keywords=['别名'], level=5)
@@ -82,7 +82,7 @@ async def _(data: Message):
 
     is_super = bool(Admin.get_or_none(account=data.user_id))
 
-    search_text = data.text_initial
+    search_text = data.text_original
 
     for item in bot.prefix_keywords:
         if search_text.startswith(item):
@@ -94,7 +94,7 @@ async def _(data: Message):
         origin = r.group(1)
         replace = r.group(2)
 
-        if '查看' in data.text_origin:
+        if '查看' in data.text:
             return show_replace_by_replace(data, replace)
 
         if origin == '删除':

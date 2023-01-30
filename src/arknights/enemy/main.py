@@ -1,11 +1,9 @@
 import os
 import re
-import jieba
-import asyncio
 
 from amiyabot import PluginInstance
-from core import log, Message, Chain
-from core.util import integer, any_match, get_index_from_text
+from core import Message, Chain
+from core.util import integer, any_match, find_most_similar, get_index_from_text
 from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
@@ -22,17 +20,6 @@ def get_value(key, source):
 
 
 class Enemy:
-    @staticmethod
-    async def init_enemies():
-        log.info('building enemies names keywords dict...')
-
-        enemies = list(ArknightsGameData.enemies.keys())
-
-        with open(f'{curr_dir}/enemies.txt', mode='w', encoding='utf-8') as file:
-            file.write('\n'.join([f'{name} 500 n' for name in enemies]))
-
-        jieba.load_userdict(f'{curr_dir}/enemies.txt')
-
     @classmethod
     def find_enemies(cls, name: str):
         result = []
@@ -87,14 +74,9 @@ class Enemy:
         }
 
 
-class EnemyPluginInstance(PluginInstance):
-    def install(self):
-        asyncio.create_task(Enemy.init_enemies())
-
-
-bot = EnemyPluginInstance(
+bot = PluginInstance(
     name='明日方舟敌方单位查询',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -103,37 +85,36 @@ bot = EnemyPluginInstance(
 
 
 async def verify(data: Message):
-    name = any_match(data.text_origin, list(ArknightsGameData.enemies.keys()))
+    name = find_most_similar(data.text, list(ArknightsGameData.enemies.keys()))
     keyword = any_match(data.text, ['敌人', '敌方'])
 
+    # W 触发频率过高
     if name in ['w'] and not keyword:
         return False
 
     if name or keyword:
-        return True, (5 if keyword else 1)
+        return True, (5 if keyword else 1), name
+
     return False
 
 
 @bot.on_message(verify=verify, allow_direct=True)
 async def _(data: Message):
-    message = data.text_origin
-    words = data.text_words
-
-    for item in words:
-        if item in ArknightsGameData.enemies:
-            return Chain(data).html(f'{curr_dir}/template/enemy.html', Enemy.get_enemy(item))
-
     enemy_name = ''
     for reg in ['敌人(资料)?(.*)', '敌方(资料)?(.*)']:
-        r = re.search(re.compile(reg), message)
+        r = re.search(re.compile(reg), data.text)
         if r:
             enemy_name = r.group(2).strip()
 
     if not enemy_name:
+        if data.verify.keypoint:
+            return Chain(data).html(f'{curr_dir}/template/enemy.html', Enemy.get_enemy(data.verify.keypoint))
+
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的敌方单位名称'))
         if not wait or not wait.text:
             return None
-        enemy_name = wait.text
+
+        enemy_name = find_most_similar(wait.text, list(ArknightsGameData.enemies.keys()))
 
     if enemy_name:
         result = Enemy.find_enemies(enemy_name)
@@ -147,8 +128,9 @@ async def _(data: Message):
             }
 
             wait = await data.wait(
-                Chain(data).html(f'{curr_dir}/template/enemyIndex.html', init_data).text(
-                    '回复【序号】查询对应的敌方单位资料')
+                Chain(data)
+                .html(f'{curr_dir}/template/enemyIndex.html', init_data)
+                .text('回复【序号】查询对应的敌方单位资料')
             )
 
             if wait:
@@ -156,4 +138,4 @@ async def _(data: Message):
                 if index is not None:
                     return Chain(data).html(f'{curr_dir}/template/enemy.html', Enemy.get_enemy(result[index][0]))
         else:
-            return Chain(data).text('博士，没有找到敌方单位%s的资料呢 >.<' % enemy_name)
+            return Chain(data).text(f'博士，没有找到敌方单位{enemy_name}的资料 >.<')

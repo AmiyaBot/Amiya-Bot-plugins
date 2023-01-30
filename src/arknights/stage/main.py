@@ -31,7 +31,7 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -42,7 +42,7 @@ bot = StagePluginInstance(
 @bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
 async def _(data: Message):
     words = jieba.lcut(
-        remove_punctuation(data.text_initial, ['-']).upper().replace(' ', '')
+        remove_punctuation(data.text, ['-']).upper().replace(' ', '')
     )
 
     level = ''

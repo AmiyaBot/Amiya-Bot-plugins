@@ -47,7 +47,7 @@ class GachaPluginInstance(PluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -177,7 +177,7 @@ async def _(data: Message):
     if any_match(message, ['切换', '更换']):
         selected = None
         for item in all_pools:
-            if item.pool_name in data.text_origin:
+            if item.pool_name in data.text_original:
                 selected = item
 
         if not selected:

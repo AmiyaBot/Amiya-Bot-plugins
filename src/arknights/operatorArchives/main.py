@@ -1,32 +1,28 @@
-import copy
 import asyncio
 
 from amiyabot import GroupConfig, PluginInstance
-from amiyabot.adapters.mirai import MiraiBotInstance, MiraiForwardMessage
+from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent import TencentBotInstance
 
-from core import Message, Chain
-from core.util import find_similar_list, any_match, get_index_from_text
+from core import Chain
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 
+from .operatorSearch import *
 from .operatorInfo import OperatorInfo, curr_dir
 from .operatorData import OperatorData
-from .initData import OperatorSearchInfo, InitData
 
 
 class OperatorPluginInstance(PluginInstance):
     def install(self):
         asyncio.create_task(OperatorInfo.init_operator())
-        asyncio.create_task(OperatorInfo.init_skins_table())
-        asyncio.create_task(OperatorInfo.init_stories_titles())
+        asyncio.create_task(OperatorInfo.init_skins_keywords())
+        asyncio.create_task(OperatorInfo.init_stories_keywords())
 
-
-default_level = 3
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -35,185 +31,9 @@ bot = OperatorPluginInstance(
 bot.set_group_config(GroupConfig('operator', allow_direct=True))
 
 
-class LoopBreak(Exception):
-    def __init__(self, index, name='', value=''):
-        self.index = index
-        self.value = value
-        self.name = name
-
-    def __str__(self):
-        return self.index, self.name
-
-
-def search_info(words: list, source_keys: list = None, text: str = ''):
-    info_source = {
-        'name': [OperatorInfo.operator_map],
-        'level': [InitData.skill_level_list],
-        'skill': [OperatorInfo.skill_map],
-        'skill_index': [InitData.skill_index_list],
-        'skin_key': [OperatorInfo.skins_keywords],
-        'voice_key': [InitData.voices],
-        'story_key': [OperatorInfo.stories_title],
-        'group_key': [OperatorInfo.operator_group_map.keys()],
-    }
-
-    info = OperatorSearchInfo()
-    info_key = list(info_source.keys()) if not source_keys else source_keys
-
-    words = [n.lower() for n in copy.deepcopy(words)]
-
-    if 'name' in info_key and text:
-        for name in OperatorInfo.operator_one_char_list:
-            if name in text:
-                info.name = name
-        for index, item in enumerate(words):
-            for source in info_source['name']:
-                if item in source:
-                    value = source[item] if type(source) is dict else item
-                    setattr(info, 'name', value)
-
-    # 如果找到了Name，则直接获取干员
-    operators = ArknightsGameData().operators
-
-    if info.name not in operators:
-        info.name = ''
-    else:
-        opt = operators[info.name]
-        info.skin_key = ''
-
-        for index, item in enumerate(words):
-            # 精确皮肤识别
-            if 'skin_key' in source_keys:
-                skins = map(lambda s: s['skin_name'], opt.skins())
-                for skin_name in skins:
-                    if item == skin_name:
-                        info.skin_key = skin_name
-
-    while True:
-        try:
-            if len(words) == 0:
-                break
-            for index, item in enumerate(words):
-                for name in copy.deepcopy(info_key):
-                    for source in info_source[name]:
-
-                        if name == 'skill':
-                            res, rate = find_similar_list(item, source.keys(), _random=True)
-                            if res:
-                                setattr(info, name, source[res])
-                                raise LoopBreak(index, name, source[res])
-                        elif name == 'name':
-                            continue
-                        elif name == 'skin_key':
-                            continue
-                        elif item in source:
-                            value = source[item] if type(source) is dict else item
-                            setattr(info, name, value)
-                            raise LoopBreak(index, name, value)
-
-                if index == len(words) - 1:
-                    raise LoopBreak('done')
-        except LoopBreak as e:
-            if e.index == 'done':
-                break
-
-            words.pop(e.index)
-
-            if e.name == 'name' and e.value == '阿米娅':
-                continue
-            else:
-                info_key.remove(e.name)
-
-    if info.name == '阿米娅':
-        for item in ['阿米娅', 'amiya']:
-            t = text.lower()
-            if t.startswith(item) and t.count(item) == 1:
-                info.name = ''
-
-    if info.name and info.skill and OperatorInfo.skill_operator[info.skill] != info.name:
-        info.skill = ''
-
-    return info
-
-
-async def level_up(data: Message):
-    info = search_info(data.text_words, source_keys=['name', 'level', 'skill_index'], text=data.text)
-
-    condition = any_match(data.text, ['精英', '专精'])
-    condition2 = info.name and '材料' in data.text
-
-    return bool(condition or condition2), (3 if condition2 else 2)
-
-
-async def operator(data: Message):
-    info = search_info(data.text_words, source_keys=['name'], text=data.text)
-    return bool(info.name), default_level if info.name != '阿米娅' else 0
-
-
-async def group(data: Message):
-    info = search_info(data.text_words, source_keys=['group_key'], text=data.text)
-    return bool(info.group_key), default_level
-
-
-@bot.on_message(group_id='operator', keywords=['皮肤', '立绘'], level=default_level)
-async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['skin_key', 'name'], text=data.text)
-
-    if not info.name:
-        wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
-        if not wait or not wait.text:
-            return None
-        info.name = wait.text
-
-    operators = ArknightsGameData.operators
-
-    if info.name not in operators:
-        return Chain(data).text(f'博士，没有找到干员"{info.name}"')
-
-    opt = operators[info.name]
-    skins = opt.skins()
-    skin_item = None
-
-    if info.skin_key and info.skin_key != '':
-        for skin in skins:
-            if skin['skin_name'] == info.skin_key:
-                skin_item = skin
-                break
-
-    if not skin_item:
-        index = get_index(data.text_digits, skins)
-
-        if index is None:
-            text = f'博士，这是干员{info.name}的立绘列表\n\n'
-            for i, item in enumerate(skins):
-                text += f'[{i + 1}] %s\n' % item['skin_name']
-            text += '\n回复【序号】查询对应的立绘资料'
-
-            wait = await data.wait(Chain(data).text(text))
-            if wait:
-                index = get_index(wait.text_digits, skins)
-
-        if index is not None:
-            skin_item = skins[index]
-
-    if skin_item:
-        skin_data = {
-            'name': info.name,
-            'data': skin_item,
-            'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
-        }
-
-        reply = Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
-
-        if type(data.instance) is not TencentBotInstance:
-            reply.image(skin_data['path'].replace('%23', '#'))
-
-        return reply
-
-
 @bot.on_message(group_id='operator', keywords=['模组'], level=default_level)
 async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['name'], text=data.text)
+    info = search_info(data, source_keys=['name'])
 
     if not info.name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
@@ -237,7 +57,7 @@ async def _(data: Message):
 
 @bot.on_message(group_id='operator', keywords=['语音'], level=default_level)
 async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['voice_key', 'name'], text=data.text)
+    info = search_info(data, source_keys=['voice_key', 'name'])
 
     voice_type = ''
     voice_name = '日语'
@@ -309,7 +129,7 @@ async def _(data: Message):
 
 @bot.on_message(group_id='operator', keywords=['档案', '资料'], level=default_level)
 async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['story_key', 'name'], text=data.text)
+    info = search_info(data, source_keys=['story_key', 'name'])
 
     if not info.name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
@@ -349,9 +169,61 @@ async def _(data: Message):
         return Chain(data).text(f'博士，没有找到干员{info.name}《{info.story_key}》的档案')
 
 
-@bot.on_message(group_id='operator', verify=level_up)
+@bot.on_message(group_id='operator', keywords=['皮肤', '服装', '衣服', '时装', '立绘'], level=default_level)
 async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['level', 'skill_index', 'name'], text=data.text)
+    info = search_info(data, source_keys=['skin_key', 'name'])
+
+    skin_item = None
+    if info.skin_key:
+        skin_item = OperatorInfo.skins_map[info.skin_key]
+    else:
+        if not info.name:
+            wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
+            if not wait or not wait.text:
+                return None
+            info.name = wait.text
+
+        operators = ArknightsGameData.operators
+
+        if info.name not in operators:
+            return Chain(data).text(f'博士，没有找到干员"{info.name}"')
+
+        opt = operators[info.name]
+        skins = opt.skins()
+
+        index = get_index(data.text_digits, skins)
+
+        if index is None:
+            text = f'博士，这是干员{info.name}的立绘列表\n\n'
+            for i, item in enumerate(skins):
+                text += f'[{i + 1}] %s\n' % item['skin_name']
+            text += '\n回复【序号】查询对应的立绘资料'
+
+            wait = await data.wait(Chain(data).text(text))
+            if wait:
+                index = get_index(wait.text_digits, skins)
+
+        if index is not None:
+            skin_item = skins[index]
+
+    if skin_item:
+        skin_data = {
+            'name': info.name,
+            'data': skin_item,
+            'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
+        }
+
+        reply = Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
+
+        if type(data.instance) is not TencentBotInstance:
+            reply.image(skin_data['path'].replace('%23', '#'))
+
+        return reply
+
+
+@bot.on_message(group_id='operator', verify=FuncsVerify.level_up)
+async def _(data: Message):
+    info: OperatorSearchInfo = data.verify.keypoint
 
     if not info.name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
@@ -372,9 +244,9 @@ async def _(data: Message):
     return Chain(data).html(template, result)
 
 
-@bot.on_message(group_id='operator', verify=operator)
+@bot.on_message(group_id='operator', verify=FuncsVerify.operator)
 async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['name'], text=data.text)
+    info: OperatorSearchInfo = data.verify.keypoint
 
     reply = Chain(data)
 
@@ -396,9 +268,9 @@ async def _(data: Message):
     return Chain(data).text('博士，请仔细描述想要查询的信息哦')
 
 
-@bot.on_message(group_id='operator', verify=group)
+@bot.on_message(group_id='operator', verify=FuncsVerify.group)
 async def _(data: Message):
-    info = search_info(data.text_words, source_keys=['group_key'], text=data.text)
+    info: OperatorSearchInfo = data.verify.keypoint
 
     if not info.group_key:
         return
@@ -410,7 +282,7 @@ async def _(data: Message):
         reply = Chain(data).text(f'查询到【{info.group_key}】拥有以下干员\n')
 
         for item in operator_group:
-            reply.image(f'resource/gamedata/avatar/{item.id}.png').text(item.name + '\n')
+            reply.text(item.name + '\n')
 
         return reply
     elif source is CQHttpBotInstance:
@@ -433,15 +305,3 @@ async def _(data: Message):
             await reply.add_message(node, user_id=data.instance.appid, nickname='AmiyaBot')
 
     await reply.send()
-
-
-def get_index(text: str, array: list):
-    filter_text = [
-        'lancet2',
-        'castle3',
-        '4月'
-    ]
-    for item in filter_text:
-        text = text.lower().replace(item, '')
-
-    return get_index_from_text(text, array)

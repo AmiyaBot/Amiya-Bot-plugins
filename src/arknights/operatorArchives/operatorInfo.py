@@ -1,54 +1,47 @@
 import os
 import re
-import jieba
 
 from typing import Dict, List
 from core import log
-from core.util import chinese_to_digits, remove_punctuation
+from core.util import chinese_to_digits, is_contain_digit
 from core.resource.arknightsGameData import ArknightsGameData, Operator
-
-from .initData import InitData
 
 curr_dir = os.path.dirname(__file__)
 
 
 class OperatorInfo:
-    skins_table = {}
-    skins_keywords = []
+    skins_map = {}
+    stories_keywords = []
 
-    stories_title = []
-
-    skill_map = {}
-    skill_operator = {}
-
-    operator_map = {}
-    operator_keywords = []
+    operator_list = []
     operator_one_char_list = []
+    operator_contain_digit_list = []
+    operator_en_name_map = {}
 
     operator_group_map: Dict[str, List[Operator]] = {}
 
+    voice_keywords = [
+        '任命助理', '任命队长', '编入队伍', '问候', '闲置',
+        '交谈1', '交谈2', '交谈3', '晋升后交谈1', '晋升后交谈2',
+        '信赖提升后交谈1', '信赖提升后交谈2', '信赖提升后交谈3',
+        '精英化晋升1', '精英化晋升2',
+        '行动出发', '行动失败', '行动开始', '3星结束行动', '4星结束行动', '非3星结束行动',
+        '选中干员1', '选中干员2', '部署1', '部署2', '作战中1', '作战中2', '作战中3', '作战中4',
+        '戳一下', '信赖触摸', '干员报到', '进驻设施', '观看作战记录', '标题'
+    ]
+
     @classmethod
     async def init_operator(cls):
-        log.info('building operator info and skills keywords dict...')
-
-        keywords = ['%s 500 n' % key for key in InitData.voices]
-
-        def append_word(text):
-            cls.operator_keywords.append(text)
-            dict_word = '%s 500 n' % text
-            if dict_word not in keywords:
-                keywords.append(dict_word)
-
-        for key in InitData.skill_index_list:
-            append_word(key)
-
-        for key in InitData.skill_level_list:
-            append_word(key)
+        log.info('building operator keywords...')
 
         for name, item in ArknightsGameData.operators.items():
-            e_name = remove_punctuation(item.en_name).lower()
-            append_word(name)
-            append_word(e_name)
+            cls.operator_list.append(name)
+            cls.operator_en_name_map[item.en_name] = name
+
+            for n in [name, item.en_name]:
+                n = chinese_to_digits(n)
+                if is_contain_digit(n):
+                    cls.operator_contain_digit_list.append(n)
 
             for group in [item.team, item.group]:
                 if group and group != '未知':
@@ -56,28 +49,12 @@ class OperatorInfo:
                         cls.operator_group_map[group] = []
                     cls.operator_group_map[group].append(item)
 
-            cls.operator_map[name.lower()] = name
-            cls.operator_map[e_name.replace(' ', '')] = name
-
             if len(name) == 1:
                 cls.operator_one_char_list.append(name)
 
-            skills = item.skills()[0]
-
-            for skl in skills:
-                skl_name = remove_punctuation(skl['skill_name'])
-                append_word(skl_name)
-
-                cls.skill_map[skl_name] = skl['skill_name']
-                cls.skill_operator[skl['skill_name']] = name
-
-        with open(f'{curr_dir}/operators.txt', mode='w', encoding='utf-8') as file:
-            file.write('\n'.join(keywords + list(cls.operator_group_map.keys())))
-        jieba.load_userdict(f'{curr_dir}/operators.txt')
-
     @classmethod
-    async def init_stories_titles(cls):
-        log.info('building operator stories keywords dict...')
+    async def init_stories_keywords(cls):
+        log.info('building operator stories keywords...')
         stories_title = {}
         stories_keyword = []
 
@@ -92,26 +69,17 @@ class OperatorInfo:
             if item:
                 stories_keyword.append(item + ' 500 n')
 
-        cls.stories_title = list(stories_title.keys()) + [i for k, i in stories_title.items()]
-
-        with open(f'{curr_dir}/stories.txt', mode='w', encoding='utf-8') as file:
-            file.write('\n'.join(stories_keyword))
-        jieba.load_userdict(f'{curr_dir}/stories.txt')
+        cls.stories_keywords = list(stories_title.keys()) + [i for k, i in stories_title.items()]
 
     @classmethod
-    async def init_skins_table(cls):
-        log.info('building operator skins keywords dict...')
-        skins_table = {}
-        skins_keywords = [] + InitData.skins
+    async def init_skins_keywords(cls):
+        log.info('building operator skins keywords...')
+        skins_map = {}
 
         for name, item in ArknightsGameData.operators.items():
-            skins = item.skins()
-            skins_table[item.name] = skins
-            skins_keywords += [n['skin_name'] for n in skins]
+            for n in item.skins():
+                if n['skin_name'] in ['初始', '精英一', '精英二']:
+                    continue
+                skins_map[n['skin_name']] = n
 
-        cls.skins_table = skins_table
-        cls.skins_keywords = skins_keywords
-
-        with open(f'{curr_dir}/skins.txt', mode='w', encoding='utf-8') as file:
-            file.write('\n'.join([n + ' 500 n' for n in skins_keywords]))
-        jieba.load_userdict(f'{curr_dir}/skins.txt')
+        cls.skins_map = skins_map

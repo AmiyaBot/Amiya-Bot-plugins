@@ -129,7 +129,7 @@ class RecruitPluginInstance(PluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -202,7 +202,7 @@ async def _(data: Message):
         return await Recruit.action(data, await get_ocr_result(data.image[0]), ocr=True)
     else:
         # 先验证文本内容
-        recruit = await Recruit.action(data, data.text_origin)
+        recruit = await Recruit.action(data, data.text_original)
         if recruit:
             return recruit
         else:

@@ -7,7 +7,7 @@ from amiyabot import PluginInstance
 from amiyabot.network.httpRequests import http_requests
 
 from core import log, Message, Chain
-from core.util import any_match, find_similar_list
+from core.util import any_match, find_most_similar
 from core.resource import remote_config
 from core.database.bot import *
 from core.database.bot import db as bot_db
@@ -148,7 +148,7 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
@@ -157,35 +157,27 @@ bot = MaterialPluginInstance(
 
 
 async def verify(data: Message):
-    res = any_match(data.text, ['材料'] + MaterialData.materials)
+    name = find_most_similar(data.text.replace('材料', ''), MaterialData.materials)
+    keyword = any_match(data.text, ['材料'])
 
-    return res, 2
+    if name or keyword:
+        return True, (5 if keyword else 1), name
+
+    return False
 
 
 @bot.on_message(verify=verify, allow_direct=True)
 async def _(data: Message):
-    words = sorted(
-        jieba.lcut_for_search(data.text),
-        reverse=True,
-        key=lambda i: len(i)
-    )
+    name = data.verify.keypoint
 
-    if '材料' in words:
-        words.remove('材料')
-
-    if not words:
+    if not name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的材料名称'))
         if not wait or not wait.text:
             return None
-        words.append(wait.text)
+        name = find_most_similar(wait.text, MaterialData.materials)
 
-    name = ''
-    rate = 0
-    for item in words:
-        n, r = find_similar_list(item, MaterialData.materials, _random=True)
-        if rate < r:
-            name = n
-            rate = r
+        if not name:
+            return Chain(data).text(f'博士，没有找到材料{wait.text}的资料 >.<')
 
     if name:
         result = MaterialData.check_material(name)

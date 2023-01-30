@@ -15,7 +15,7 @@ curr_dir = os.path.dirname(__file__)
 
 bot = PluginInstance(
     name='明日方舟合成玉计算',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-jade',
     plugin_type='official',
     description='计算给定的日期前可以通过各种途径获得的合成玉数量',
@@ -120,4 +120,4 @@ async def action(data: Message):
 async def action(data: Message):
     reply = Chain(data)
 
-    return await calc_result(reply, data.text_origin)
+    return await calc_result(reply, data.text_original)
