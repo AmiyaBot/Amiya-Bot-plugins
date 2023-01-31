@@ -3,7 +3,7 @@ import re
 
 from amiyabot import PluginInstance
 from core import Message, Chain
-from core.util import integer, any_match, find_most_similar, get_index_from_text
+from core.util import integer, any_match, find_most_similar, get_index_from_text, remove_punctuation
 from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
@@ -87,6 +87,9 @@ bot = PluginInstance(
 async def verify(data: Message):
     name = find_most_similar(data.text, list(ArknightsGameData.enemies.keys()))
     keyword = any_match(data.text, ['敌人', '敌方'])
+
+    if not keyword and name and remove_punctuation(name) not in data.text:
+        return False
 
     # W 触发频率过高
     if name in ['w'] and not keyword:

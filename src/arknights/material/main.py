@@ -7,7 +7,7 @@ from amiyabot import PluginInstance
 from amiyabot.network.httpRequests import http_requests
 
 from core import log, Message, Chain
-from core.util import any_match, find_most_similar
+from core.util import any_match, find_most_similar, remove_punctuation
 from core.resource import remote_config
 from core.database.bot import *
 from core.database.bot import db as bot_db
@@ -159,6 +159,9 @@ bot = MaterialPluginInstance(
 async def verify(data: Message):
     name = find_most_similar(data.text.replace('材料', ''), MaterialData.materials)
     keyword = any_match(data.text, ['材料'])
+
+    if not keyword and name and remove_punctuation(name) not in data.text:
+        return False
 
     if name or keyword:
         return True, (5 if keyword else 1), name
