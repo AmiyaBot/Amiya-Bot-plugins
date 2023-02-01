@@ -48,15 +48,10 @@ class MaterialData:
 
     @staticmethod
     async def init_materials():
-        log.info('building materials names keywords dict...')
+        log.info('building materials names keywords...')
 
         for name in ArknightsGameData.materials_map.keys():
             MaterialData.materials.append(name)
-
-        with open(f'{curr_dir}/materials.txt', mode='w', encoding='utf-8') as file:
-            file.write('\n'.join([f'{name} 500 n' for name in MaterialData.materials]))
-
-        jieba.load_userdict(f'{curr_dir}/materials.txt')
 
     @classmethod
     def find_material_children(cls, material_id):

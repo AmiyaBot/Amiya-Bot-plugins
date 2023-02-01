@@ -191,27 +191,6 @@ def check_forbidden(replace, origin):
         if item in [replace, origin]:
             return item
 
-    keyword_dicts = [
-        'enemies.txt',
-        'materials.txt',
-        'operators.txt',
-        'skins.txt',
-        'stages.txt',
-        'stories.txt',
-        'tags.txt',
-        'tokens.txt'
-    ]
-
-    for file in keyword_dicts:
-        if not os.path.exists(f'resource/{file}'):
-            continue
-        with open(f'resource/{file}', mode='r', encoding='utf-8') as src:
-            content = src.read().strip('\n').split('\n')
-        for item in content:
-            item = item.replace(' 500 n', '')
-            if item == replace:
-                return item
-
 
 def check_permissible(text):
     replace_setting: List[TextReplaceSetting] = TextReplaceSetting.select().where(TextReplaceSetting.status == 0)

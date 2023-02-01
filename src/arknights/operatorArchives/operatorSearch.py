@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from core import Message
-from core.util import any_match, get_index_from_text
+from core.util import any_match, find_most_similar, get_index_from_text, remove_punctuation
 
 from .operatorInfo import OperatorInfo
 
@@ -52,8 +52,8 @@ def search_info(data: Message, source_keys: list = None):
     info = OperatorSearchInfo()
 
     for key_name in source_keys:
-        res = any_match(data.text, info_source[key_name])
-        if res:
+        res = find_most_similar(data.text, info_source[key_name])
+        if res and remove_punctuation(res) in data.text:
             setattr(info, key_name, res)
 
             if key_name == 'name':

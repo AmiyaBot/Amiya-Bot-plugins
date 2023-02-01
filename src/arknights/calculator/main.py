@@ -113,7 +113,7 @@ async def action(data: Message):
     if not wait or not wait.text:
         return None
 
-    return await calc_result(Chain(wait), wait.text_origin)
+    return await calc_result(Chain(wait), wait.text)
 
 
 @bot.on_message(verify=verify, allow_direct=True)
