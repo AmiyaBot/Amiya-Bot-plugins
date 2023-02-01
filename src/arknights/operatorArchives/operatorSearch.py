@@ -25,7 +25,7 @@ class FuncsVerify:
         condition = any_match(data.text, ['精英', '专精'])
         condition2 = info.name and '材料' in data.text
 
-        return bool(condition or condition2), (3 if condition2 else 2), info
+        return bool(condition or condition2), (6 if condition2 else 2), info
 
     @classmethod
     async def operator(cls, data: Message):
