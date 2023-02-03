@@ -84,7 +84,7 @@
                         <table>
                             <tr v-for="(item, lang) in data.info.cv">
                                 <td>{{ lang }}：</td>
-                                <td>{{ item }}</td>
+                                <td>{{ item.join('、') }}</td>
                             </tr>
                         </table>
                     </template>
