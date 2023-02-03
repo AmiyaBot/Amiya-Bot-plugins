@@ -85,10 +85,11 @@ bot = PluginInstance(
 
 
 async def verify(data: Message):
-    name = find_most_similar(data.text, list(ArknightsGameData.enemies.keys()))
+    search_text = data.text.replace('敌人', '').replace('敌方', '')
+    name = find_most_similar(search_text, list(ArknightsGameData.enemies.keys()))
     keyword = any_match(data.text, ['敌人', '敌方'])
 
-    if not keyword and name and remove_punctuation(name) not in data.text:
+    if not keyword and name and remove_punctuation(name) not in search_text:
         return False
 
     # W 触发频率过高
