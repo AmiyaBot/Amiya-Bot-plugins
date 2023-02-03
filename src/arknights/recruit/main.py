@@ -11,6 +11,7 @@ from typing import List
 from itertools import combinations
 from amiyabot import PluginInstance
 from amiyabot.network.download import download_async
+from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
 from core import log, Message, Chain
 from core.util import all_match, read_yaml, create_dir
@@ -129,7 +130,7 @@ class RecruitPluginInstance(PluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -183,23 +184,34 @@ async def auto_discern(data: Message):
     return False
 
 
-async def get_ocr_result(image):
+async def get_ocr_result(data: Message):
+    result = ''
+
     if baidu.enable:
-        res = await baidu.basic_accurate(image)
+        res = await baidu.basic_accurate(data.image[0])
         if not res:
-            res = await baidu.basic_general(image)
+            res = await baidu.basic_general(data.image[0])
 
         if res and 'words_result' in res:
-            return ''.join([item['words'] for item in res['words_result']])
+            result = ''.join([item['words'] for item in res['words_result']])
 
-    return ''
+    # 如果百度 OCR 没有结果且实例是 go-cq，调用 go-cq OCR
+    if not result and type(data.instance) is CQHttpBotInstance:
+        instance: CQHttpBotInstance = data.instance
+        async with log.catch():
+            images_id = [item['data']['file'] for item in data.message['message'] if item['type'] == 'image']
+            if images_id:
+                res = await instance.api.post('ocr_image', {'image': images_id[0]})
+                result = ''.join([item['text'] for item in res['data']['texts']])
+
+    return result
 
 
 @bot.on_message(keywords=['公招', '公开招募'], allow_direct=True, level=10)
 async def _(data: Message):
     if data.image:
         # 直接 OCR 识别图片
-        return await Recruit.action(data, await get_ocr_result(data.image[0]), ocr=True)
+        return await Recruit.action(data, await get_ocr_result(data), ocr=True)
     else:
         # 先验证文本内容
         recruit = await Recruit.action(data, data.text_original)
@@ -207,17 +219,17 @@ async def _(data: Message):
             return recruit
         else:
             # 文本内容验证不出则询问截图
-            if not baidu.enable:
+            if not baidu.enable and type(data.instance) is not CQHttpBotInstance:
                 return None
 
             wait = await data.wait(Chain(data, at=True).text('博士，请发送您的公招界面截图~'), force=True)
 
             if wait and wait.image:
-                return await Recruit.action(wait, await get_ocr_result(wait.image[0]), ocr=True)
+                return await Recruit.action(wait, await get_ocr_result(wait), ocr=True)
             else:
                 return Chain(data, at=True).text('博士，您没有发送图片哦~')
 
 
 @bot.on_message(verify=auto_discern, check_prefix=False, allow_direct=True)
 async def _(data: Message):
-    return await Recruit.action(data, await get_ocr_result(data.image[0]), ocr=True)
+    return await Recruit.action(data, await get_ocr_result(data), ocr=True)
