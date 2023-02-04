@@ -76,7 +76,7 @@ class Enemy:
 
 bot = PluginInstance(
     name='明日方舟敌方单位查询',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -85,11 +85,13 @@ bot = PluginInstance(
 
 
 async def verify(data: Message):
-    search_text = data.text.replace('敌人', '').replace('敌方', '')
-    name = find_most_similar(search_text, list(ArknightsGameData.enemies.keys()))
+    name = find_most_similar(data.text.replace('敌人', '').replace('敌方', ''), list(ArknightsGameData.enemies.keys()))
     keyword = any_match(data.text, ['敌人', '敌方'])
 
-    if not keyword and name and remove_punctuation(name) not in search_text:
+    if name == '-':
+        name = ''
+
+    if not keyword and name and remove_punctuation(name) not in remove_punctuation(data.text):
         return False
 
     # W 触发频率过高
