@@ -54,7 +54,7 @@ class MaterialData:
             MaterialData.materials.append(name)
 
     @classmethod
-    def find_material_children(cls, material_id):
+    def find_material_children(cls, material_id: str, parent_id: str = ''):
         game_data = ArknightsGameData
         children = []
 
@@ -63,7 +63,8 @@ class MaterialData:
                 children.append({
                     **item,
                     **game_data.materials[item['use_material_id']],
-                    'children': cls.find_material_children(item['use_material_id'])
+                    'children': cls.find_material_children(item['use_material_id'], material_id)
+                    if item['use_material_id'] != parent_id else []
                 })
 
         return children
@@ -143,7 +144,7 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
@@ -152,7 +153,7 @@ bot = MaterialPluginInstance(
 
 
 async def verify(data: Message):
-    name = find_most_similar(data.text.replace('材料', ''), MaterialData.materials)
+    name = find_most_similar(data.text.replace('材料', '').replace('阿米娅', ''), MaterialData.materials)
     keyword = any_match(data.text, ['材料'])
 
     if not keyword and name and remove_punctuation(name) not in data.text:
