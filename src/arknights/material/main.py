@@ -156,7 +156,7 @@ async def verify(data: Message):
     name = find_most_similar(data.text.replace('材料', '').replace('阿米娅', ''), MaterialData.materials)
     keyword = any_match(data.text, ['材料'])
 
-    if not keyword and name and remove_punctuation(name) not in data.text:
+    if not keyword and name and remove_punctuation(name) not in remove_punctuation(data.text):
         return False
 
     if name or keyword:

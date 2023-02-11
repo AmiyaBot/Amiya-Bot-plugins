@@ -53,7 +53,7 @@ def search_info(data: Message, source_keys: list = None):
 
     for key_name in source_keys:
         res = find_most_similar(data.text, info_source[key_name])
-        if res and remove_punctuation(res) in data.text:
+        if res and remove_punctuation(res) in remove_punctuation(data.text):
             setattr(info, key_name, res)
 
             if key_name == 'name':
