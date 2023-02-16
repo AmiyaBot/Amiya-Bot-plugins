@@ -144,7 +144,7 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
