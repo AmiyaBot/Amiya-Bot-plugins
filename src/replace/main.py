@@ -5,7 +5,7 @@ import shutil
 import asyncio
 
 from amiyabot import PluginInstance
-from amiyabot.adapters.convert import text_convert
+from amiyabot.adapters.common import text_convert
 from amiyabot.adapters.tencent import TencentBotInstance
 from amiyabot.network.httpRequests import http_requests
 from core.database.bot import *
@@ -47,7 +47,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
