@@ -47,7 +47,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -55,8 +55,8 @@ bot = ReplacePluginInstance(
 )
 
 
-@bot.handler_middleware
-async def _(data: Message):
+@bot.message_created
+async def _(data: Message, _):
     replace: List[TextReplace] = TextReplace.select() \
         .where(TextReplace.group_id == data.guild_id, TextReplace.is_active == 1) \
         .orwhere(TextReplace.is_global == 1)

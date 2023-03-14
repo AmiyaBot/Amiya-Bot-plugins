@@ -107,8 +107,8 @@ async def _(data: Message):
     return await user_info(data)
 
 
-@bot.before_bot_reply
-async def _(data: Message, _):
+@bot.message_before_handle
+async def _(data: Message, factory_name: str, _):
     user: UserInfo = UserInfo.get_user(data.user_id)
 
     if user.user_id.black == 1:
@@ -120,8 +120,8 @@ async def _(data: Message, _):
     return True
 
 
-@bot.after_bot_reply
-async def _(data: Chain, _):
+@bot.message_after_send
+async def _(data: Chain, f_name: str, _):
     user_id = data.data.user_id
     feeling = 2
 
@@ -166,7 +166,7 @@ async def _(event: Event, instance: MiraiBotInstance):
             )
 
 
-@bot.on_event('notice')
+@bot.on_event('notice.notify.poke')
 async def _(event: Event, instance: CQHttpBotInstance):
     if str(event.data['target_id']) == instance.appid:
         if random.randint(0, 10) >= 6:
