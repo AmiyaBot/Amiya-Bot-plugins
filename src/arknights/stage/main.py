@@ -10,13 +10,17 @@ from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
 
+multiple_zone_stage = {
+    'CF-9': 2
+}
+
 
 class Stage:
     @staticmethod
     async def init_stages():
         log.info('building stages keywords dict...')
 
-        stages = list(ArknightsGameData.stages_map.keys())
+        stages = list(ArknightsGameData.stages_map.keys()) + list(ArknightsGameData.side_story_map.keys())
 
         with open(f'{curr_dir}/stages.txt', mode='w', encoding='utf-8') as file:
             file.write('\n'.join([f'{name} 500 n' for name in stages]))
@@ -31,7 +35,7 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -39,7 +43,7 @@ bot = StagePluginInstance(
 )
 
 
-@bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
+@bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=-9999)
 async def _(data: Message):
     words = jieba.lcut(
         remove_punctuation(data.text, ['-']).upper().replace(' ', '')
@@ -69,7 +73,8 @@ async def _(data: Message):
         stage_data = ArknightsGameData.stages[stage_id]
         res = {
             **stage_data,
-            'name': stage_data['name'] + level_str
+            'name': stage_data['name'] + level_str,
+            'zones': multiple_zone_stage[stage_data['code']] if stage_data['code'] in multiple_zone_stage else 0
         }
 
         if level == '_easy':
@@ -82,4 +87,26 @@ async def _(data: Message):
 
         return Chain(data).html(f'{curr_dir}/template/stage.html', res)
     else:
+        for key in words:
+            if key in ArknightsGameData.side_story_map:
+                ss = ArknightsGameData.side_story_map[key]
+
+                text = f'博士，以下是活动【{key}】的关卡列表。\n发送“兔兔地图 + 关卡代号或关卡名”查看详情。\n|关卡代号|关卡名|关卡代号|关卡名|\n|----|----|----|----|\n'
+                for index, item in enumerate(ss.values()):
+                    text += '|%s|%s%s' % (
+                        item['code'],
+                        item['name'],
+                        '|\n' if (index + 1) % 2 == 0 else ''
+                    )
+                return Chain(data).markdown(text)
+
+        if '活动' in data.text:
+            text = f'博士，以下是活动列表。\n发送“兔兔地图 + 活动名”查看详情。\n|活动名|活动名|\n|----|----|\n'
+            for index, act_name in enumerate(reversed(ArknightsGameData.side_story_map.keys())):
+                text += '|%s%s' % (
+                    act_name,
+                    '|\n' if (index + 1) % 2 == 0 else ''
+                )
+            return Chain(data).markdown(text)
+
         return Chain(data).text('抱歉博士，没有查询到相关地图信息')

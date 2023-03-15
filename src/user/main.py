@@ -5,9 +5,14 @@ from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
 from core import Event
 from core.util import any_match
-from core.database.user import User
+from core.database.user import *
 
 from .mainBot import *
+
+
+@table
+class PokeLock(UserBaseModel):
+    group_id: str = CharField()
 
 
 @bot.on_message(group_id='user', verify=only_name)
@@ -107,6 +112,48 @@ async def _(data: Message):
     return await user_info(data)
 
 
+@bot.on_message(group_id='user', keywords=['开启戳一戳', '关闭戳一戳'])
+async def _(data: Message):
+    if '开启' in data.text:
+        PokeLock.delete().where(PokeLock.group_id == data.channel_id).execute()
+        return '已开启戳一戳'
+    else:
+        PokeLock.create(group_id=data.channel_id)
+        return '已关闭戳一戳'
+
+
+@bot.on_event('NudgeEvent')
+async def _(event: Event, instance: MiraiBotInstance):
+    if str(event.data['target']) == instance.appid and PokeLock.get_or_none(group_id=event.data['target']):
+        if random.randint(0, 10) >= 6:
+            await instance.api.send_nudge(
+                event.data['fromId'],
+                event.data['subject']['id']
+            )
+        else:
+            await instance.send_message(
+                await echo(),
+                event.data['fromId'],
+                event.data['subject']['id']
+            )
+
+
+@bot.on_event('notice.notify.poke')
+async def _(event: Event, instance: CQHttpBotInstance):
+    if str(event.data['target_id']) == instance.appid and PokeLock.get_or_none(group_id=event.data['target_id']):
+        if random.randint(0, 10) >= 6:
+            await instance.api.send_nudge(
+                event.data['user_id'],
+                event.data['group_id']
+            )
+        else:
+            await instance.send_message(
+                await echo(),
+                event.data['user_id'],
+                event.data['group_id']
+            )
+
+
 @bot.message_before_handle
 async def _(data: Message, factory_name: str, _):
     user: UserInfo = UserInfo.get_user(data.user_id)
@@ -117,11 +164,12 @@ async def _(data: Message, factory_name: str, _):
     if user.user_mood <= 0 and not any_match(data.text, ['我错了', '对不起', '抱歉']):
         await data.send(Chain(data).text('哼~阿米娅生气了！不理博士！[face:38]'))
         return False
+
     return True
 
 
 @bot.message_after_send
-async def _(data: Chain, f_name: str, _):
+async def _(data: Chain, factory_name: str, _):
     user_id = data.data.user_id
     feeling = 2
 
@@ -148,35 +196,3 @@ async def _(data: Chain, f_name: str, _):
         user_mood=user_mood,
         user_feeling=UserInfo.user_feeling + feeling,
     ).where(UserInfo.user_id == user_id).execute()
-
-
-@bot.on_event('NudgeEvent')
-async def _(event: Event, instance: MiraiBotInstance):
-    if str(event.data['target']) == instance.appid:
-        if random.randint(0, 10) >= 6:
-            await instance.api.send_nudge(
-                event.data['fromId'],
-                event.data['subject']['id']
-            )
-        else:
-            await instance.send_message(
-                await echo(),
-                event.data['fromId'],
-                event.data['subject']['id']
-            )
-
-
-@bot.on_event('notice.notify.poke')
-async def _(event: Event, instance: CQHttpBotInstance):
-    if str(event.data['target_id']) == instance.appid:
-        if random.randint(0, 10) >= 6:
-            await instance.api.send_nudge(
-                event.data['user_id'],
-                event.data['group_id']
-            )
-        else:
-            await instance.send_message(
-                await echo(),
-                event.data['user_id'],
-                event.data['group_id']
-            )

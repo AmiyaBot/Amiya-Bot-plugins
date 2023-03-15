@@ -28,7 +28,13 @@
                 <div v-html="description(data.description)"></div>
             </div>
             <div class="stage-map">
-                <img :src="`../../../resource/gamedata/map/${data.stageId.replace(/#f#/g, '')}.png`"
+                <template v-if="data.zones">
+                    <img v-for="n in data.zones"
+                         :src="`../../../resource/gamedata/map/${data.stageId.replace(/#f#/g, '')}_${n}.png`"
+                         :alt="data.stageId"
+                         onerror="hideImage(this)">
+                </template>
+                <img v-else :src="`../../../resource/gamedata/map/${data.stageId.replace(/#f#/g, '')}.png`"
                      :alt="data.stageId"
                      onerror="hideImage(this)">
             </div>

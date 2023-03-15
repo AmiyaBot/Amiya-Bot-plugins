@@ -4,11 +4,12 @@ from typing import List
 from amiyabot import PluginInstance, Message, Chain
 from core.database.bot import DisabledFunction
 from core.util import get_index_from_text, get_doc
+from core import bot as main_bot
 
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='功能管理',
-    version='1.0',
+    version='1.1',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的功能',
@@ -28,7 +29,7 @@ async def _(data: Message):
 
     index = 1
     funcs = []
-    for _, item in bot.plugins.items():
+    for _, item in main_bot.plugins.items():
         if item.plugin_id == bot.plugin_id:
             continue
 

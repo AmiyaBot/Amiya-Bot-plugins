@@ -8,7 +8,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = PluginInstance(
     name='大帝的CYPHER挑战',
-    version='1.6',
+    version='1.7',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -26,7 +26,7 @@ async def _(data: Message):
                 'PUT UR HANDS UP！\n\n' \
                 '请选择难度：\n\n【普通】\n【硬核】'
 
-    choice = await data.wait(Chain(data).text(main_text))
+    choice = await data.wait(Chain(data).text(main_text), force=True)
     if not choice:
         return None
     choice_level = any_match(choice.text, ['普通', '硬核'])

@@ -47,7 +47,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.6',
+    version='1.7',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -60,9 +60,6 @@ async def _(data: Message, _):
     replace: List[TextReplace] = TextReplace.select() \
         .where(TextReplace.group_id == data.guild_id, TextReplace.is_active == 1) \
         .orwhere(TextReplace.is_global == 1)
-
-    if not data.is_admin:
-        data.is_admin = bool(Admin.get_or_none(account=data.user_id))
 
     if replace:
         text = data.text

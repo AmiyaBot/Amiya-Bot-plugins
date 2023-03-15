@@ -9,7 +9,7 @@ from .guessStart import *
 
 bot = PluginInstance(
     name='兔兔猜干员',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -32,7 +32,7 @@ async def _(data: Message):
                    '所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n' \
                    '详细说明请查看功能菜单'
 
-    choice = await data.wait(Chain(data).text(select_level))
+    choice = await data.wait(Chain(data).text(select_level), force=True)
 
     if not choice:
         return None
