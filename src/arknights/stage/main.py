@@ -35,7 +35,7 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.6',
+    version='1.7',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -43,7 +43,7 @@ bot = StagePluginInstance(
 )
 
 
-@bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=-9999)
+@bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
 async def _(data: Message):
     words = jieba.lcut(
         remove_punctuation(data.text, ['-']).upper().replace(' ', '')
@@ -94,8 +94,8 @@ async def _(data: Message):
                 text = f'博士，以下是活动【{key}】的关卡列表。\n发送“兔兔地图 + 关卡代号或关卡名”查看详情。\n|关卡代号|关卡名|关卡代号|关卡名|\n|----|----|----|----|\n'
                 for index, item in enumerate(ss.values()):
                     text += '|%s|%s%s' % (
-                        item['code'],
-                        item['name'],
+                        item['code'] + ('**突袭**' if item['difficulty'] == 'FOUR_STAR' else ''),
+                        item['name'] + ('**（突袭）**' if item['difficulty'] == 'FOUR_STAR' else ''),
                         '|\n' if (index + 1) % 2 == 0 else ''
                     )
                 return Chain(data).markdown(text)
