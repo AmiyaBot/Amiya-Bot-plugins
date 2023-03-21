@@ -9,7 +9,7 @@ from core import bot as main_bot
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='功能管理',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的功能',
@@ -53,14 +53,14 @@ async def _(data: Message):
 
     disabled: List[DisabledFunction] = DisabledFunction.select().where(DisabledFunction.channel_id == data.channel_id)
 
-    func_ids = set(bot.plugins.keys()) & set([n.function_id for n in disabled])
+    func_ids = set(main_bot.plugins.keys()) & set([n.function_id for n in disabled])
 
     if func_ids:
         content = '有以下可开启的功能：\n\n'
         index = 1
         funcs = []
         for n in func_ids:
-            item = bot.plugins[n]
+            item = main_bot.plugins[n]
             funcs.append(item)
             content += f'[{index}]{item.name}\n'
             index += 1
@@ -88,14 +88,14 @@ async def _(data: Message):
 
     disabled: List[DisabledFunction] = DisabledFunction.select().where(DisabledFunction.channel_id == data.channel_id)
 
-    func_ids = set(bot.plugins.keys()) - set([n.function_id for n in disabled])
+    func_ids = set(main_bot.plugins.keys()) - set([n.function_id for n in disabled])
 
     if func_ids:
         content = '有以下可关闭的功能：\n\n'
         index = 1
         funcs = []
         for n in func_ids:
-            item = bot.plugins[n]
+            item = main_bot.plugins[n]
             funcs.append(item)
             content += f'[{index}]{item.name}\n'
             index += 1
