@@ -1,0 +1,56 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [
+        "test",
+        "test2"
+    ],
+    "properties": {
+        "setting": {
+            "title": "监听设置",
+            "type": "object",
+            "required": [
+                "checkRate"
+            ],
+            "properties": {
+                "checkRate": {
+                    "title": "监听频率",
+                    "description": "每个一定时间刷新一下微博列表的频率，单位秒",
+                    "type": "integer",
+                    "default": 30
+                },
+                "sendGIF": {
+                    "title": "是否发送GIF图",
+                    "type": "boolean",
+                    "default": false
+                },
+                "imagesCache": {
+                    "title": "图片缓存目录",
+                    "description": "微博图片缓存的目录，可以为绝对路径",
+                    "type": "string",
+                    "default": "log/weibo"
+                }
+            }
+        },
+        "listen": {
+            "title": "监听列表",
+            "description": "监听的微博ID的列表",
+            "type": "array",
+            "default": [
+                6279793937
+            ]
+        },
+        "test": {
+            "title": "测试字段",
+            "type": "string",
+            "enum": [
+                123,
+                234
+            ]
+        },
+        "test2": {
+            "title": "测试字段2",
+            "type": "number"
+        }
+    }
+}

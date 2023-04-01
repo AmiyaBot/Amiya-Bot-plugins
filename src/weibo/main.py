@@ -1,41 +1,32 @@
 import os
 import time
-import shutil
 import asyncio
 
-from typing import Optional
-from amiyabot import PluginInstance, TencentBotInstance
+from amiyabot import TencentBotInstance
 
 from core.database.group import GroupSetting
 from core.database.messages import *
-from core.util import AttrDict, TimeRecorder, read_yaml, create_dir
-from core import send_to_console_channel, Message, Chain, SourceServer, bot as main_bot
+from core.util import TimeRecorder, AttrDict
+from core import send_to_console_channel, Message, Chain, SourceServer, AmiyaBotPluginInstance, bot as main_bot
 
 from .helper import WeiboUser
 
 curr_dir = os.path.dirname(__file__)
-weibo_conf: Optional[AttrDict] = None
 
 
-class WeiboPluginInstance(PluginInstance):
-    def install(self):
-        global weibo_conf
-
-        config_path = 'resource/plugins/weibo.yaml'
-        if not os.path.exists(config_path):
-            create_dir(config_path, is_file=True)
-            shutil.copy(f'{curr_dir}/weibo.yaml', config_path)
-
-        weibo_conf = read_yaml(config_path)
+class WeiboPluginInstance(AmiyaBotPluginInstance):
+    ...
 
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/weibo.yaml'
 )
 
 
@@ -112,7 +103,7 @@ async def _(data: Message):
     if '最新' in message:
         index = 1
 
-    weibo = WeiboUser(weibo_conf.listen[0], weibo_conf.setting)
+    weibo = WeiboUser(bot.get_config('listen')[0], AttrDict(bot.get_config('setting')))
 
     if index:
         return await send_by_index(index, weibo, data)
@@ -137,8 +128,8 @@ async def _(data: Message):
 
 @bot.timed_task(each=30)
 async def _(_):
-    for user in weibo_conf.listen:
-        weibo = WeiboUser(user, weibo_conf.setting)
+    for user in bot.get_config('listen'):
+        weibo = WeiboUser(user, AttrDict(bot.get_config('setting')))
         new_id = await weibo.get_weibo_id(0)
         if not new_id:
             continue
