@@ -39,18 +39,6 @@
             "default": [
                 6279793937
             ]
-        },
-        "test": {
-            "title": "测试字段",
-            "type": "string",
-            "enum": [
-                123,
-                234
-            ]
-        },
-        "test2": {
-            "title": "测试字段2",
-            "type": "number"
         }
     }
 }
