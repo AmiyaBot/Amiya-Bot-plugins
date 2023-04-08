@@ -1,4 +1,5 @@
 import os
+import html
 import time
 import asyncio
 
@@ -45,7 +46,7 @@ async def send_by_index(index: int, weibo: WeiboUser, data: Message):
     else:
         chain = Chain(data) \
             .text(result.user_name + '\n') \
-            .text(result.html_text + '\n') \
+            .text(html.unescape(result.html_text) + '\n') \
             .image(result.pics_list)
 
         if type(data.instance) is not TencentBotInstance:
@@ -166,7 +167,7 @@ async def _(_):
             if not instance:
                 continue
 
-            data.text(f'来自 {result.user_name} 的最新微博\n\n{result.html_text}')
+            data.text(f'来自 {result.user_name} 的最新微博\n\n{html.unescape(result.html_text)}')
 
             if type(instance.instance) is TencentBotInstance:
                 data.builder = SourceServer()
