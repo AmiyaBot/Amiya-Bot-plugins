@@ -152,14 +152,18 @@ body {
 }
 
 .sub_title {
-    margin: 15px 0;
+    margin: 10px 0;
     font-size: 20px;
 }
 
 .description {
     padding: 0;
-    margin: 6px 0;
+    margin: 8px 0;
     color: #aaa;
+}
+
+.mb-extra {
+    margin-bottom: 14px;
 }
 
 .recommend-table {
