@@ -19,8 +19,8 @@ icon_size = 34
 line_height = 16
 side_padding = 10
 
-yituliu_t3 = "https://backend.yituliu.site/stage/t3?expCoefficient=0.625"
-yituliu_t2 = "https://backend.yituliu.site/stage/t2?expCoefficient=0.625"
+yituliu_t3 = 'https://backend.yituliu.site/stage/t3?expCoefficient=0.625'
+yituliu_t2 = 'https://backend.yituliu.site/stage/t2?expCoefficient=0.625'
 
 
 @table
@@ -45,29 +45,29 @@ class MaterialData:
             t2 = json.loads(t2)
 
             YituliuData.truncate_table()
-            for i in t3["data"]:
-                materialId = i[0]["itemId"]
-                if materialId == "30012":
-                    materialId = "30013"
+            for i in t3['data']:
+                material_id = i[0]['itemId']
+                if material_id == '30012':
+                    material_id = '30013'
                 for j in i:
                     YituliuData(
-                        materialId=materialId,
-                        stageId=j["stageCode"],
-                        sampleConfidence=j["sampleConfidence"],
-                        stageEfficiency=j["stageEfficiency"],
-                        apExpect=j["apExpect"],
-                        knockRating=j["knockRating"],
+                        materialId=material_id,
+                        stageId=j['stageCode'],
+                        sampleConfidence=j['sampleConfidence'],
+                        stageEfficiency=j['stageEfficiency'],
+                        apExpect=j['apExpect'],
+                        knockRating=j['knockRating'],
                     ).save()
-            for i in t2["data"]:
-                materialId = i[0]["itemId"]
+            for i in t2['data']:
+                material_id = i[0]['itemId']
                 for j in i:
                     YituliuData(
-                        materialId=materialId,
-                        stageId=j["stageCode"],
-                        sampleConfidence=j["sampleConfidence"],
-                        stageEfficiency=j["stageEfficiency"],
-                        apExpect=j["apExpect"],
-                        knockRating=j["knockRating"],
+                        materialId=material_id,
+                        stageId=j['stageCode'],
+                        sampleConfidence=j['sampleConfidence'],
+                        stageEfficiency=j['stageEfficiency'],
+                        apExpect=j['apExpect'],
+                        knockRating=j['knockRating'],
                     ).save()
 
             log.info('yituliu data save successful.')
@@ -106,14 +106,14 @@ class MaterialData:
         material_id = material['material_id']
 
         if stages := YituliuData.select().where(YituliuData.materialId == material_id):
-            yituliu_data = [{"name": material["material_name"], "stages": stages}]
+            yituliu_data = [{'name': material['material_name'], 'stages': stages}]
         else:
             yituliu_data = []
             for i in cls.find_material_children(material_id):
                 if stages := YituliuData.select().where(
-                    YituliuData.materialId == i["material_id"]
+                    YituliuData.materialId == i['material_id']
                 ):
-                    yituliu_data.append({"name": i["material_name"], "stages": stages})
+                    yituliu_data.append({'name': i['material_name'], 'stages': stages})
 
         def compare_knock_rating(a, b):
             return a.knockRating - b.knockRating
@@ -149,21 +149,21 @@ class MaterialData:
 
         if yituliu_data:
             for i in yituliu_data:
-                i["stages"] = sorted(
-                    list(i["stages"]), key=cmp_to_key(compare_efficiency), reverse=True
+                i['stages'] = sorted(
+                    list(i['stages']), key=cmp_to_key(compare_efficiency), reverse=True
                 )
-                result["recommend"].append(
+                result['recommend'].append(
                     {
-                        "name": i["name"],
-                        "stages": [
+                        'name': i['name'],
+                        'stages': [
                             {
-                                "stageId": j.stageId,
-                                "stageEfficiency": f"{round(j.stageEfficiency)}%",
-                                "apExpect": round(j.apExpect),
-                                "knockRating": f"{round(j.knockRating * 100)}%",
-                                "sampleConfidence": f"{round(j.sampleConfidence)}%",
+                                'stageId': j.stageId,
+                                'stageEfficiency': f'{round(j.stageEfficiency)}%',
+                                'apExpect': round(j.apExpect),
+                                'knockRating': f'{round(j.knockRating * 100)}%',
+                                'sampleConfidence': f'{round(j.sampleConfidence)}%',
                             }
-                            for j in i["stages"]
+                            for j in i['stages']
                         ],
                     }
                 )
