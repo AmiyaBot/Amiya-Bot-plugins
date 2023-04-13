@@ -39,7 +39,7 @@ async def _(data: Message):
 
     content += '\n回复【序号】查询详细的功能描述'
 
-    reply = await data.wait(Chain(data).text(content))
+    reply = await data.wait(Chain(data).text_image(content))
     if reply:
         index = get_index_from_text(reply.text_digits, funcs)
         if index is not None:

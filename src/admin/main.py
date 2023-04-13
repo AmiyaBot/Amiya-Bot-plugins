@@ -2,6 +2,8 @@ import os
 import time
 
 from amiyabot import PluginInstance, Message, Chain, Equal
+
+from core import load_resource
 from core.util import TimeRecorder, any_match
 from core.database.bot import FunctionUsed, DisabledFunction
 from core.database.group import GroupActive, check_group_active
@@ -9,7 +11,7 @@ from core.database.group import GroupActive, check_group_active
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='管理员模块',
-    version='1.0',
+    version='1.1',
     plugin_id='amiyabot-admin',
     plugin_type='official',
     description='可使用 BOT 的开关功能',
@@ -92,3 +94,17 @@ async def _(data: Message):
         f'频道ID：{data.guild_id}\n'
         f'子频道ID：{data.channel_id}'
     )
+
+
+@bot.on_message(keywords=Equal('更新资源'))
+async def _(data: Message):
+    if not data.is_admin:
+        return None
+
+    await data.send(Chain(data).text('即将开始检查更新，更新过程中所有功能将会无响应...'))
+
+    time_rec = TimeRecorder()
+
+    load_resource()
+
+    return Chain(data).text(f'更新完成，耗时{time_rec.total()}')
