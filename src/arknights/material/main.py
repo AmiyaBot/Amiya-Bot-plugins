@@ -1,6 +1,5 @@
 import os
 import json
-import jieba
 import asyncio
 
 from amiyabot import PluginInstance
@@ -8,10 +7,10 @@ from amiyabot.network.httpRequests import http_requests
 
 from core import log, Message, Chain
 from core.util import any_match, find_most_similar, remove_punctuation
-from core.resource import remote_config
 from core.database.bot import *
-from core.database.bot import db as bot_db
 from core.resource.arknightsGameData import ArknightsGameData
+
+from functools import cmp_to_key
 
 curr_dir = os.path.dirname(__file__)
 
@@ -20,31 +19,58 @@ icon_size = 34
 line_height = 16
 side_padding = 10
 
+yituliu_t3 = "https://backend.yituliu.site/stage/t3?expCoefficient=0.625"
+yituliu_t2 = "https://backend.yituliu.site/stage/t2?expCoefficient=0.625"
+
 
 @table
-class PenguinData(BotBaseModel):
+class YituliuData(BotBaseModel):
+    materialId: str = CharField(null=True)
     stageId: str = CharField(null=True)
-    itemId: str = CharField(null=True)
-    times: int = IntegerField(null=True)
-    quantity: int = IntegerField(null=True)
-    stdDev: float = FloatField(null=True)
-    start: int = BigIntegerField(null=True)
-    end: int = BigIntegerField(null=True)
+    stageEfficiency: int = FloatField(null=True)
+    apExpect: float = FloatField(null=True)
+    knockRating: float = FloatField(null=True)
+    sampleConfidence: float = FloatField(null=True)
 
 
 class MaterialData:
     materials: List[str] = []
 
     @staticmethod
-    async def save_penguin_data():
-        async with log.catch('penguin data save error:'):
-            res = await http_requests.get(remote_config.remote.penguin)
-            res = json.loads(res)
+    async def save_yituliu_data():
+        async with log.catch('yituliu data save error:'):
+            t3 = await http_requests.get(yituliu_t3)
+            t3 = json.loads(t3)
+            t2 = await http_requests.get(yituliu_t2)
+            t2 = json.loads(t2)
 
-            PenguinData.truncate_table()
-            PenguinData.batch_insert(res['matrix'])
+            YituliuData.truncate_table()
+            for i in t3["data"]:
+                materialId = i[0]["itemId"]
+                if materialId == "30012":
+                    materialId = "30013"
+                for j in i:
+                    YituliuData(
+                        materialId=materialId,
+                        stageId=j["stageCode"],
+                        sampleConfidence=j["sampleConfidence"],
+                        stageEfficiency=j["stageEfficiency"],
+                        apExpect=j["apExpect"],
+                        knockRating=j["knockRating"],
+                    ).save()
+            for i in t2["data"]:
+                materialId = i[0]["itemId"]
+                for j in i:
+                    YituliuData(
+                        materialId=materialId,
+                        stageId=j["stageCode"],
+                        sampleConfidence=j["sampleConfidence"],
+                        stageEfficiency=j["stageEfficiency"],
+                        apExpect=j["apExpect"],
+                        knockRating=j["knockRating"],
+                    ).save()
 
-            log.info('penguin data save successful.')
+            log.info('yituliu data save successful.')
 
     @staticmethod
     async def init_materials():
@@ -79,9 +105,36 @@ class MaterialData:
         material = game_data.materials[game_data.materials_map[name]]
         material_id = material['material_id']
 
-        select_sql = f'SELECT stageId, (quantity * 1.0) / (times * 1.0) AS rate ' \
-                     f'FROM penguin_data WHERE itemId = "{material_id}" ORDER BY rate DESC LIMIT 10'
-        penguin_data = bot_db.execute_sql(select_sql).fetchall()
+        if stages := YituliuData.select().where(YituliuData.materialId == material_id):
+            yituliu_data = [{"name": material["material_name"], "stages": stages}]
+        else:
+            yituliu_data = []
+            for i in cls.find_material_children(material_id):
+                if stages := YituliuData.select().where(
+                    YituliuData.materialId == i["material_id"]
+                ):
+                    yituliu_data.append({"name": i["material_name"], "stages": stages})
+
+        def compare_knock_rating(a, b):
+            return a.knockRating - b.knockRating
+
+        def compare_ap_expect(a, b):
+            if a.apExpect < b.apExpect:
+                r = (b.apExpect - a.apExpect) / b.apExpect
+                if r > 0.03:
+                    return 1
+                return compare_knock_rating(a, b)
+            else:
+                return -compare_ap_expect(b, a)
+
+        def compare_efficiency(a, b):
+            if a.stageEfficiency > b.stageEfficiency:
+                r = (a.stageEfficiency - b.stageEfficiency) / a.stageEfficiency
+                if r > 0.03:
+                    return 1
+                return compare_ap_expect(a, b)
+            else:
+                return -compare_efficiency(b, a)
 
         result = {
             'name': name,
@@ -93,6 +146,27 @@ class MaterialData:
             },
             'recommend': []
         }
+
+        if yituliu_data:
+            for i in yituliu_data:
+                i["stages"] = sorted(
+                    list(i["stages"]), key=cmp_to_key(compare_efficiency), reverse=True
+                )
+                result["recommend"].append(
+                    {
+                        "name": i["name"],
+                        "stages": [
+                            {
+                                "stageId": j.stageId,
+                                "stageEfficiency": f"{round(j.stageEfficiency)}%",
+                                "apExpect": round(j.apExpect),
+                                "knockRating": f"{round(j.knockRating * 100)}%",
+                                "sampleConfidence": f"{round(j.sampleConfidence)}%",
+                            }
+                            for j in i["stages"]
+                        ],
+                    }
+                )
 
         if material_id in game_data.materials_source:
             source = game_data.materials_source[material_id]
@@ -110,41 +184,18 @@ class MaterialData:
                 else:
                     result['source']['act'].append(info)
 
-        if penguin_data:
-            recommend = []
-            for item in penguin_data:
-                stage_id = item[0].rstrip('_perm')
-                rate = float(item[1])
-
-                if stage_id not in game_data.stages:
-                    continue
-
-                stage = game_data.stages[stage_id]
-
-                recommend.append({
-                    'stageId': stage_id,
-                    'stageType': stage['stageType'],
-                    'apCost': stage['apCost'],
-                    'code': stage['code'],
-                    'name': stage['name'] + ('（磨难）' if 'tough' in stage_id else ''),
-                    'rate': rate,
-                    'desired': (stage['apCost'] / rate) if rate else 0
-                })
-
-            result['recommend'] = sorted(recommend, key=lambda n: n['desired'])
-
         return result
 
 
 class MaterialPluginInstance(PluginInstance):
     def install(self):
-        asyncio.create_task(MaterialData.save_penguin_data())
+        asyncio.create_task(MaterialData.save_yituliu_data())
         asyncio.create_task(MaterialData.init_materials())
 
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
@@ -186,4 +237,4 @@ async def _(data: Message):
 
 @bot.timed_task(each=3600)
 async def _(instance):
-    await MaterialData.save_penguin_data()
+    await MaterialData.save_yituliu_data()
