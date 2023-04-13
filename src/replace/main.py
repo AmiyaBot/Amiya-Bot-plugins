@@ -31,7 +31,7 @@ class ReplacePluginInstance(PluginInstance):
             if TextReplace.get_or_none():
                 return False
 
-        res = await http_requests.get(remote_config.remote.console + '/replace/getReplace')
+        res = await http_requests.get(remote_config.remote.console + '/replace/getGlobalReplace')
         if res:
             async with log.catch('replace sync error:'):
                 res = json.loads(res)
@@ -47,7 +47,7 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
