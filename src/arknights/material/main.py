@@ -105,15 +105,16 @@ class MaterialData:
         material = game_data.materials[game_data.materials_map[name]]
         material_id = material['material_id']
 
-        if stages := YituliuData.select().where(YituliuData.materialId == material_id):
-            yituliu_data = [{'name': material['material_name'], 'stages': stages}]
-        else:
-            yituliu_data = []
-            for i in cls.find_material_children(material_id):
-                if stages := YituliuData.select().where(
-                    YituliuData.materialId == i['material_id']
-                ):
-                    yituliu_data.append({'name': i['material_name'], 'stages': stages})
+        material_queue = [material]
+        yituliu_data = {}
+        while material_queue:
+            i = material_queue.pop(0)
+            if i['material_name'] in yituliu_data:
+                continue
+            if stages := YituliuData.select().where(YituliuData.materialId == i['material_id']):
+                yituliu_data[i['material_name']] = stages
+            else:
+                material_queue += cls.find_material_children(i['material_id'])
 
         def compare_knock_rating(a, b):
             return a.knockRating - b.knockRating
@@ -149,12 +150,12 @@ class MaterialData:
 
         if yituliu_data:
             for i in yituliu_data:
-                i['stages'] = sorted(
-                    list(i['stages']), key=cmp_to_key(compare_efficiency), reverse=True
+                yituliu_data[i] = sorted(
+                    list(yituliu_data[i]), key=cmp_to_key(compare_efficiency), reverse=True
                 )
                 result['recommend'].append(
                     {
-                        'name': i['name'],
+                        'name': i,
                         'stages': [
                             {
                                 'stageId': j.stageId,
@@ -163,7 +164,7 @@ class MaterialData:
                                 'knockRating': f'{round(j.knockRating * 100)}%',
                                 'sampleConfidence': f'{round(j.sampleConfidence)}%',
                             }
-                            for j in i['stages']
+                            for j in yituliu_data[i]
                         ],
                     }
                 )
