@@ -119,7 +119,7 @@ class MaterialData:
             return a.knockRating - b.knockRating
 
         def compare_ap_expect(a, b):
-            if a.apExpect < b.apExpect:
+            if a.apExpect <= b.apExpect:
                 r = (b.apExpect - a.apExpect) / b.apExpect
                 if r > 0.03:
                     return 1
@@ -128,7 +128,7 @@ class MaterialData:
                 return -compare_ap_expect(b, a)
 
         def compare_efficiency(a, b):
-            if a.stageEfficiency > b.stageEfficiency:
+            if a.stageEfficiency >= b.stageEfficiency:
                 r = (a.stageEfficiency - b.stageEfficiency) / a.stageEfficiency
                 if r > 0.03:
                     return 1
