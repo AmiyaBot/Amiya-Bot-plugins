@@ -36,25 +36,27 @@
         </template>
         <div class="title" v-if="data.recommend.length">推荐刷取地图</div>
         <p class="description mb-extra">排序算法综合考虑刷取效率、副产物价值、掉落体验三项指标，为博士推荐最优关卡。</p>
-        <template v-for="material in data.recommend">
-            <div class="sub_title">{{material.name}}</div>
-            <table class="recommend-table">
-                <tr>
-                    <td>关卡编号</td>
-                    <td>理智效率</td>
-                    <td>理智期望</td>
-                    <td>掉落概率</td>
-                    <td>置信度</td>
-                </tr>
-                <tr class="recommend-stage" v-for="stage in material.stages">
-                    <td>{{ stage.stageId }}</td>
-                    <td>{{ stage.stageEfficiency }}</td>
-                    <td>{{ stage.apExpect }}</td>
-                    <td>{{ stage.knockRating }}</td>
-                    <td>{{ stage.sampleConfidence }}</td>
-                </tr>
-            </table>
-        </template>
+        <div class="table-container">
+            <div v-for="material in data.recommend" class="table-wrapper">
+                <div class="sub_title">{{material.name}}</div>
+                <table class="recommend-table">
+                    <tr>
+                        <td>关卡编号</td>
+                        <td>理智效率</td>
+                        <td>理智期望</td>
+                        <td>掉落概率</td>
+                        <td>置信度</td>
+                    </tr>
+                    <tr class="recommend-stage" v-for="stage in material.stages">
+                        <td>{{ stage.stageId }}</td>
+                        <td>{{ stage.stageEfficiency }}</td>
+                        <td>{{ stage.apExpect }}</td>
+                        <td>{{ stage.knockRating }}</td>
+                        <td>{{ stage.sampleConfidence }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
         <p class="description">数据来源：企鹅物流数据统计（https://penguin-stats.cn）</p>
         <p class="description">数据计算：明日方舟一图流（https://yituliu.site）</p>
         <template v-if="Object.keys(data.source.main).length || Object.keys(data.source.act).length">
