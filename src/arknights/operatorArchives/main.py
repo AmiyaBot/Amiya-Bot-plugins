@@ -1,6 +1,6 @@
 import asyncio
 
-from amiyabot import GroupConfig, PluginInstance
+from amiyabot import GroupConfig, PluginInstance, event_bus
 from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent import TencentBotInstance
@@ -22,13 +22,14 @@ class OperatorPluginInstance(PluginInstance):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='2.5',
+    version='2.6',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
     document=f'{curr_dir}/README.md'
 )
 bot.set_group_config(GroupConfig('operator', allow_direct=True))
+event_bus.subscribe('gameDataInitialized', bot.install)
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=default_level)

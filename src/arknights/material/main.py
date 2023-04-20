@@ -2,7 +2,7 @@ import os
 import json
 import asyncio
 
-from amiyabot import PluginInstance
+from amiyabot import PluginInstance, event_bus
 from amiyabot.network.httpRequests import http_requests
 
 from core import log, Message, Chain
@@ -196,12 +196,13 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
     document=f'{curr_dir}/README.md'
 )
+event_bus.subscribe('gameDataInitialized', MaterialData.init_materials)
 
 
 async def verify(data: Message):

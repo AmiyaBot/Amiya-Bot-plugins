@@ -9,7 +9,7 @@ from PIL import Image
 from jieba import posseg
 from typing import List
 from itertools import combinations
-from amiyabot import PluginInstance
+from amiyabot import PluginInstance, event_bus
 from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
@@ -130,12 +130,13 @@ class RecruitPluginInstance(PluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
     document=f'{curr_dir}/README.md'
 )
+event_bus.subscribe('gameDataInitialized', bot.install)
 
 
 def find_operator_tags_by_tags(tags, max_rarity):

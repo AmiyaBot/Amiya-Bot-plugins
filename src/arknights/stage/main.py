@@ -2,7 +2,7 @@ import os
 import jieba
 import asyncio
 
-from amiyabot import PluginInstance
+from amiyabot import PluginInstance, event_bus
 
 from core import log, Message, Chain
 from core.util import any_match, remove_punctuation
@@ -35,12 +35,13 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
     document=f'{curr_dir}/README.md'
 )
+event_bus.subscribe('gameDataInitialized', bot.install)
 
 
 @bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
