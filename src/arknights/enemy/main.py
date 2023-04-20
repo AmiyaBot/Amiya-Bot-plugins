@@ -24,9 +24,7 @@ class Enemy:
     def find_enemies(cls, name: str):
         result = []
         for e_name, item in ArknightsGameData.enemies.items():
-            if name.lower() == e_name:
-                return [[e_name, item]]
-            if name.lower() in e_name:
+            if name.lower() == e_name or name.lower() in e_name:
                 result.append([e_name, item])
 
         return result
@@ -76,7 +74,7 @@ class Enemy:
 
 bot = PluginInstance(
     name='明日方舟敌方单位查询',
-    version='1.8',
+    version='1.9',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
