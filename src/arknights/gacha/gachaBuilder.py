@@ -38,7 +38,8 @@ class GachaBuilder:
             weight[item[0]] = int(item[1])
 
         operators = self.__get_gacha_operator(
-            extra=list(weight.keys())
+            extra=list(weight.keys()),
+            classic_only=pool.limit_pool == 4
         )
         class_group = {}
 
@@ -78,11 +79,18 @@ class GachaBuilder:
         '''
 
     @staticmethod
-    def __get_gacha_operator(extra):
+    def __get_gacha_operator(extra, classic_only=False):
         opts = []
         for name, item in ArknightsGameData.operators.items():
-            if name in extra or (item.rarity >= 3 and not item.limit and not item.unavailable):
+            if classic_only:
+                if item.is_classic:
+                    opts.append(item)
+                continue
+
+            classic_opt = item.is_classic and item.rarity >= 5
+            if name in extra or (item.rarity >= 3 and not item.limit and not item.unavailable and not classic_opt):
                 opts.append(item)
+
         return opts
 
     @staticmethod
@@ -309,6 +317,7 @@ class GachaBuilder:
                 1: 限定
                 2: 联合寻访
                 3: 前路回响
+                4: 中坚寻访
             '''
             special = {
                 6: {
