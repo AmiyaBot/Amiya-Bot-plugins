@@ -202,7 +202,16 @@ bot = MaterialPluginInstance(
     description='查询明日方舟材料和物品资料',
     document=f'{curr_dir}/README.md'
 )
-event_bus.subscribe('gameDataInitialized', MaterialData.init_materials)
+
+
+@event_bus.subscribe('gameDataInitialized')
+def update(_):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    else:
+        asyncio.create_task(MaterialData.init_materials())
 
 
 async def verify(data: Message):

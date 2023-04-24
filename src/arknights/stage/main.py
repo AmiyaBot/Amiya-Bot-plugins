@@ -41,7 +41,16 @@ bot = StagePluginInstance(
     description='查询明日方舟关卡资料',
     document=f'{curr_dir}/README.md'
 )
-event_bus.subscribe('gameDataInitialized', bot.install)
+
+
+@event_bus.subscribe('gameDataInitialized')
+def update(_):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    else:
+        bot.install()
 
 
 @bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)

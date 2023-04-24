@@ -29,7 +29,16 @@ bot = OperatorPluginInstance(
     document=f'{curr_dir}/README.md'
 )
 bot.set_group_config(GroupConfig('operator', allow_direct=True))
-event_bus.subscribe('gameDataInitialized', bot.install)
+
+
+@event_bus.subscribe('gameDataInitialized')
+def update(_):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    else:
+        bot.install()
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=default_level)

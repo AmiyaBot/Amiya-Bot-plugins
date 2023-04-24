@@ -136,7 +136,16 @@ bot = RecruitPluginInstance(
     description='可通过指令或图像识别规划公招标签组合',
     document=f'{curr_dir}/README.md'
 )
-event_bus.subscribe('gameDataInitialized', bot.install)
+
+
+@event_bus.subscribe('gameDataInitialized')
+def update(_):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    else:
+        bot.install()
 
 
 def find_operator_tags_by_tags(tags, max_rarity):
