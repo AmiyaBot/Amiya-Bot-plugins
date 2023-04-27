@@ -29,6 +29,12 @@
                 }
             }
         },
+        "sendInterval": {
+            "title": "发送间隔",
+            "description": "每个一定时间刷新一下微博列表的频率，单位秒",
+            "type": "number",
+            "default": 0.2
+        },
         "listen": {
             "title": "监听列表",
             "description": "监听的微博ID的列表",

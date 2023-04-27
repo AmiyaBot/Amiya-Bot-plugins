@@ -3,5 +3,6 @@ setting:
     sendGIF: false
     imagesCache: log/weibo
 
+sendInterval: 0.2
 listen:
     - 6279793937

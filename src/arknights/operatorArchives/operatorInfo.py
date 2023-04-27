@@ -17,7 +17,6 @@ class OperatorInfo:
     operator_one_char_list = []
     operator_contain_digit_list = []
     operator_en_name_map = {}
-
     operator_group_map: Dict[str, List[Operator]] = {}
 
     voice_keywords = [
@@ -31,8 +30,18 @@ class OperatorInfo:
     ]
 
     @classmethod
+    def reset(cls):
+        cls.operator_list = []
+        cls.operator_one_char_list = []
+        cls.operator_contain_digit_list = []
+        cls.operator_en_name_map = {}
+        cls.operator_group_map = {}
+
+    @classmethod
     async def init_operator(cls):
         log.info('building operator keywords...')
+
+        cls.reset()
 
         for name, item in ArknightsGameData.operators.items():
             cls.operator_list.append(name)

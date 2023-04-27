@@ -3,20 +3,4 @@
 
 ### 配置
 
-配置文件位置：resource/plugins/weibo.yaml
-
-```yaml
-setting:
-    # 抓取的时间间隔
-    checkRate: 30
-    # 是否发送GIF图
-    sendGIF: false
-    # 缓存图片的目录
-    imagesCache: log/weibo
-
-# listen 下可追加需要监听的微博ID
-listen:
-    - 6279793937
-    - ...
-    - ...
-```
+前往控制台 >> 插件管理 >> 插件配置，管理微博推送设置

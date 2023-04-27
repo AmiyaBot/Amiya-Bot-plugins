@@ -1,43 +1,54 @@
 import os
-import shutil
-import configparser
+import re
 
-from amiyabot import PluginInstance, Message, Chain
-from core.util import any_match, create_dir
+from amiyabot import Message, Chain
+from core import AmiyaBotPluginInstance
 
 curr_dir = os.path.dirname(__file__)
-ini_file = 'resource/plugins/talking/talking.ini'
 
 
-class TalkPluginInstance(PluginInstance):
-    def install(self):
-        if not os.path.exists(ini_file):
-            create_dir(ini_file, is_file=True)
-            shutil.copy(f'{curr_dir}/talking.ini', ini_file)
+class TalkPluginInstance(AmiyaBotPluginInstance):
+    ...
 
 
 bot = TalkPluginInstance(
     name='自定义回复',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-talking',
     plugin_type='official',
     description='可以自定义一问一答的简单对话',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml'
 )
 
 
 async def check_talk(data: Message):
-    config = configparser.ConfigParser()
-    config.read(ini_file, encoding='utf-8')
+    configs: list = bot.get_config('configs')
 
-    key = any_match(data.text, config.sections())
-    if key:
-        setattr(data, 'reply', config.get(key, 'reply'))
+    def set_reply(_item):
+        setattr(data, 'reply', _item['reply'])
+        setattr(data, 'is_at', _item['is_at'])
         return True
+
+    for item in configs:
+        if item['keyword_type'] == '包含关键词':
+            if item['keyword'] in data.text:
+                return set_reply(item)
+        if item['keyword_type'] == '等于关键词':
+            if item['keyword'] == data.text:
+                return set_reply(item)
+        if item['keyword_type'] == '正则匹配':
+            if re.search(re.compile(item['keyword']), data.text):
+                return set_reply(item)
 
 
 @bot.on_message(verify=check_talk, check_prefix=False)
 async def _(data: Message):
     reply: str = getattr(data, 'reply')
+    is_at: bool = getattr(data, 'is_at')
 
-    return Chain(data).text(reply.replace('{nickname}', data.nickname))
+    if os.path.exists(reply):
+        return Chain(data, at=is_at).image(reply)
+
+    return Chain(data, at=is_at).text(reply.replace('{nickname}', data.nickname))

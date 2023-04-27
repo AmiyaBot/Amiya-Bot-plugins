@@ -21,13 +21,13 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='1.8',
+    version='1.9',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
     document=f'{curr_dir}/README.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
-    global_config_default=f'{curr_dir}/weibo.yaml'
+    global_config_default=f'{curr_dir}/config_default.yaml'
 )
 
 
@@ -176,6 +176,6 @@ async def _(_):
                 data.image(result.pics_list).text(f'\n\n{result.detail_url}')
 
             await instance.send_message(data, channel_id=item.group_id)
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(bot.get_config('sendInterval'))
 
         await send_to_console_channel(Chain().text(f'微博推送结束:\n{new_id}\n耗时{time_rec.total()}'))

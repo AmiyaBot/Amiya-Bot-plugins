@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "configs": {
+            "title": "回复列表",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "keyword",
+                    "keyword_type",
+                    "reply"
+                ],
+                "properties": {
+                    "keyword": {
+                        "title": "关键词",
+                        "description": "触发回复的关键词",
+                        "type": "string"
+                    },
+                    "keyword_type": {
+                        "title": "触发类型",
+                        "description": "触发回复的类型",
+                        "type": "string",
+                        "enum": [
+                            "包含关键词",
+                            "等于关键词",
+                            "正则匹配"
+                        ]
+                    },
+                    "is_at": {
+                        "title": "是否@",
+                        "description": "是否 @用户",
+                        "type": "boolean"
+                    },
+                    "reply": {
+                        "title": "回复",
+                        "description": "回复内容，可以为图片的绝对路径",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
