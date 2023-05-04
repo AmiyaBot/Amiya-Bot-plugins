@@ -53,18 +53,19 @@ class Enemy:
 
         attrs = {}
 
-        for item in enemies[name]['data']:
-            attrs[item['level'] + 1] = {}
+        if enemies[name]['data']:
+            for item in enemies[name]['data']:
+                attrs[item['level'] + 1] = {}
 
-            detail_data = item['enemyData']
-            for key in key_map:
-                defined, value = get_value(key, detail_data)
-                if defined:
-                    key_map[key]['value'] = value
-                else:
-                    value = key_map[key]['value']
+                detail_data = item['enemyData']
+                for key in key_map:
+                    defined, value = get_value(key, detail_data)
+                    if defined:
+                        key_map[key]['value'] = value
+                    else:
+                        value = key_map[key]['value']
 
-                attrs[item['level'] + 1][key_map[key]['title']] = value
+                    attrs[item['level'] + 1][key_map[key]['title']] = value
 
         return {
             **enemies[name],
@@ -74,7 +75,7 @@ class Enemy:
 
 bot = PluginInstance(
     name='明日方舟敌方单位查询',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',

@@ -173,6 +173,9 @@ class MaterialData:
             source = game_data.materials_source[material_id]
 
             for code in source.keys():
+                if code not in game_data.stages:
+                    continue
+
                 stage = game_data.stages[code]
                 info = {
                     'code': stage['code'],
@@ -196,7 +199,7 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.8',
+    version='1.9',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
