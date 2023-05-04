@@ -47,7 +47,7 @@ class GachaPluginInstance(PluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -168,7 +168,7 @@ async def _(data: Message):
     )
 
 
-@bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=3)
+@bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
 async def _(data: Message):
     all_pools: List[Pool] = Pool.select()
 
