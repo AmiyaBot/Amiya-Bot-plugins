@@ -108,13 +108,16 @@ class MaterialData:
         material_queue = [material]
         yituliu_data = {}
         while material_queue:
-            i = material_queue.pop(0)
-            if i['material_name'] in yituliu_data:
+            item = material_queue.pop(0)
+            same_use = 'use_material_id' in item and item['use_material_id'] == item['material_id']
+
+            if item['material_name'] in yituliu_data or same_use:
                 continue
-            if stages := YituliuData.select().where(YituliuData.materialId == i['material_id']):
-                yituliu_data[i['material_name']] = stages
+
+            if stages := YituliuData.select().where(YituliuData.materialId == item['material_id']):
+                yituliu_data[item['material_name']] = stages
             else:
-                material_queue += cls.find_material_children(i['material_id'])
+                material_queue += cls.find_material_children(item['material_id'])
 
         def compare_knock_rating(a, b):
             return a.knockRating - b.knockRating
@@ -149,13 +152,13 @@ class MaterialData:
         }
 
         if yituliu_data:
-            for i in yituliu_data:
-                yituliu_data[i] = sorted(
-                    list(yituliu_data[i]), key=cmp_to_key(compare_efficiency), reverse=True
+            for item in yituliu_data:
+                yituliu_data[item] = sorted(
+                    list(yituliu_data[item]), key=cmp_to_key(compare_efficiency), reverse=True
                 )
                 result['recommend'].append(
                     {
-                        'name': i,
+                        'name': item,
                         'stages': [
                             {
                                 'stageId': j.stageId,
@@ -164,7 +167,7 @@ class MaterialData:
                                 'knockRating': f'{round(j.knockRating * 100)}%',
                                 'sampleConfidence': f'{round(j.sampleConfidence)}%',
                             }
-                            for j in yituliu_data[i]
+                            for j in yituliu_data[item]
                         ],
                     }
                 )
@@ -199,7 +202,7 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',

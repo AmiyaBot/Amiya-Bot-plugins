@@ -64,7 +64,7 @@ def search_info(data: Message, source_keys: list = None):
                     for item in ['阿米娅', 'amiya']:
                         t = data.text.lower()
                         if t.startswith(item) and t.count(item) == 1:
-                            info.name = any_match(data.text.replace(item, ''), info_source[key_name])
+                            info.name = find_most_similar(data.text.replace(item, ''), info_source[key_name])
 
     return info
 
