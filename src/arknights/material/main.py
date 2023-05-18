@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 
+from typing import Dict
 from amiyabot import PluginInstance, event_bus
 from amiyabot.network.httpRequests import http_requests
 
@@ -44,31 +45,36 @@ class MaterialData:
             t2 = await http_requests.get(yituliu_t2)
             t2 = json.loads(t2)
 
-            YituliuData.truncate_table()
+            yituliu_data = []
+
             for i in t3['data']:
                 material_id = i[0]['itemId']
                 if material_id == '30012':
                     material_id = '30013'
                 for j in i:
-                    YituliuData(
-                        materialId=material_id,
-                        stageId=j['stageCode'],
-                        sampleConfidence=j['sampleConfidence'],
-                        stageEfficiency=j['stageEfficiency'],
-                        apExpect=j['apExpect'],
-                        knockRating=j['knockRating'],
-                    ).save()
+                    yituliu_data.append({
+                        'materialId': material_id,
+                        'stageId': j['stageCode'],
+                        'sampleConfidence': j['sampleConfidence'],
+                        'stageEfficiency': j['stageEfficiency'],
+                        'apExpect': j['apExpect'],
+                        'knockRating': j['knockRating'],
+                    })
+
             for i in t2['data']:
                 material_id = i[0]['itemId']
                 for j in i:
-                    YituliuData(
-                        materialId=material_id,
-                        stageId=j['stageCode'],
-                        sampleConfidence=j['sampleConfidence'],
-                        stageEfficiency=j['stageEfficiency'],
-                        apExpect=j['apExpect'],
-                        knockRating=j['knockRating'],
-                    ).save()
+                    yituliu_data.append({
+                        'materialId': material_id,
+                        'stageId': j['stageCode'],
+                        'sampleConfidence': j['sampleConfidence'],
+                        'stageEfficiency': j['stageEfficiency'],
+                        'apExpect': j['apExpect'],
+                        'knockRating': j['knockRating'],
+                    })
+
+            YituliuData.truncate_table()
+            YituliuData.batch_insert(yituliu_data)
 
             log.info('yituliu data save successful.')
 
@@ -105,41 +111,6 @@ class MaterialData:
         material = game_data.materials[game_data.materials_map[name]]
         material_id = material['material_id']
 
-        material_queue = [material]
-        yituliu_data = {}
-        while material_queue:
-            item = material_queue.pop(0)
-            same_use = 'use_material_id' in item and item['use_material_id'] == item['material_id']
-
-            if item['material_name'] in yituliu_data or same_use:
-                continue
-
-            if stages := YituliuData.select().where(YituliuData.materialId == item['material_id']):
-                yituliu_data[item['material_name']] = stages
-            else:
-                material_queue += cls.find_material_children(item['material_id'])
-
-        def compare_knock_rating(a, b):
-            return a.knockRating - b.knockRating
-
-        def compare_ap_expect(a, b):
-            if a.apExpect <= b.apExpect:
-                r = (b.apExpect - a.apExpect) / b.apExpect
-                if r > 0.03:
-                    return 1
-                return compare_knock_rating(a, b)
-            else:
-                return -compare_ap_expect(b, a)
-
-        def compare_efficiency(a, b):
-            if a.stageEfficiency >= b.stageEfficiency:
-                r = (a.stageEfficiency - b.stageEfficiency) / a.stageEfficiency
-                if r > 0.03:
-                    return 1
-                return compare_ap_expect(a, b)
-            else:
-                return -compare_efficiency(b, a)
-
         result = {
             'name': name,
             'info': material,
@@ -151,14 +122,17 @@ class MaterialData:
             'recommend': []
         }
 
+        yituliu_data = cls.find_yituliu_data([material, *cls.find_material_children(material_id)])
         if yituliu_data:
-            for item in yituliu_data:
-                yituliu_data[item] = sorted(
-                    list(yituliu_data[item]), key=cmp_to_key(compare_efficiency), reverse=True
+            for material_name, items in yituliu_data.items():
+                sorted_list = sorted(
+                    list(items),
+                    key=cmp_to_key(cls.compare_efficiency),
+                    reverse=True
                 )
                 result['recommend'].append(
                     {
-                        'name': item,
+                        'name': material_name,
                         'stages': [
                             {
                                 'stageId': j.stageId,
@@ -167,7 +141,7 @@ class MaterialData:
                                 'knockRating': f'{round(j.knockRating * 100)}%',
                                 'sampleConfidence': f'{round(j.sampleConfidence)}%',
                             }
-                            for j in yituliu_data[item]
+                            for j in sorted_list
                         ],
                     }
                 )
@@ -192,6 +166,44 @@ class MaterialData:
                     result['source']['act'].append(info)
 
         return result
+
+    @classmethod
+    def find_yituliu_data(cls, items: List[dict]):
+        data: Dict[str, List[YituliuData]] = {}
+        for item in items:
+            stages = YituliuData.select().where(YituliuData.materialId == item['material_id'])
+            if stages:
+                data[item['material_name']] = stages
+            if 'children' in item:
+                data.update(
+                    cls.find_yituliu_data(item['children'])
+                )
+
+        return data
+
+    @classmethod
+    def compare_knock_rating(cls, a, b):
+        return a.knockRating - b.knockRating
+
+    @classmethod
+    def compare_ap_expect(cls, a, b):
+        if a.apExpect <= b.apExpect:
+            r = (b.apExpect - a.apExpect) / b.apExpect
+            if r > 0.03:
+                return 1
+            return cls.compare_knock_rating(a, b)
+        else:
+            return -cls.compare_ap_expect(b, a)
+
+    @classmethod
+    def compare_efficiency(cls, a, b):
+        if a.stageEfficiency >= b.stageEfficiency:
+            r = (a.stageEfficiency - b.stageEfficiency) / a.stageEfficiency
+            if r > 0.03:
+                return 1
+            return cls.compare_ap_expect(a, b)
+        else:
+            return -cls.compare_efficiency(b, a)
 
 
 class MaterialPluginInstance(PluginInstance):
