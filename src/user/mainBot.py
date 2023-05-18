@@ -4,10 +4,10 @@ import time
 import base64
 import shutil
 
-from amiyabot import GroupConfig, PluginInstance
+from amiyabot import GroupConfig
 from amiyabot.network.download import download_async
 
-from core import Message, Chain
+from core import Message, Chain, AmiyaBotPluginInstance
 from core.util import read_yaml, check_sentence_by_re
 from core.database.user import UserInfo, UserGachaInfo
 
@@ -17,7 +17,7 @@ face_dir = 'resource/plugins/user/face'
 talking = read_yaml(f'{curr_dir}/talking.yaml')
 
 
-class UserPluginInstance(PluginInstance):
+class UserPluginInstance(AmiyaBotPluginInstance):
     def install(self):
         if not os.path.exists(face_dir):
             shutil.copytree(f'{curr_dir}/face', face_dir)
@@ -25,11 +25,12 @@ class UserPluginInstance(PluginInstance):
 
 bot = UserPluginInstance(
     name='兔兔互动',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-user',
     plugin_type='official',
     description='包含签到、问候、好感和戳一戳等日常互动',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
 )
 bot.set_group_config(GroupConfig('user', allow_direct=True))
 

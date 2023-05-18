@@ -3,13 +3,13 @@ import os
 from typing import List
 from amiyabot import PluginInstance, Message, Chain
 from core.database.bot import DisabledFunction
-from core.util import get_index_from_text, get_doc
+from core.util import get_index_from_text, get_doc, check_file_content
 from core import bot as main_bot
 
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='功能管理',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的功能',
@@ -43,7 +43,13 @@ async def _(data: Message):
     if reply:
         index = get_index_from_text(reply.text_digits, funcs)
         if index is not None:
-            return Chain(reply).markdown(get_doc(funcs[index]))
+            instance = funcs[index]
+
+            if hasattr(instance, 'instruction'):
+                content = check_file_content(instance.instruction)
+                return Chain(reply).markdown(f'# {instance.name}\n\n{content}')
+
+            return Chain(reply).markdown(get_doc(instance))
 
 
 @bot.on_message(keywords='开启功能', level=5)

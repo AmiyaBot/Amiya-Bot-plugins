@@ -13,11 +13,12 @@ class TalkPluginInstance(AmiyaBotPluginInstance):
 
 bot = TalkPluginInstance(
     name='自定义回复',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-talking',
     plugin_type='official',
     description='可以自定义一问一答的简单对话',
     document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
     global_config_default=f'{curr_dir}/config_default.yaml'
 )

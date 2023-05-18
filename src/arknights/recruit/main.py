@@ -9,11 +9,11 @@ from PIL import Image
 from jieba import posseg
 from typing import List
 from itertools import combinations
-from amiyabot import PluginInstance, event_bus
+from amiyabot import event_bus
 from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
-from core import log, Message, Chain
+from core import log, Message, Chain, AmiyaBotPluginInstance
 from core.util import all_match, read_yaml, create_dir
 from core.lib.baiduCloud import BaiduCloud
 from core.resource.arknightsGameData import ArknightsGameData
@@ -123,18 +123,19 @@ class Recruit:
             return reply.text('博士，没有在图内找到标签信息')
 
 
-class RecruitPluginInstance(PluginInstance):
+class RecruitPluginInstance(AmiyaBotPluginInstance):
     def install(self):
         asyncio.create_task(Recruit.init_tags_list())
 
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='1.6',
+    version='1.7',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md'
 )
 
 

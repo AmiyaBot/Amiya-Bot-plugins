@@ -21,11 +21,12 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
     document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
     global_config_default=f'{curr_dir}/config_default.yaml'
 )

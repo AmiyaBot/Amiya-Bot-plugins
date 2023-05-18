@@ -4,10 +4,9 @@ import json
 import asyncio
 
 from typing import List
-from amiyabot import PluginInstance
 from amiyabot import TencentBotInstance, GroupConfig
 from amiyabot.network.httpRequests import http_requests
-from core import log, Message, Chain, Equal
+from core import log, Message, Chain, Equal, AmiyaBotPluginInstance
 from core.util import any_match, create_dir
 from core.resource import remote_config
 from core.database.user import UserInfo, UserGachaInfo
@@ -20,7 +19,7 @@ pool_image = 'resource/plugins/gacha/pool'
 create_dir(pool_image)
 
 
-class GachaPluginInstance(PluginInstance):
+class GachaPluginInstance(AmiyaBotPluginInstance):
     @staticmethod
     async def sync_pool(force: bool = False):
         if not force:
@@ -47,11 +46,12 @@ class GachaPluginInstance(PluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='1.6',
+    version='1.7',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
 )
 
 re_list = [

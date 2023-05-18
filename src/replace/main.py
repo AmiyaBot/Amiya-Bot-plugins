@@ -4,7 +4,6 @@ import time
 import shutil
 import asyncio
 
-from amiyabot import PluginInstance
 from amiyabot.adapters.common import text_convert
 from amiyabot.adapters.tencent import TencentBotInstance
 from amiyabot.network.httpRequests import http_requests
@@ -12,7 +11,7 @@ from core.database.bot import *
 from core.lib.baiduCloud import BaiduCloud
 from core.resource import remote_config
 from core.util import read_yaml
-from core import log, Message, Chain, Equal
+from core import log, Message, Chain, Equal, AmiyaBotPluginInstance
 
 curr_dir = os.path.dirname(__file__)
 config_path = 'resource/plugins/baiduCloud.yaml'
@@ -24,7 +23,7 @@ if not os.path.exists(config_path):
 baidu = BaiduCloud(read_yaml(config_path))
 
 
-class ReplacePluginInstance(PluginInstance):
+class ReplacePluginInstance(AmiyaBotPluginInstance):
     @staticmethod
     async def sync_replace(force: bool = False):
         if not force:
@@ -47,11 +46,12 @@ class ReplacePluginInstance(PluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
 )
 
 
