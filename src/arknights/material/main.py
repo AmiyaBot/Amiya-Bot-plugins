@@ -211,10 +211,13 @@ class MaterialPluginInstance(PluginInstance):
         asyncio.create_task(MaterialData.save_yituliu_data())
         asyncio.create_task(MaterialData.init_materials())
 
+    def uninstall(self):
+        event_bus.unsubscribe('gameDataInitialized', update)
+
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='2.1',
+    version='2.2',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',

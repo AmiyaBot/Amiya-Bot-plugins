@@ -32,10 +32,13 @@ class StagePluginInstance(PluginInstance):
     def install(self):
         asyncio.create_task(Stage.init_stages())
 
+    def uninstall(self):
+        event_bus.unsubscribe('gameDataInitialized', update)
+
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.8',
+    version='1.9',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',

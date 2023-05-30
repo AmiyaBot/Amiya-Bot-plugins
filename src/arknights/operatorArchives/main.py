@@ -19,10 +19,13 @@ class OperatorPluginInstance(PluginInstance):
         asyncio.create_task(OperatorInfo.init_skins_keywords())
         asyncio.create_task(OperatorInfo.init_stories_keywords())
 
+    def uninstall(self):
+        event_bus.unsubscribe('gameDataInitialized', update)
+
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='2.8',
+    version='2.9',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',

@@ -127,10 +127,13 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
     def install(self):
         asyncio.create_task(Recruit.init_tags_list())
 
+    def uninstall(self):
+        event_bus.unsubscribe('gameDataInitialized', update)
+
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
