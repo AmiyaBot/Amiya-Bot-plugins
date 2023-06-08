@@ -43,7 +43,7 @@ body {
 
 .name .tags {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: flex-start;
 }
 
@@ -125,4 +125,9 @@ body {
 
 .attr.on:before {
     background: #ffeb3b;
+}
+
+.ability-TITLE {
+    padding: 10px 0;
+    color: #ff6900;
 }

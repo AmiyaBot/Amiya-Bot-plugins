@@ -19,22 +19,24 @@
                 <div class="tags">
                     <span style="font-size: 40px">{{ data.info.name }}</span>
                     <span class="tag" :class="data.info.enemyLevel">{{ level[data.info.enemyLevel] }}</span>
+                    <!--
                     <span class="tag race" v-if="data.info.enemyRace">{{ data.info.enemyRace }}</span>
                     <span class="tag attackType" v-for="n in data.info.attackType.split(' ')">{{ n }}</span>
+                    -->
                     <span class="tag enemyIndex">{{ data.info.enemyIndex }}</span>
                 </div>
                 <div class="attr-s">
-                    <div>耐久<span>{{ data.info.endure }}</span></div>
-                    <div>攻击力<span>{{ data.info.attack }}</span></div>
-                    <div>防御力<span>{{ data.info.defence }}</span></div>
-                    <div>法术抗性<span>{{ data.info.resistance }}</span></div>
+                    <i style="font-size: 20px">「{{ data.info.description }}」</i>
                 </div>
             </div>
         </div>
         <div>
-            <div style="margin: 10px 0"><i style="font-size: 20px">「{{ data.info.description }}」</i></div>
             <div class="title">能力</div>
-            <div v-html="data.info.ability ? ability(data.info.ability) : '无'"></div>
+            <div>
+                <div v-for="item in data.info.abilityList" :class="'ability-' + item.textFormat">
+                    {{ item.text }}
+                </div>
+            </div>
             <div class="title">属性</div>
             <div class="attrs-content">
                 <div v-for="(item, level) in data.attrs">

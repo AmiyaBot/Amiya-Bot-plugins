@@ -12,7 +12,9 @@
 <body>
 <div id="template">
     <div v-if="Object.keys(data).length">
-        <div style="margin-bottom: 20px">通过【<span style="color: #ff6900">{{ data.search }}</span>】搜索到以下敌人单位：</div>
+        <div style="margin-bottom: 20px">
+            通过【<span style="color: #ff6900">{{ data.search }}</span>】搜索到以下敌人单位：
+        </div>
         <div class="enemyBox">
             <div class="enemyItem" v-for="(item, name) in data.result">
                 <div class="avatar" :style="avatar(item)"></div>
@@ -23,7 +25,9 @@
                     </div>
                     <div class="tags">
                         <span class="tag" :class="item.info.enemyLevel">{{ level[item.info.enemyLevel] }}</span>
+                        <!--
                         <span class="tag attackType" v-for="n in item.info.attackType.split(' ')">{{ n }}</span>
+                        -->
                         <span class="tag enemyIndex">{{ item.info.enemyIndex }}</span>
                     </div>
                     <div class="desc">
