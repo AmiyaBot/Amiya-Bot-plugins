@@ -5,7 +5,7 @@ import asyncio
 from amiyabot import PluginInstance, event_bus
 
 from core import log, Message, Chain
-from core.util import any_match, remove_punctuation
+from core.util import any_match, remove_punctuation, get_index_from_text
 from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
@@ -38,7 +38,7 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -75,12 +75,32 @@ async def _(data: Message):
         level_str = '（磨难）'
 
     stage_id = None
+    stage_ids = []
     stages_map = ArknightsGameData.stages_map
 
     for item in words:
         stage_key = item + level
         if stage_key in stages_map:
-            stage_id = stages_map[stage_key]
+            stage_ids = stages_map[stage_key]
+
+    if stage_ids:
+        if len(stage_ids) == 1:
+            stage_id = stage_ids[0]
+        else:
+            text = '博士，找到以下同名或同代号关卡，请回复序号查询对应的关卡：\n\n'
+
+            for index, item in enumerate(stage_ids):
+                stage_data = ArknightsGameData.stages[item]
+
+                text += f'[{index + 1}] ' + '{code} {name}\n'.format(**stage_data)
+
+            wait = await data.wait(Chain(data).text(text))
+
+            if not wait:
+                return
+
+            index = get_index_from_text(wait.text_digits, stage_ids)
+            stage_id = stage_ids[index]
 
     if stage_id:
         stage_data = ArknightsGameData.stages[stage_id]
