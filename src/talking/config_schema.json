@@ -29,6 +29,16 @@
                             "正则匹配"
                         ]
                     },
+                    "direct": {
+                        "title": "允许私聊",
+                        "description": "是否可在私聊中触发",
+                        "type": "string",
+                        "enum": [
+                            "仅群聊",
+                            "群聊和私聊",
+                            "仅私聊"
+                        ]
+                    },
                     "is_at": {
                         "title": "是否@",
                         "description": "是否 @用户",
