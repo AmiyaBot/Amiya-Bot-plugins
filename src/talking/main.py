@@ -13,7 +13,7 @@ class TalkPluginInstance(AmiyaBotPluginInstance):
 
 bot = TalkPluginInstance(
     name='自定义回复',
-    version='1.4',
+    version='1.4.1',
     plugin_id='amiyabot-talking',
     plugin_type='official',
     description='可以自定义一问一答的简单对话',
