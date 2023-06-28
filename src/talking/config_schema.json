@@ -30,8 +30,8 @@
                         ]
                     },
                     "direct": {
-                        "title": "允许私聊",
-                        "description": "是否可在私聊中触发",
+                        "title": "触发环境",
+                        "description": "配置允许的回复触发环境",
                         "type": "string",
                         "enum": [
                             "仅群聊",

@@ -13,7 +13,7 @@ class TalkPluginInstance(AmiyaBotPluginInstance):
 
 bot = TalkPluginInstance(
     name='自定义回复',
-    version='1.4',
+    version='1.4.1',
     plugin_id='amiyabot-talking',
     plugin_type='official',
     description='可以自定义一问一答的简单对话',
@@ -33,10 +33,12 @@ async def check_talk(data: Message):
         return True
 
     for item in configs:
-        if item['direct'] == '仅群聊' and data.is_direct:
-            continue
-        if item['direct'] == '仅私聊' and not data.is_direct:
-            continue
+        direct = item.get('direct')
+        if direct:
+            if direct == '仅群聊' and data.is_direct:
+                continue
+            if direct == '仅私聊' and not data.is_direct:
+                continue
 
         if item['keyword_type'] == '包含关键词':
             if item['keyword'] in data.text:
