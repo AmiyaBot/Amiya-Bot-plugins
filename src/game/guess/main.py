@@ -9,7 +9,7 @@ from .guessStart import *
 
 bot = PluginInstance(
     name='兔兔猜干员',
-    version='2.1',
+    version='2.2',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',

@@ -37,7 +37,11 @@ async def guess_start(referee: GuessReferee,
         ask.text(f'博士，这是哪位干员的{title}呢，请发送干员名猜一猜吧！').text('\n')
 
     if level == '初级':
-        skin = random.choice(operator.skins())
+        skins = operator.skins()
+        if not skins:
+            return GuessResult(answer=data, state=GameState.systemSkip)
+
+        skin = random.choice(skins)
         skin_path = await ArknightsGameDataResource.get_skin_file(skin)
 
         if not skin_path:

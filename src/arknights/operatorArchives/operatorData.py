@@ -32,6 +32,7 @@ class OperatorData:
                     module_attr[snake_case_to_pascal_case(attr['key'])] = integer(attr['value'])
 
         skills, skills_id, skills_cost, skills_desc = operator.skills()
+        skins = operator.skins()
 
         operator_info = {
             'info': {
@@ -65,7 +66,7 @@ class OperatorData:
                 'is_recruit': operator.is_recruit,
                 'is_sp': operator.is_sp
             },
-            'skin': await ArknightsGameDataResource.get_skin_file(operator.skins()[0], encode_url=True),
+            'skin': (await ArknightsGameDataResource.get_skin_file(skins[0], encode_url=True)) if skins else '',
             'trust': trust,
             'detail': detail,
             'modules': module_attr,
@@ -128,10 +129,15 @@ class OperatorData:
             })
 
         skins = operator.skins()
-        skin = skins[1] if len(skins) > 1 else skins[0]
+        skin = ''
+        if skins:
+            skin = await ArknightsGameDataResource.get_skin_file(
+                skins[1] if len(skins) > 1 else skins[0],
+                encode_url=True
+            )
 
         return {
-            'skin': await ArknightsGameDataResource.get_skin_file(skin, encode_url=True),
+            'skin': skin,
             'evolve_costs': evolve_costs_list,
             'skills': skills,
             'skills_cost': skills_cost_list
