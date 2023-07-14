@@ -1,8 +1,6 @@
 import copy
 
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
-from core.resource.arknightsGameData.wiki import PRTS
-from core.resource.arknightsGameData.operatorBuilder import parse_template
 from core.util import integer, snake_case_to_pascal_case
 
 from .operatorSearch import OperatorSearchInfo
@@ -18,7 +16,7 @@ class OperatorData:
 
         operator = operators[info.name]
 
-        real_name = await PRTS.get_real_name(operator.origin_name)
+        real_name = await ArknightsGameData.get_real_name(operator.origin_name)
 
         detail, trust = operator.detail()
         modules = operator.modules()
@@ -178,11 +176,15 @@ class OperatorData:
             for candidate in data:
                 blackboard = candidate['blackboard']
                 if candidate['additionalDescription']:
-                    candidate['additionalDescription'] = parse_template(blackboard,
-                                                                        candidate['additionalDescription'])
+                    candidate['additionalDescription'] = ArknightsGameDataResource.parse_template(
+                        blackboard,
+                        candidate['additionalDescription']
+                    )
                 if candidate['overrideDescripton']:
-                    candidate['overrideDescripton'] = parse_template(blackboard,
-                                                                     candidate['overrideDescripton'])
+                    candidate['overrideDescripton'] = ArknightsGameDataResource.parse_template(
+                        blackboard,
+                        candidate['overrideDescripton']
+                    )
 
         def parse_talent_data(data):
             if data is None:
@@ -190,8 +192,10 @@ class OperatorData:
             for candidate in data:
                 blackboard = candidate['blackboard']
                 if candidate['upgradeDescription']:
-                    candidate['upgradeDescription'] = parse_template(blackboard,
-                                                                     candidate['upgradeDescription'])
+                    candidate['upgradeDescription'] = ArknightsGameDataResource.parse_template(
+                        blackboard,
+                        candidate['upgradeDescription']
+                    )
 
         for item in modules:
             if item['itemCost']:
