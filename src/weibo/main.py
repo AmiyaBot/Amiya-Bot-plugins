@@ -8,7 +8,7 @@ from amiyabot import TencentBotInstance
 from core.database.group import GroupSetting
 from core.database.messages import *
 from core.util import TimeRecorder, AttrDict
-from core import send_to_console_channel, Message, Chain, SourceServer, AmiyaBotPluginInstance, bot as main_bot
+from core import send_to_console_channel, Message, Chain, AmiyaBotPluginInstance, bot as main_bot
 
 from .helper import WeiboUser
 
@@ -21,7 +21,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
@@ -171,7 +171,8 @@ async def _(_):
             data.text(f'来自 {result.user_name} 的最新微博\n\n{html.unescape(result.html_text)}')
 
             if type(instance.instance) is TencentBotInstance:
-                data.builder = SourceServer()
+                # 终于不用 url 图了，爷青结 T^T
+                # data.builder = SourceServer()
                 data.image(result.pics_list)
             else:
                 data.image(result.pics_list).text(f'\n\n{result.detail_url}')
