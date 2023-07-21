@@ -26,7 +26,7 @@
             }
         },
         "searchSetting": {
-            "title": "干员资料设置",
+            "title": "关键词匹配设置",
             "type": "object",
             "properties": {
                 "similarMode": {
