@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "operatorInfo": {
+            "title": "干员资料设置",
+            "type": "object",
+            "properties": {
+                "showToken": {
+                    "title": "是否展示召唤物",
+                    "type": "boolean",
+                    "default": true
+                }
+            }
+        },
+        "operatorSkin": {
+            "title": "干员立绘设置",
+            "type": "object",
+            "properties": {
+                "showToken": {
+                    "title": "是否发送原图",
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        },
+        "searchSetting": {
+            "title": "干员资料设置",
+            "type": "object",
+            "properties": {
+                "similarMode": {
+                    "title": "模糊匹配模式",
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        }
+    }
+}

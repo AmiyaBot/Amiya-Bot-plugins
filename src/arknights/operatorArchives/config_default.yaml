@@ -1,0 +1,8 @@
+operatorInfo:
+    showToken: true
+
+operatorSkin:
+    showImage: false
+
+searchSetting:
+    similarMode: false

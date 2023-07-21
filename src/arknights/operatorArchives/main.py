@@ -1,47 +1,13 @@
-import asyncio
-
-from amiyabot import GroupConfig, PluginInstance, event_bus
 from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent import TencentBotInstance
 
-from core import Chain
+from core import Chain, Message
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 
-from .operatorSearch import *
+from .operatorSearch import bot, default_level, get_index, search_info, FuncsVerify, OperatorSearchInfo
 from .operatorInfo import OperatorInfo, curr_dir
 from .operatorData import OperatorData
-
-
-class OperatorPluginInstance(PluginInstance):
-    def install(self):
-        asyncio.create_task(OperatorInfo.init_operator())
-        asyncio.create_task(OperatorInfo.init_skins_keywords())
-        asyncio.create_task(OperatorInfo.init_stories_keywords())
-
-    def uninstall(self):
-        event_bus.unsubscribe('gameDataInitialized', update)
-
-
-bot = OperatorPluginInstance(
-    name='明日方舟干员资料',
-    version='3.1',
-    plugin_id='amiyabot-arknights-operator',
-    plugin_type='official',
-    description='查询明日方舟干员资料',
-    document=f'{curr_dir}/README.md'
-)
-bot.set_group_config(GroupConfig('operator', allow_direct=True))
-
-
-@event_bus.subscribe('gameDataInitialized')
-def update(_):
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        pass
-    else:
-        bot.install()
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=default_level)
@@ -228,7 +194,7 @@ async def _(data: Message):
 
         reply = Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
 
-        if type(data.instance) is not TencentBotInstance:
+        if bot.get_config('operatorSkin')['showImage']:
             reply.image(skin_data['path'].replace('%23', '#'))
 
         return reply
@@ -272,10 +238,14 @@ async def _(data: Message):
         if result:
             if '召唤物' not in data.text:
                 reply = reply.html(f'{curr_dir}/template/operatorInfo.html', result, width=1600)
+
             elif not tokens['tokens']:
                 return Chain(data).text('博士，干员%s未拥有召唤物' % result['info']['name'])
+
             if tokens['tokens']:
-                reply = reply.html(f'{curr_dir}/template/operatorToken.html', tokens)
+                if '召唤物' in data.text or bot.get_config('operatorInfo')['showToken']:
+                    reply = reply.html(f'{curr_dir}/template/operatorToken.html', tokens)
+
             return reply
 
     return Chain(data).text('博士，请仔细描述想要查询的信息哦')

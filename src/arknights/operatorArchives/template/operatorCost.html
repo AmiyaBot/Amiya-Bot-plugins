@@ -10,7 +10,7 @@
     <title>template</title>
 </head>
 <body>
-<div id="template">
+<div id="template" v-if="Object.keys(data).length">
     <div class="background" :style="{backgroundImage: `url('../../../${data.skin}')`}"></div>
     <div style="position: relative;z-index: 1">
         <div class="title">精英化</div>
