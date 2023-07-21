@@ -1,3 +1,4 @@
+import re
 import os
 import random
 
@@ -127,18 +128,27 @@ async def guess_start(referee: GuessReferee,
 
     tips = [
         f'TA是{operator.rarity}星干员',
-        f'TA的所属队伍是{operator.team}',
-        f'TA的所属阵营是{operator.group}',
-        f'TA的所属势力是{operator.nation}',
-        f'TA的画师是{operator.drawer}',
         f'TA的职业是{operator.classes}',
         f'TA的分支职业是{operator.classes_sub}',
-        f'TA的标签是%s' % ','.join(operator.tags)
     ]
-    if operator.cv:
-        tips.append(f'TA的CV有{random.choice(list(operator.cv.values()))}')
+
+    for t, v in {
+        '队伍': operator.team,
+        '阵营': operator.group,
+        '势力': operator.nation
+    }.items():
+        if v != '未知':
+            tips.append(f'TA的所属{t}是{v}')
+
+    stories = operator.stories()
+    if stories:
+        r = re.search(r'【性别】(\S+)\n', stories[0]['story_text'])
+        if r:
+            tips.append(f'TA的性别是【{r.group(1)}】')
+
     if len(operator.name) > 1:
-        tips.append(f'TA的代号里有一个字是"{random.choice(operator.name)}"')
+        tips.append(f'TA的代号里有一个字是【{random.choice(operator.name)}】')
+
     if operator.limit:
         tips.append('TA是限定干员')
 
@@ -189,7 +199,7 @@ async def guess_start(referee: GuessReferee,
             return result
 
         # 回答问题
-        if answer.text == operator.index_name:
+        if answer.text == operator.name:
             # 回答正确
             rewards = int(guess_config.rewards.bingo * level_rate * (100 + result.total_rate) / 100)
             point = 1
