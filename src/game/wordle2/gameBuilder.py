@@ -15,13 +15,16 @@ class OperatorPool:
         return not len(self.operators.keys())
 
     def pick_one(self):
-        return self.operators.pop(
+        operator = self.operators.pop(
             random.choice(
                 list(
                     self.operators.keys()
                 )
             )
         )
+        if '预备干员' in operator.name:
+            return self.pick_one()
+        return operator
 
 
 @dataclass
@@ -37,7 +40,7 @@ class TagElement:
 
 
 class GuessProcess:
-    def __init__(self, operator: Operator, hardcode: bool = False):
+    def __init__(self, operator: Operator, prev: Operator, hardcode: bool = False):
         self.wrongs = {}
 
         self.max_count = 10
@@ -53,14 +56,21 @@ class GuessProcess:
         else:
             self.tags = self.__build_normal()
 
+        for tag in self.tags.values():
+            if tag.value == '未知':
+                tag.show()
+
+        if not hardcode and prev:
+            self.guess(prev)
+
     def __build_normal(self, show_title: bool = True) -> Dict[str, TagElement]:
         return {
             'rarity': TagElement('稀有度', self.operator.rarity, show_title),
             'classes': TagElement('职业', self.operator.classes, show_title),
             'classes_sub': TagElement('子职业', self.operator.classes_sub, show_title),
-            'race': TagElement('种族', self.operator.race, show_title),
+            'race': TagElement('种族', self.operator.race if self.operator.race != '未公开' else '未知', show_title),
             'nation': TagElement('势力', self.operator.nation, show_title),
-            'drawer': TagElement('画师', self.operator.drawer, show_title),
+            'sex': TagElement('性别', self.operator.sex, show_title),
         }
 
     def __build_hardcode(self) -> Dict[str, TagElement]:
@@ -68,6 +78,7 @@ class GuessProcess:
             **self.__build_normal(False),
             'team': TagElement('队伍', self.operator.team, False),
             'group': TagElement('阵营', self.operator.group, False),
+            'drawer': TagElement('画师', self.operator.drawer, False),
         }
         res = {}
 
@@ -136,7 +147,10 @@ class GuessProcess:
                     if answer_value < item.value:
                         wrong[field] = 'up'
                 else:
-                    wrong[field] = 'ng'
+                    if answer_value in ['未知', '未公开']:
+                        wrong[field] = 'unknown'
+                    else:
+                        wrong[field] = 'ng'
 
         self.wrongs[answer.id] = wrong
 

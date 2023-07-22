@@ -12,18 +12,18 @@ max_rewards = 30000
 
 
 async def guess_filter(data: Message):
-    return data.text in [
+    return data.text in ArknightsGameData.operators or data.text in [
         *['不玩了', '结束'],
-        *['线索', '提示'],
-        *ArknightsGameData.operators.keys()
+        *['下一个', '跳过'],
+        *['线索', '提示']
     ]
 
 
-async def game_begin(data: Message, operator: Operator, hardcode: bool):
+async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode: bool):
     async def send(content: str):
         await data.send(Chain(data, at=False, reference=True).text(content))
 
-    process = GuessProcess(operator, hardcode)
+    process = GuessProcess(operator, prev, hardcode)
 
     event = None
     time_rec = time.time()
@@ -77,6 +77,12 @@ async def game_begin(data: Message, operator: Operator, hardcode: bool):
                 await send('不能连续揭示两个线索哦，请猜一次后继续~')
             continue
 
+        # 跳过
+        if data.text in ['下一个', '跳过']:
+            await send(f'答案是{operator.name}')
+            event.close_event()
+            break
+
         # 手动结束游戏
         if data.text in ['不玩了', '结束']:
             await send(f'答案是{operator.name}，游戏结束~')
@@ -86,7 +92,7 @@ async def game_begin(data: Message, operator: Operator, hardcode: bool):
         # 竞猜
         answer = ArknightsGameData.operators[data.text]
         if answer.id in process.wrongs:
-            await send('不能连续揭示两个线索哦，请猜一次后继续~')
+            await send(f'干员【{answer.name}】已经猜过啦，换一个试试吧~')
             continue
 
         match, unlock = process.guess(answer)

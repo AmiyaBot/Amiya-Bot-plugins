@@ -40,6 +40,7 @@ class OperatorImpl(Operator):
         self.classes_sub = sub_classes[data['subProfessionId']]['subProfessionName']
         self.classes_code = data['profession']
 
+        self.sex = '未知'
         self.race = '未知'
         self.drawer = '未知'
         self.team_id = data['teamId']

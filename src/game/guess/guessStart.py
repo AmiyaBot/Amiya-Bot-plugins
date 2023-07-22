@@ -18,11 +18,10 @@ guess_keyword = game_config.keyword
 
 
 async def guess_filter(data: Message):
-    return data.text in [
+    return data.text in ArknightsGameData.operators or data.text in [
         *guess_keyword.skip,
         *guess_keyword.tips,
-        *guess_keyword.over,
-        *ArknightsGameData.operators.keys()
+        *guess_keyword.over
     ]
 
 
@@ -129,7 +128,7 @@ async def guess_start(referee: GuessReferee,
     tips = [
         f'TA是{operator.rarity}星干员',
         f'TA的职业是{operator.classes}',
-        f'TA的分支职业是{operator.classes_sub}',
+        f'TA的分支职业是{operator.classes_sub}'
     ]
 
     for t, v in {
@@ -140,11 +139,8 @@ async def guess_start(referee: GuessReferee,
         if v != '未知':
             tips.append(f'TA的所属{t}是{v}')
 
-    stories = operator.stories()
-    if stories:
-        r = re.search(r'【性别】(\S+)\n', stories[0]['story_text'])
-        if r:
-            tips.append(f'TA的性别是【{r.group(1)}】')
+    if operator.sex != '未知':
+        tips.append(f'TA的性别是【{operator.sex}】')
 
     if len(operator.name) > 1:
         tips.append(f'TA的代号里有一个字是【{random.choice(operator.name)}】')

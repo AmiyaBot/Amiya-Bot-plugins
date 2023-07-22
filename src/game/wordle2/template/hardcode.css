@@ -132,3 +132,7 @@ body {
 .tip-icon.ng {
     background-image: url(img/icon/thumbs-down.svg) !important;
 }
+
+.tip-icon.unknown {
+    background-image: url(img/icon/unknown.svg) !important;
+}

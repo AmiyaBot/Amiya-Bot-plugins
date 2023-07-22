@@ -8,7 +8,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = PluginInstance(
     name='大帝的CYPHER挑战',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -34,6 +34,8 @@ async def _(data: Message):
         return Chain(choice).text('博士，您没有选择难度哦，游戏取消。')
 
     pool = OperatorPool()
+    prev = None
+    hardcode = choice_level == '硬核'
 
     while True:
         if pool.is_empty:
@@ -46,9 +48,14 @@ async def _(data: Message):
         await asyncio.sleep(2)
 
         operator = pool.pick_one()
-        while not operator.nation or not operator.drawer or operator.race == '未知':
-            operator = pool.pick_one()
+        if not hardcode:
+            if not prev:
+                prev = pool.pick_one()
 
-        data = await game_begin(data, operator, hardcode=choice_level == '硬核')
+            await data.send(Chain(data, at=False).text(f'{prev.name}为博士们提供了帮助！'))
+
+        data = await game_begin(data, operator, prev, hardcode)
+        prev = operator
+
         if not data:
             break

@@ -106,6 +106,11 @@ def init_operators():
 
                     item.birthday = f'{month}月{day}日'
                     birth[month][day].append(item)
+
+                r = re.search(r'性别】(\S+)\n', story['story_text'])
+                if r:
+                    item.sex = r.group(1)
+
                 break
 
     birthdays = {}
