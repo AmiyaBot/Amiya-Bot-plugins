@@ -25,7 +25,7 @@ class UserPluginInstance(AmiyaBotPluginInstance):
 
 bot = UserPluginInstance(
     name='兔兔互动',
-    version='1.8',
+    version='1.9',
     plugin_id='amiyabot-user',
     plugin_type='official',
     description='包含签到、问候、好感和戳一戳等日常互动',

@@ -3,6 +3,7 @@ import sys
 import json
 import base64
 import zipfile
+import logging
 import importlib
 
 from amiyabot import PluginInstance
@@ -88,11 +89,37 @@ def upload_all_plugins(upload_list: list):
     secret_id = os.environ.get('SECRETID')
     secret_key = os.environ.get('SECRETKEY')
 
-    cos = COSUploader(secret_id, secret_key)
+    cos = COSUploader(secret_id, secret_key, logger_level=logging.ERROR)
 
     cos.delete_folder(remote)
-    for item in upload_list:
+    for item in upload_progress(upload_list):
         cos.upload_file(*item)
+
+
+def upload_progress(upload_list: list):
+    count = len(upload_list)
+
+    def print_bar(name: str = ''):
+        p = int(curr / count * 100)
+        block = int(p / 4)
+        progress_line = '=' * block + ' ' * (25 - block)
+
+        msg = f'uploading...{name}\nprogress: [{progress_line}] {curr}/{count} ({p}%)'
+
+        print('\r', end='')
+        print(msg, end='')
+
+        sys.stdout.flush()
+
+    curr = 0
+
+    print_bar()
+    for item in upload_list:
+        yield item
+        curr += 1
+        print_bar(item[1])
+
+    print()
 
 
 if __name__ == '__main__':

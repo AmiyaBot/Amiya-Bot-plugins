@@ -170,6 +170,9 @@ async def _(data: Message, factory_name: str, _):
 
 @bot.message_after_send
 async def _(data: Chain, factory_name: str, _):
+    if not data.data:
+        return
+
     user_id = data.data.user_id
     feeling = 2
 
