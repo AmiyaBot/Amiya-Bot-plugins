@@ -33,7 +33,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='3.3',
+    version='3.4',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -88,7 +88,7 @@ def search_info(data: Message, source_keys: list = None):
 
     info = OperatorSearchInfo()
 
-    match_method = find_most_similar if bot.get_config('searchSetting')['similarMode'] else any_match
+    match_method = find_most_similar if bot.get_config('searchSetting')['similarMode'] else get_longest
 
     for key_name in source_keys:
         res = match_method(data.text, info_source[key_name])
@@ -106,6 +106,15 @@ def search_info(data: Message, source_keys: list = None):
                             info.name = match_method(data.text.replace(item, ''), info_source[key_name])
 
     return info
+
+
+def get_longest(text: str, items: list):
+    res = ''
+    for item in items:
+        if item in text and len(item) >= len(res):
+            res = item
+
+    return res
 
 
 def get_index(text: str, array: list):
