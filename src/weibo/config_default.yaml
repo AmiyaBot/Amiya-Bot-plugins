@@ -4,5 +4,7 @@ setting:
     imagesCache: log/weibo
 
 sendInterval: 0.2
+sendAsync: false
+
 listen:
     - 6279793937

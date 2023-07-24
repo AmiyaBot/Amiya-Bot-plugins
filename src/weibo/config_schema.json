@@ -12,7 +12,7 @@
             "properties": {
                 "checkRate": {
                     "title": "监听频率",
-                    "description": "每个一定时间刷新一下微博列表的频率，单位秒",
+                    "description": "每隔一定时间刷新一下微博列表的频率，单位秒",
                     "type": "integer",
                     "default": 30
                 },
@@ -29,9 +29,15 @@
                 }
             }
         },
+        "sendAsync": {
+            "title": "是否同时推送",
+            "description": "同时向所有群推送，否则排队推送。",
+            "type": "boolean",
+            "default": false
+        },
         "sendInterval": {
             "title": "发送间隔",
-            "description": "每个一定时间刷新一下微博列表的频率，单位秒",
+            "description": "如果不是同时发送，每隔一定时间向下一个群推送",
             "type": "number",
             "default": 0.2
         },
