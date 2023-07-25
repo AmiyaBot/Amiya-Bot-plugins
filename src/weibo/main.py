@@ -22,7 +22,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
@@ -208,7 +208,8 @@ async def _(_):
                                 images_urls.append(
                                     await SourceServer.image_getter_hook(p.read())
                                 )
-                    data.image(images_urls)
+                    for url in images_urls:
+                        data.image(url=url)
                 else:
                     data.image(result.pics_list)
             else:
