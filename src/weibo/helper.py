@@ -3,7 +3,7 @@ import os
 import time
 import json
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from amiyabot.network.download import download_async
 from amiyabot.network.httpRequests import http_requests
 from core.util import remove_xml_tag, char_seat, create_dir
@@ -26,9 +26,10 @@ async def get_result(url, headers):
 @dataclass
 class WeiboContent:
     user_name: str
-    html_text: str
-    pics_list: list
-    detail_url: str
+    html_text: str = ''
+    detail_url: str = ''
+    pics_list: list = field(default_factory=list)
+    pics_urls: list = field(default_factory=list)
 
 
 class WeiboUser:
@@ -130,21 +131,24 @@ class WeiboUser:
 
         target_blog = cards[index]
         blog = target_blog['mblog']
-        detail_url = target_blog['scheme']
 
         # 获取完整正文
         result = await get_result('https://m.weibo.cn/statuses/extend?id=' + blog['id'], self.headers)
         if not result:
             return None
 
-        html_text = result['data']['longTextContent']
-        html_text = re.sub('<br />', '\n', html_text)
-        html_text = remove_xml_tag(html_text)
-        html_text = html_text.strip('\n')
+        content = WeiboContent(self.user_name)
+
+        text = result['data']['longTextContent']
+        text = re.sub('<br />', '\n', text)
+        text = remove_xml_tag(text)
+
+        content.html_text = text.strip('\n')
+        content.detail_url = target_blog['scheme']
 
         # 获取静态图片列表
-        pics_list = []
         pics = blog['pics'] if 'pics' in blog else []
+
         for pic in pics:
             pic_url = pic['large']['url']
             name = pic_url.split('/')[-1]
@@ -161,6 +165,7 @@ class WeiboUser:
                 if stream:
                     open(path, 'wb').write(stream)
 
-            pics_list.append(path)
+            content.pics_list.append(path)
+            content.pics_urls.append(pic_url)
 
-        return WeiboContent(self.user_name, html_text, pics_list, detail_url)
+        return content

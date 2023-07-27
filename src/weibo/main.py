@@ -3,13 +3,13 @@ import html
 import time
 import asyncio
 
-from typing import Awaitable
 from amiyabot import TencentBotInstance
+from amiyabot.builtin.message import MessageStructure
 
 from core.database.group import GroupSetting
 from core.database.messages import *
 from core.util import TimeRecorder, AttrDict
-from core import send_to_console_channel, Message, Chain, SourceServer, AmiyaBotPluginInstance, bot as main_bot
+from core import send_to_console_channel, Message, Chain, AmiyaBotPluginInstance, bot as main_bot
 
 from .helper import WeiboUser
 
@@ -22,7 +22,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
@@ -40,33 +40,7 @@ class WeiboRecord(MessageBaseModel):
     record_time: int = IntegerField()
 
 
-class SendTasks:
-    def __init__(self):
-        self.tasks = []
-        self.done = 0
-
-    def append_task(self, task: Awaitable):
-        self.tasks.append(
-            self.run_task(task)
-        )
-
-    async def run_task(self, task: Awaitable):
-        await task
-        self.done += 1
-
-    async def run(self, timeout: int):
-        for item in self.tasks:
-            asyncio.create_task(item)
-
-        time_rec = TimeRecorder()
-        while self.done != len(self.tasks):
-            await asyncio.sleep(1)
-
-            if time_rec.rec() >= timeout:
-                break
-
-
-async def send_by_index(index: int, weibo: WeiboUser, data: Message):
+async def send_by_index(index: int, weibo: WeiboUser, data: MessageStructure):
     result = await weibo.get_weibo_content(index - 1)
 
     if not result:
@@ -177,10 +151,9 @@ async def _(_):
             continue
 
         time_rec = TimeRecorder()
-        send_tasks = SendTasks()
+        async_send_tasks = []
 
         result = await weibo.get_weibo_content(0)
-        images_urls = []
 
         if not result:
             await send_to_console_channel(Chain().text(f'微博获取失败\nUSER: {user}\nID: {new_id}'))
@@ -202,13 +175,7 @@ async def _(_):
 
             if type(instance.instance) is TencentBotInstance:
                 if not instance.private:
-                    if not images_urls and result.pics_list:
-                        for pic in result.pics_list:
-                            with open(pic, mode='rb') as p:
-                                images_urls.append(
-                                    await SourceServer.image_getter_hook(p.read())
-                                )
-                    for url in images_urls:
+                    for url in result.pics_urls:
                         data.image(url=url)
                 else:
                     data.image(result.pics_list)
@@ -216,14 +183,14 @@ async def _(_):
                 data.image(result.pics_list).text(f'\n\n{result.detail_url}')
 
             if bot.get_config('sendAsync'):
-                send_tasks.append_task(
+                async_send_tasks.append(
                     instance.send_message(data, channel_id=item.group_id)
                 )
             else:
                 await instance.send_message(data, channel_id=item.group_id)
                 await asyncio.sleep(bot.get_config('sendInterval'))
 
-        if send_tasks.tasks:
-            await send_tasks.run(20 * 60)
+        if async_send_tasks:
+            await asyncio.wait(async_send_tasks)
 
         await send_to_console_channel(Chain().text(f'微博推送结束:\n{new_id}\n耗时{time_rec.total()}'))
