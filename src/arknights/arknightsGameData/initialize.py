@@ -16,6 +16,9 @@ gamedata_path = 'resource/gamedata'
 
 
 def initialize(cls: ArknightsGameData):
+    if not os.path.exists('resource/gamedata/version'):
+        return None
+
     with open('resource/gamedata/version', mode='r', encoding='utf-8') as file:
         cls.version = file.read().strip('\n') or 'none'
 
