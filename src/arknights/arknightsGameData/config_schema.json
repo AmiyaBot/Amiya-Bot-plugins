@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "repo": {
+            "title": "仓库地址",
+            "description": "资源的 Git 地址",
+            "type": "string",
+            "default": "https://gitee.com/amiya-bot/arknights-resource.git"
+        },
+        "autoUpdate": {
+            "title": "是否自动更新",
+            "description": "在启动时自动更新资源",
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

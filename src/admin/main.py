@@ -10,10 +10,10 @@ from core.database.group import GroupActive, check_group_active
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='管理员模块',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-admin',
     plugin_type='official',
-    description='可使用 BOT 的开关功能',
+    description='可使用 BOT 的开关功能以及获取频道信息',
     document=f'{curr_dir}/README.md'
 )
 
@@ -88,8 +88,13 @@ async def _(data: Message):
 
 @bot.on_message(keywords=Equal('频道信息'))
 async def _(data: Message):
-    return Chain(data, at=False).text(
+    rep = Chain(data, at=False).text(
         f'用户ID：{data.user_id}\n'
         f'频道ID：{data.guild_id}\n'
         f'子频道ID：{data.channel_id}'
     )
+
+    if data.at_target:
+        rep.text('\nAt用户ID：' + ' | '.join(data.at_target))
+
+    return rep

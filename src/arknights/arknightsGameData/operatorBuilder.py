@@ -27,7 +27,7 @@ class OperatorImpl(Operator):
         self.type = ArknightsConfig.types.get(data['position'])
         self.tags = []
         self.range = '无范围'
-        self.rarity = data['rarity'] + 1
+        self.rarity = int(data['rarity'].split('_')[-1]) if isinstance(data['rarity'], str) else (data['rarity'] + 1)
         self.number = data['displayNumber']
 
         self.name = data['name']
@@ -120,7 +120,7 @@ class OperatorImpl(Operator):
     def tokens(self):
         token_list = []
 
-        if self.data['tokenKey'] and self.data['tokenKey'] in Collection.tokens_map:
+        if self.data.get('tokenKey') and self.data['tokenKey'] in Collection.tokens_map:
             token_list.append(Collection.tokens_map[self.data['tokenKey']])
 
         if self.data['skills']:
