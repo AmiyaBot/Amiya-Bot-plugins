@@ -18,7 +18,7 @@
             "title": "干员立绘设置",
             "type": "object",
             "properties": {
-                "showToken": {
+                "showImage": {
                     "title": "是否发送原图",
                     "type": "boolean",
                     "default": false

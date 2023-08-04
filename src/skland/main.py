@@ -1,14 +1,91 @@
 import os
+import json
 
-from core import AmiyaBotPluginInstance
+from amiyabot import AmiyaBot, TencentBotInstance
+from amiyabot.database import *
+from core import AmiyaBotPluginInstance, Message, Chain
+from core.database.user import UserBaseModel
+
+from .api import SKLandAPI
 
 curr_dir = os.path.dirname(__file__)
 
+
+@table
+class UserToken(UserBaseModel):
+    user_id: str = CharField(primary_key=True)
+    token: str = CharField(null=True)
+
+
 bot = AmiyaBotPluginInstance(
     name='森空岛',
-    version='1.0',
+    version='1.1',
     plugin_id='amiyabot-skland',
     plugin_type='official',
-    description='通过森空岛查询玩家信',
+    description='通过森空岛查询玩家信息',
     document=f'{curr_dir}/README.md',
 )
+
+
+async def is_token_str(data: Message):
+    try:
+        res = json.loads(data.text)
+        token = res['data']['content']
+        return True, 1, token
+    except json.JSONDecodeError:
+        pass
+
+    return False
+
+
+@bot.on_message(keywords=['我的游戏信息', '我的方舟信息', '我的游戏数据', '我的方舟数据'])
+async def _(data: Message):
+    rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
+    if not rec:
+        return Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 进行查看绑定说明。')
+
+    sk_land = SKLandAPI(token=rec.token)
+    user_info = await sk_land.get_user_info()
+
+    if not user_info:
+        return Chain(data).text('无法获取信息，请重新绑定 Token。')
+
+    return Chain(data).html(f'{curr_dir}/template/userInfo.html', user_info, width=650, height=300)
+
+
+@bot.on_message(keywords='绑定', allow_direct=True)
+async def _(data: Message):
+    source_bot: AmiyaBot = data.bot
+
+    with open(f'{curr_dir}/README_TOKEN.md', mode='r', encoding='utf-8') as md:
+        content = md.read()
+
+    chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
+
+    if not isinstance(data.instance, TencentBotInstance):
+        chain \
+            .text('https://ak.hypergryph.com/user/login\n') \
+            .text('https://web-api.hypergryph.com/account/info/hg')
+
+    # await source_bot.send_message(
+    #     chain=chain,
+    #     user_id=data.user_id,
+    #     direct_src_guild_id=data.src_guild_id
+    # )
+
+    return chain
+
+
+@bot.on_message(verify=is_token_str, check_prefix=False, allow_direct=True)
+async def _(data: Message):
+    if not data.is_direct:
+        await data.recall()
+        return
+
+    UserToken.delete().where(UserToken.user_id == data.user_id).execute()
+    UserToken.create(
+        user_id=data.user_id,
+        token=data.verify.keypoint
+    )
+
+    return Chain(data).text('Token 绑定成功！')

@@ -17,7 +17,7 @@ body {
 .background {
     width: 100%;
     padding: 10px;
-    background: rgb(255 255 255 / 30%) bottom 25px left 25% / 700px no-repeat;
+    background: rgb(255 255 255 / 30%) bottom 25px left 25% / auto calc(100% - 200px) no-repeat;
     display: flex;
     justify-content: space-between;
 }

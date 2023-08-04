@@ -1,0 +1,62 @@
+* {
+    color: #fff;
+    font-size: 18px;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#template {
+    width: 650px;
+    height: 300px;
+    background: #252525 right -100px top 20px / auto 600px no-repeat;
+    padding: 25px;
+}
+
+.avatar {
+    background: rgb(255, 255, 255);
+    width: 65px;
+    height: 65px;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-right: 20px;
+}
+
+.level {
+    font-size: 30px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.dr-name {
+    font-size: 30px;
+    margin: 20px 0 20px 0;
+}
+
+.count-info {
+    margin-right: 20px;
+}
+
+.count-info > div:first-child {
+    font-size: 16px;
+    color: #9E9E9E;
+}
+
+.count-info > div:first-child:after {
+    content: '\\\\';
+    color: #03A9F4;
+    padding-left: 10px;
+}
+
+.count-info > div:last-child {
+    font-size: 25px;
+}
+
+.ap {
+    line-height: 25px;
+    background: url(./道具_理智.png) center left 0 / 25px no-repeat;
+    padding-left: 30px;
+    margin-top: 15px;
+}
