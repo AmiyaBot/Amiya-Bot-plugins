@@ -14,7 +14,8 @@
     <div style="display: flex">
         <div class="avatar">
             <img style="width: 100%;" :src="avatar(data.gameStatus.secretary.skinId)"
-                 :alt="data.gameStatus.avatar.type">
+                 :alt="data.gameStatus.avatar.type"
+                 onerror="hideImage(this)">
         </div>
         <div style="display: flex; align-items: center; flex-direction: column;">
             <div style="display: flex; align-items: center;">
@@ -36,7 +37,7 @@
     <div style="display: flex;">
         <div class="count-info">
             <div>作战进度</div>
-            <div>{{ data.gameStatus.mainStageProgress }}</div>
+            <div>{{ data.gameStatus.mainStageProgress || '全部完成' }}</div>
         </div>
         <div class="count-info">
             <div>干员数量</div>
@@ -57,6 +58,10 @@
 </body>
 <script src="js/vue.min.js"></script>
 <script>
+    function hideImage(e) {
+        e.src = '../logo.png'
+    }
+
     const template = new Vue({
         el: '#template',
         methods: {
@@ -72,12 +77,12 @@
             },
             secretary(charId) {
                 return {
-                    backgroundImage: `url(../../../../resource/gamedata/skin/skin/${charId}_1b.png)`
+                    backgroundImage: `url(../../../resource/gamedata/skin/skin/${charId}_1b.png)`
                 }
             },
             avatar(skinId) {
                 skinId = skinId.replace(/#/g, '_')
-                return `../../../../resource/gamedata/avatar/${skinId}.png`
+                return `../../../resource/gamedata/avatar/${skinId}.png`
             },
             dateTime(time, format = 'y-m-d h:i:s') {
                 const mSec = time * (time.toString().length < 13 ? 1000 : 1)

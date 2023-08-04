@@ -19,7 +19,7 @@ class UserToken(UserBaseModel):
 
 bot = AmiyaBotPluginInstance(
     name='森空岛',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛查询玩家信息',
@@ -30,8 +30,9 @@ bot = AmiyaBotPluginInstance(
 async def is_token_str(data: Message):
     try:
         res = json.loads(data.text)
-        token = res['data']['content']
-        return True, 1, token
+        if isinstance(res, dict):
+            token = res['data']['content']
+            return True, 1, token
     except json.JSONDecodeError:
         pass
 
