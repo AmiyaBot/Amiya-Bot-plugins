@@ -80,7 +80,7 @@ async def _(data: Message):
 async def _(data: Message):
     if not data.is_direct:
         await data.recall()
-        return
+        return Chain(data).text('博士，请注意保护您的敏感信息！>.<')
 
     UserToken.delete().where(UserToken.user_id == data.user_id).execute()
     UserToken.create(
