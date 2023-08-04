@@ -64,15 +64,7 @@ async def _(data: Message):
     chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
 
     if not isinstance(data.instance, TencentBotInstance):
-        chain \
-            .text('https://ak.hypergryph.com/user/login\n') \
-            .text('https://web-api.hypergryph.com/account/info/hg')
-
-    # await source_bot.send_message(
-    #     chain=chain,
-    #     user_id=data.user_id,
-    #     direct_src_guild_id=data.src_guild_id
-    # )
+        chain.text('https://ak.hypergryph.com/user/login\nhttps://web-api.hypergryph.com/account/info/hg')
 
     return chain
 
