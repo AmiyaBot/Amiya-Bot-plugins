@@ -12,7 +12,7 @@ from core.resource import remote_config
 from core.database.user import UserInfo, UserGachaInfo
 from core.database.bot import OperatorConfig, Admin
 
-from .gachaBuilder import GachaBuilder, curr_dir, Pool, PoolSpOperator
+from .gachaBuilder import GachaBuilder, curr_dir, Pool, PoolSpOperator, bot_caller
 from .box import get_user_box
 
 pool_image = 'resource/plugins/gacha/pool'
@@ -42,16 +42,19 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
     def install(self):
         asyncio.create_task(self.sync_pool())
+        bot_caller['plugin_instance'] = self
 
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    global_config_default=f'{curr_dir}/config/global_config_default.json',
+    global_config_schema=f'{curr_dir}/config/global_config_schema.json', 
 )
 
 re_list = [

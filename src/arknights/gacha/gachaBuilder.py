@@ -23,6 +23,9 @@ color = {
     1: '7F7F7F'
 }
 
+bot_caller = {
+   'plugin_instance': None
+}
 
 class GachaBuilder:
     def __init__(self, data: Message):
@@ -229,9 +232,13 @@ class GachaBuilder:
         if ten_times:
             result_list = []
 
+            operator_name_list = ""
+
             for item in operators:
                 name = item['name']
                 op_dt = None
+
+                operator_name_list += f'【{name}】'
 
                 if name in operators_info:
                     op_dt = operators_info[name]
@@ -242,7 +249,15 @@ class GachaBuilder:
 
             reply.image(create_gacha_image(result_list))
 
-            return reply.text(f'【{self.pick_up_name}】\n{self.check_break_even()}')
+            show_name = False
+            if bot_caller is not None:
+                if bot_caller['plugin_instance'] is not None:
+                    show_name = bot_caller['plugin_instance'].get_config('display_operator_name')
+
+            if show_name:
+                return reply.text(f'【{self.pick_up_name}】\n{operator_name_list}\n{self.check_break_even()}')
+            else:
+                return reply.text(f'【{self.pick_up_name}】\n{self.check_break_even()}')
         else:
             return reply.text_image(f'{result}\n{self.check_break_even()}', icons)
 
