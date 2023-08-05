@@ -1,22 +1,58 @@
 import os
-import re
 import time
 
-from typing import List
-from amiyabot import PluginInstance
+from amiyabot.database import *
 
-from core import bot as main_bot, Message, Chain
-from core.database.user import Intellect
+from core import bot as main_bot, Message, Chain, AmiyaBotPluginInstance
+from core.database.user import UserBaseModel
 
 curr_dir = os.path.dirname(__file__)
 
-bot = PluginInstance(
+
+@table
+class Intellect(UserBaseModel):
+    user_id: str = CharField(primary_key=True)
+    belong_id: str = CharField(null=True)
+    cur_num: int = IntegerField()
+    full_num: int = IntegerField()
+    full_time: int = IntegerField()
+    message_type: str = CharField()
+    group_id: str = CharField()
+    in_time: int = IntegerField()
+    status: int = IntegerField()
+
+
+class IntellectPluginInstance(AmiyaBotPluginInstance):
+    @staticmethod
+    def set_record(data: Message, cur_num: int, full_num: int):
+        update = {
+            'belong_id': data.instance.appid,
+            'cur_num': cur_num,
+            'full_num': full_num,
+            'full_time': (full_num - cur_num) * 6 * 60 + int(time.time()),
+            'message_type': data.message_type or 'channel',
+            'group_id': data.channel_id,
+            'in_time': int(time.time()),
+            'status': 0
+        }
+
+        if not Intellect.get_or_none(user_id=data.user_id):
+            Intellect.create(**{
+                'user_id': data.user_id,
+                **update
+            })
+        else:
+            Intellect.update(**update).where(Intellect.user_id == data.user_id).execute()
+
+
+bot = IntellectPluginInstance(
     name='理智恢复提醒',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-arknights-intellect',
     plugin_type='official',
     description='可以记录理智量并在回复满时发送提醒',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
 )
 
 
@@ -37,30 +73,11 @@ async def _(data: Message):
         if cur_num < 0 or full_num <= 0:
             return reply.text('啊这…看来博士是真的没有理智了……回头问问可露希尔能不能多给点理智合剂……')
         if cur_num >= full_num:
-            return reply.text('阿米娅已经帮博士记…呜……阿米娅现在可以提醒博士了吗')
+            return reply.text('阿米娅已经帮博士记…呜……阿米娅现在可以提醒博士了吗？')
         if full_num > 135:
             return reply.text('博士的理智有这么高吗？')
 
-        full_time = (full_num - cur_num) * 6 * 60 + int(time.time())
-
-        update = {
-            'belong_id': data.instance.appid,
-            'cur_num': cur_num,
-            'full_num': full_num,
-            'full_time': full_time,
-            'message_type': data.message_type or 'channel',
-            'group_id': data.channel_id,
-            'in_time': int(time.time()),
-            'status': 0
-        }
-
-        if not Intellect.get_or_none(user_id=data.user_id):
-            Intellect.create(**{
-                'user_id': data.user_id,
-                **update
-            })
-        else:
-            Intellect.update(**update).where(Intellect.user_id == data.user_id).execute()
+        bot.set_record(data, cur_num, full_num)
 
         return reply.text('阿米娅已经帮博士记住了，回复满的时候阿米娅会提醒博士的哦～')
 
@@ -82,11 +99,35 @@ async def _(data: Message):
 
                 return reply.text(text)
             else:
-                return reply.text('阿米娅还没有帮博士记录理智提醒哦')
+                return reply.text('阿米娅还没有帮博士记录理智提醒哦～')
+
+
+@bot.on_message(keywords='记录真实理智')
+async def _(data: Message):
+    if 'amiyabot-skland' in main_bot.plugins:
+        skland = main_bot.plugins['amiyabot-skland']
+
+        token = await skland.get_token(data.user_id)
+        if not token:
+            return Chain(data).text('未在森空岛插件绑定 Token，请查看森空岛插件的说明。')
+
+        user_info = await skland.get_user_info(token)
+        if not user_info:
+            return Chain(data).text('无法从森空岛获取用户信息。')
+
+        ap_info = user_info['gameStatus']['ap']
+
+        if time.time() >= ap_info['completeRecoveryTime']:
+            return Chain(data).text('博士，理智已经恢复满了！快点上线查看吧～')
+
+        bot.set_record(data, ap_info['current'], ap_info['max'])
+
+    else:
+        return Chain(data).text('未检测到森空岛插件，无法使用功能。')
 
 
 @bot.timed_task(each=10)
-async def _(instance):
+async def _(_):
     conditions = (Intellect.status == 0, Intellect.full_time <= int(time.time()))
     results: List[Intellect] = Intellect.select().where(*conditions)
     if results:

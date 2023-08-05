@@ -1,5 +1,6 @@
 import json
 
+from typing import Optional
 from amiyabot.network.httpRequests import http_requests
 from amiyabot.log import LoggerManager
 
@@ -22,7 +23,7 @@ class SKLandAPI:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
         }
 
-    async def get_code(self):
+    async def get_code(self) -> str:
         if not self.code:
             payload = {
                 'appCode': '4ca99fa6b56cc2ba',
@@ -39,7 +40,7 @@ class SKLandAPI:
 
         return self.code
 
-    async def get_cred(self):
+    async def get_cred(self) -> str:
         if not self.cred:
             payload = {
                 'code': self.code,
@@ -58,7 +59,7 @@ class SKLandAPI:
 
         return self.cred
 
-    async def get_user_info(self):
+    async def get_user_info(self) -> Optional[dict]:
         if not await self.get_code():
             log.warning('无法获取 Code 值。')
             return None

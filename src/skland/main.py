@@ -17,13 +17,26 @@ class UserToken(UserBaseModel):
     token: str = CharField(null=True)
 
 
-bot = AmiyaBotPluginInstance(
+class SKLandPluginInstance(AmiyaBotPluginInstance):
+    @staticmethod
+    async def get_token(user_id: str):
+        rec: UserToken = UserToken.get_or_none(user_id=user_id)
+        if rec:
+            return rec.token
+
+    @staticmethod
+    async def get_user_info(token: str):
+        return await SKLandAPI(token).get_user_info()
+
+
+bot = SKLandPluginInstance(
     name='森空岛',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-skland',
     plugin_type='official',
-    description='通过森空岛查询玩家信息',
+    description='通过森空岛 API 查询玩家信息展示游戏数据',
     document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
 )
 
 
@@ -41,13 +54,11 @@ async def is_token_str(data: Message):
 
 @bot.on_message(keywords=['我的游戏信息', '我的方舟信息', '我的游戏数据', '我的方舟数据'])
 async def _(data: Message):
-    rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
-    if not rec:
+    token = await bot.get_token(data.user_id)
+    if not token:
         return Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 进行查看绑定说明。')
 
-    sk_land = SKLandAPI(token=rec.token)
-    user_info = await sk_land.get_user_info()
-
+    user_info = await bot.get_user_info(token)
     if not user_info:
         return Chain(data).text('Token 无效，无法获取信息。>.<')
 
