@@ -22,8 +22,9 @@ async def example():
 
 记录理智提醒
 
-| 参数名      | 类型      | 释义         | 默认值 |
-|----------|---------|------------|-----|
-| data     | Message | Message 对象 |     |
-| cur_num  | int     | 当前理智量      |     |
-| full_num | int     | 满理智量       |     |
+| 参数名       | 类型      | 释义         | 默认值 |
+|-----------|---------|------------|-----|
+| data      | Message | Message 对象 |     |
+| cur_num   | int     | 当前理智量      |     |
+| full_num  | int     | 满理智量       |     |
+| full_time | int     | 预计恢复满需要的时间 |     |

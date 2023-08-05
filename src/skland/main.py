@@ -45,14 +45,14 @@ async def is_token_str(data: Message):
         res = json.loads(data.text)
         token = res['data']['content']
 
-        return True, 1, token
+        return True, 10, token
     except Exception:
         pass
 
     return False
 
 
-@bot.on_message(keywords=['我的游戏信息', '我的方舟信息', '我的游戏数据', '我的方舟数据'])
+@bot.on_message(keywords=['我的游戏信息', '我的方舟信息', '我的游戏数据', '我的方舟数据'], level=5)
 async def _(data: Message):
     token = await bot.get_token(data.user_id)
     if not token:

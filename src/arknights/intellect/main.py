@@ -24,12 +24,15 @@ class Intellect(UserBaseModel):
 
 class IntellectPluginInstance(AmiyaBotPluginInstance):
     @staticmethod
-    def set_record(data: Message, cur_num: int, full_num: int):
+    def set_record(data: Message, cur_num: int, full_num: int, full_time: int = None):
+
+        full_time = full_time or (full_num - cur_num) * 6 * 60 + int(time.time())
+
         update = {
             'belong_id': data.instance.appid,
             'cur_num': cur_num,
             'full_num': full_num,
-            'full_time': (full_num - cur_num) * 6 * 60 + int(time.time()),
+            'full_time': full_time,
             'message_type': data.message_type or 'channel',
             'group_id': data.channel_id,
             'in_time': int(time.time()),
@@ -44,10 +47,12 @@ class IntellectPluginInstance(AmiyaBotPluginInstance):
         else:
             Intellect.update(**update).where(Intellect.user_id == data.user_id).execute()
 
+        return Chain(data).text(f'阿米娅已经帮博士记住了（{cur_num}/{full_num}），回复满的时候阿米娅会提醒博士的哦～')
+
 
 bot = IntellectPluginInstance(
     name='理智恢复提醒',
-    version='1.3',
+    version='1.4',
     plugin_id='amiyabot-arknights-intellect',
     plugin_type='official',
     description='可以记录理智量并在回复满时发送提醒',
@@ -63,7 +68,6 @@ async def verify(data: Message):
 @bot.on_message(verify=verify)
 async def _(data: Message):
     message = data.text_digits
-    reply = Chain(data)
 
     r = re.search(re.compile(r'理智(\d+)满(\d+)'), message)
     if r:
@@ -71,15 +75,13 @@ async def _(data: Message):
         full_num = int(r.group(2))
 
         if cur_num < 0 or full_num <= 0:
-            return reply.text('啊这…看来博士是真的没有理智了……回头问问可露希尔能不能多给点理智合剂……')
+            return Chain(data).text('啊这…看来博士是真的没有理智了……回头问问可露希尔能不能多给点理智合剂……')
         if cur_num >= full_num:
-            return reply.text('阿米娅已经帮博士记…呜……阿米娅现在可以提醒博士了吗？')
+            return Chain(data).text('阿米娅已经帮博士记…呜……阿米娅现在可以提醒博士了吗？')
         if full_num > 135:
-            return reply.text('博士的理智有这么高吗？')
+            return Chain(data).text('博士的理智有这么高吗？')
 
-        bot.set_record(data, cur_num, full_num)
-
-        return reply.text('阿米娅已经帮博士记住了，回复满的时候阿米娅会提醒博士的哦～')
+        return bot.set_record(data, cur_num, full_num)
 
     r_list = [
         '多少理智',
@@ -88,7 +90,7 @@ async def _(data: Message):
     for item in r_list:
         r = re.search(re.compile(item), message)
         if r:
-            info: Intellect = Intellect.get_or_none(data.user_id)
+            info: Intellect = Intellect.get_or_none(user_id=data.user_id, belong_id=data.instance.appid)
             if info:
                 full_time = time.strftime('%Y-%m-%d %H:%M', time.localtime(info.full_time))
                 through = int(time.time()) - info.in_time
@@ -97,12 +99,12 @@ async def _(data: Message):
                 text = f'博士，根据上一次记录，您的 {info.full_num} 理智会在 {full_time} 左右回复满\n' \
                        f'不计算上限的话，现在已经回复到 {restored} 理智了'
 
-                return reply.text(text)
+                return Chain(data).text(text)
             else:
-                return reply.text('阿米娅还没有帮博士记录理智提醒哦～')
+                return Chain(data).text('阿米娅还没有帮博士记录理智提醒哦～')
 
 
-@bot.on_message(keywords='记录真实理智')
+@bot.on_message(keywords='记录真实理智', level=10)
 async def _(data: Message):
     if 'amiyabot-skland' in main_bot.plugins:
         skland = main_bot.plugins['amiyabot-skland']
@@ -117,11 +119,13 @@ async def _(data: Message):
 
         ap_info = user_info['gameStatus']['ap']
 
+        full_time = time.strftime('%Y-%m-%d %H:%M', time.localtime(ap_info['completeRecoveryTime']))
+        ap = (time.time() - ap_info['lastApAddTime']) / 360
+
         if time.time() >= ap_info['completeRecoveryTime']:
-            return Chain(data).text('博士，理智已经恢复满了！快点上线查看吧～')
+            return Chain(data).text(f'博士，理智在{full_time}就已经恢复满了！快点上线查看吧～')
 
-        bot.set_record(data, ap_info['current'], ap_info['max'])
-
+        return bot.set_record(data, ap_info['current'] + int(ap), ap_info['max'], ap_info['completeRecoveryTime'])
     else:
         return Chain(data).text('未检测到森空岛插件，无法使用功能。')
 
