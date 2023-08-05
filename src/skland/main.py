@@ -1,7 +1,7 @@
 import os
 import json
 
-from amiyabot import AmiyaBot, TencentBotInstance
+from amiyabot import TencentBotInstance
 from amiyabot.database import *
 from core import AmiyaBotPluginInstance, Message, Chain
 from core.database.user import UserBaseModel
@@ -19,7 +19,7 @@ class UserToken(UserBaseModel):
 
 bot = AmiyaBotPluginInstance(
     name='森空岛',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛查询玩家信息',
@@ -30,10 +30,10 @@ bot = AmiyaBotPluginInstance(
 async def is_token_str(data: Message):
     try:
         res = json.loads(data.text)
-        if isinstance(res, dict):
-            token = res['data']['content']
-            return True, 1, token
-    except json.JSONDecodeError:
+        token = res['data']['content']
+
+        return True, 1, token
+    except Exception:
         pass
 
     return False
@@ -49,15 +49,13 @@ async def _(data: Message):
     user_info = await sk_land.get_user_info()
 
     if not user_info:
-        return Chain(data).text('无法获取信息，请重新绑定 Token。')
+        return Chain(data).text('Token 无效，无法获取信息。>.<')
 
     return Chain(data).html(f'{curr_dir}/template/userInfo.html', user_info, width=650, height=300)
 
 
 @bot.on_message(keywords='绑定', allow_direct=True)
 async def _(data: Message):
-    source_bot: AmiyaBot = data.bot
-
     with open(f'{curr_dir}/README_TOKEN.md', mode='r', encoding='utf-8') as md:
         content = md.read()
 
@@ -73,7 +71,7 @@ async def _(data: Message):
 async def _(data: Message):
     if not data.is_direct:
         await data.recall()
-        return Chain(data).text('博士，请注意保护您的敏感信息！>.<')
+        await data.send(Chain(data).text('博士，请注意保护您的敏感信息！>.<'))
 
     UserToken.delete().where(UserToken.user_id == data.user_id).execute()
     UserToken.create(

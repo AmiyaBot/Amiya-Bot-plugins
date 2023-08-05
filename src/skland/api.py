@@ -1,6 +1,9 @@
 import json
 
 from amiyabot.network.httpRequests import http_requests
+from amiyabot.log import LoggerManager
+
+log = LoggerManager('SKLand')
 
 
 class SKLandAPI:
@@ -57,8 +60,11 @@ class SKLandAPI:
 
     async def get_user_info(self):
         if not await self.get_code():
+            log.warning('无法获取 Code 值。')
             return None
+
         if not await self.get_cred():
+            log.warning('无法获取 Cred 值。')
             return None
 
         headers = {
