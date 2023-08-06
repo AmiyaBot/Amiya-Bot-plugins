@@ -4,6 +4,7 @@ import json
 from amiyabot import TencentBotInstance
 from amiyabot.database import *
 from core import AmiyaBotPluginInstance, Message, Chain
+from core.resource.arknightsGameData import ArknightsGameData
 from core.database.user import UserBaseModel
 
 from .api import SKLandAPI
@@ -27,6 +28,10 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
     @staticmethod
     async def get_user_info(token: str):
         return await SKLandAPI(token).get_user_info()
+    
+    @staticmethod
+    async def get_character_info(token: str,uid: str):
+        return await SKLandAPI(token).get_character_info(uid)
 
 
 bot = SKLandPluginInstance(
@@ -73,7 +78,7 @@ async def _(data: Message):
     chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
 
     if not isinstance(data.instance, TencentBotInstance):
-        chain.text('https://ak.hypergryph.com/user/login\nhttps://web-api.hypergryph.com/account/info/hg')
+        chain.text('https://www.skland.com/\nhttps://web-api.skland.com/account/info/hg')
 
     return chain
 

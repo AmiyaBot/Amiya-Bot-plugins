@@ -34,8 +34,17 @@ async def example():
 
 ### get_user_info
 
+获取玩家通用信息
+
+| 参数名   | 类型  | 释义    | 默认值 |
+|-------|-----|-------|-----|
+| token | str | Token |     |
+
+### get_character_info
+
 获取游戏角色信息
 
 | 参数名   | 类型  | 释义    | 默认值 |
 |-------|-----|-------|-----|
 | token | str | Token |     |
+| uid | str | 要获取数据的游戏内角色UID |     |

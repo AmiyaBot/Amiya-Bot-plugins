@@ -25,10 +25,13 @@ class SKLandAPI:
 
     async def get_code(self) -> str:
         if not self.code:
+            
+            type_value = 1 if len(self.token) > 30 else 0
+
             payload = {
                 'appCode': '4ca99fa6b56cc2ba',
                 'token': self.token,
-                'type': 0
+                'type': type_value
             }
             res = await http_requests.post('https://as.hypergryph.com/user/oauth2/v2/grant', payload,
                                            headers=self.headers)
@@ -74,6 +77,26 @@ class SKLandAPI:
             'Cred': self.cred
         }
         res = await http_requests.get('https://zonai.skland.com/api/v1/user/me', headers=headers)
+        if res:
+            data = json.loads(res)
+            if data['code'] == 0:
+                return data['data']
+
+    async def get_character_info(self,uid: str) -> Optional[dict]:
+        if not await self.get_code():
+            log.warning('无法获取 Code 值。')
+            return None
+
+        if not await self.get_cred():
+            log.warning('无法获取 Cred 值。')
+            return None
+
+        headers = {
+            **self.headers,
+            'Host': 'zonai.skland.com',
+            'Cred': self.cred
+        }
+        res = await http_requests.get(f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}', headers=headers)
         if res:
             data = json.loads(res)
             if data['code'] == 0:
