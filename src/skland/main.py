@@ -4,12 +4,12 @@ import json
 from amiyabot import TencentBotInstance
 from amiyabot.database import *
 from core import AmiyaBotPluginInstance, Message, Chain
-from core.resource.arknightsGameData import ArknightsGameData
 from core.database.user import UserBaseModel
 
-from .api import SKLandAPI
+from .api import SKLandAPI, log
 
 curr_dir = os.path.dirname(__file__)
+skland_api = SKLandAPI()
 
 
 @table
@@ -27,16 +27,26 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
 
     @staticmethod
     async def get_user_info(token: str):
-        return await SKLandAPI(token).get_user_info()
-    
+        user = await skland_api.user(token)
+        if not user:
+            log.warning('森空岛用户获取失败。')
+            return None
+
+        return await user.user_info()
+
     @staticmethod
-    async def get_character_info(token: str,uid: str):
-        return await SKLandAPI(token).get_character_info(uid)
+    async def get_character_info(token: str, uid: str):
+        user = await skland_api.user(token)
+        if not user:
+            log.warning('森空岛用户获取失败。')
+            return None
+
+        return await user.character_info(uid)
 
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='1.4',
+    version='1.6',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -65,7 +75,7 @@ async def _(data: Message):
 
     user_info = await bot.get_user_info(token)
     if not user_info:
-        return Chain(data).text('Token 无效，无法获取信息。>.<')
+        return Chain(data).text('Token 无效，无法获取信息，请重新绑定或确认您是否具备森空岛测试资格。>.<')
 
     return Chain(data).html(f'{curr_dir}/template/userInfo.html', user_info, width=650, height=300)
 

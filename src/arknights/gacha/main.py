@@ -54,7 +54,7 @@ bot = GachaPluginInstance(
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     global_config_default=f'{curr_dir}/config/global_config_default.json',
-    global_config_schema=f'{curr_dir}/config/global_config_schema.json', 
+    global_config_schema=f'{curr_dir}/config/global_config_schema.json',
 )
 
 re_list = [

@@ -24,8 +24,9 @@ color = {
 }
 
 bot_caller = {
-   'plugin_instance': None
+    'plugin_instance': None
 }
+
 
 class GachaBuilder:
     def __init__(self, data: Message):

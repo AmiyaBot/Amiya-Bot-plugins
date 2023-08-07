@@ -13,7 +13,9 @@
 <div id="template" v-if="Object.keys(data).length" :style="secretary(data.gameStatus.secretary.charId)">
     <div style="display: flex">
         <div class="avatar">
-            <img style="width: 100%;" :src="avatar(data.gameStatus.secretary.skinId)"
+            <img style="width: 100%;"
+                 :src="avatar(data.gameStatus.secretary.skinId)"
+                 :src2="data.user.avatar"
                  :alt="data.gameStatus.avatar.type"
                  onerror="hideImage(this)">
         </div>
@@ -59,7 +61,7 @@
 <script src="js/vue.min.js"></script>
 <script>
     function hideImage(e) {
-        e.src = './avatar.webp'
+        e.src = e.attributes.src2.value
     }
 
     const template = new Vue({
