@@ -16,7 +16,7 @@
             <img style="width: 100%;"
                  :src="avatar(data.status.secretary.skinId)"
                  :alt="data.status.avatar.type"
-                 onerror="hideImage(this)">
+                 onerror="changeImage(this)">
         </div>
         <div style="display: flex; align-items: center; flex-direction: column;">
             <div style="display: flex; align-items: center;">
@@ -60,7 +60,7 @@
 <script src="js/vue.min.js"></script>
 <script src="js/character.js"></script>
 <script>
-    function hideImage(e) {
+    function changeImage(e) {
         e.src = '../logo.png'
     }
 
@@ -79,7 +79,7 @@
             },
             secretary(charId) {
                 return {
-                    backgroundImage: `url(../../../../resource/gamedata/skin/skin/${charId}_1b.png)`
+                    backgroundImage: `url(../../../resource/gamedata/skin/skin/${charId}_1b.png)`
                 }
             },
             avatar(skinId) {
