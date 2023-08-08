@@ -56,7 +56,7 @@ body {
 
 .ap {
     line-height: 25px;
-    background: url(./intellect.png) center left 0 / 25px no-repeat;
+    background: url(assets/intellect.png) center left 0 / 25px no-repeat;
     padding-left: 30px;
     margin-top: 15px;
 }

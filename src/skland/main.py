@@ -45,8 +45,8 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
 
 
 bot = SKLandPluginInstance(
-    name='森空岛',
-    version='1.6',
+    name='森空岛（Beta）',
+    version='1.7',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -67,17 +67,49 @@ async def is_token_str(data: Message):
     return False
 
 
-@bot.on_message(keywords=['我的游戏信息', '我的方舟信息', '我的游戏数据', '我的方舟数据'], level=5)
-async def _(data: Message):
+async def check_user_info(data: Message):
     token = await bot.get_token(data.user_id)
     if not token:
-        return Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 进行查看绑定说明。')
+        await data.send(Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 进行查看绑定说明。'))
+        return
 
     user_info = await bot.get_user_info(token)
     if not user_info:
-        return Chain(data).text('Token 无效，无法获取信息，请重新绑定或确认您是否具备森空岛测试资格。>.<')
+        await data.send(Chain(data).text('Token 无效，无法获取信息，请重新绑定或确认您是否具备森空岛测试资格。>.<'))
+        return
 
-    return Chain(data).html(f'{curr_dir}/template/userInfo.html', user_info, width=650, height=300)
+    return user_info, token
+
+
+@bot.on_message(keywords=['我的游戏信息'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+
+    return Chain(data).html(f'{curr_dir}/template/userInfo.html', character_info, width=650, height=300)
+
+
+@bot.on_message(keywords=['我的干员信息'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    await data.send(Chain(data).text('开始获取并生成干员信息，请稍后...'))
+
+    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+    render_data = {
+        'data': character_info,
+        'minEvolvePhase': 2,
+        'minRarity': 3
+    }
+
+    tips = '测试阶段仅筛选了精英二和四星以上干员，后续可开放查询。'
+
+    return Chain(data).html(f'{curr_dir}/template/chars.html', render_data, width=1580, render_time=1000).text(tips)
 
 
 @bot.on_message(keywords='绑定', allow_direct=True)

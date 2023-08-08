@@ -5,86 +5,92 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link type="text/css" rel="styleSheet" href="font.css"/>
+    <link type="text/css" rel="styleSheet" href="font/font.css"/>
     <link type="text/css" rel="styleSheet" href="userInfo.css"/>
     <title>template</title>
 </head>
 <body>
-<div id="template" v-if="Object.keys(data).length" :style="secretary(data.gameStatus.secretary.charId)">
+<div id="template" v-if="Object.keys(data).length" :style="secretary(data.status.secretary.charId)">
     <div style="display: flex">
         <div class="avatar">
             <img style="width: 100%;"
-                 :src="avatar(data.gameStatus.secretary.skinId)"
-                 :src2="data.user.avatar"
-                 :alt="data.gameStatus.avatar.type"
+                 :src="avatar(data.status.secretary.skinId)"
+                 :alt="data.status.avatar.type"
                  onerror="hideImage(this)">
         </div>
         <div style="display: flex; align-items: center; flex-direction: column;">
             <div style="display: flex; align-items: center;">
-                <div class="level">{{ data.gameStatus.level }}</div>
+                <div class="level">{{ data.status.level }}</div>
                 <div>
                     <div style="font-size: 14px;">Lv.</div>
                     <div>博士等级</div>
                 </div>
             </div>
             <div style="font-size: 14px; color: #9E9E9E; margin-top: 5px">
-                入职日：{{ dateTime(data.gameStatus.registerTs, 'y-m-d') }}
+                入职日：{{ dateTime(data.status.registerTs, 'y-m-d') }}
             </div>
         </div>
     </div>
     <div class="dr-name">
-        {{ data.gameStatus.name }}
-        <div style="font-size: 14px; color: #9E9E9E">UID: {{ data.gameStatus.uid }}</div>
+        {{ data.status.name }}
+        <div style="font-size: 14px; color: #9E9E9E">UID: {{ data.status.uid }}</div>
     </div>
     <div style="display: flex;">
         <div class="count-info">
             <div>作战进度</div>
-            <div>{{ data.gameStatus.mainStageProgress || '全部完成' }}</div>
+            <div>{{ stageProgress() }}</div>
         </div>
         <div class="count-info">
             <div>干员数量</div>
-            <div>{{ data.gameStatus.charCnt }}</div>
+            <div>{{ data.chars.length }}</div>
         </div>
         <div class="count-info">
             <div>时装</div>
-            <div>{{ data.gameStatus.skinCnt }}</div>
+            <div>{{ data.skins.length }}</div>
         </div>
     </div>
     <div class="ap">
-        <span style="color: #03A9F4;">{{ data.gameStatus.ap.current }}</span> / {{ data.gameStatus.ap.max }}
+        <span style="color: #03A9F4;">{{ data.status.ap.current }}</span> / {{ data.status.ap.max }}
     </div>
     <div style="font-size: 12px; color: #9E9E9E; margin-top: 3px">
-        最后记录于{{ dateTime(data.gameStatus.ap.lastApAddTime) }}
+        最后记录于{{ dateTime(data.status.ap.lastApAddTime) }}
     </div>
 </div>
 </body>
 <script src="js/vue.min.js"></script>
+<script src="js/character.js"></script>
 <script>
     function hideImage(e) {
-        e.src = e.attributes.src2.value
+        e.src = '../logo.png'
     }
 
     const template = new Vue({
         el: '#template',
         methods: {
             init(data) {
-                const crossTime = (new Date().getTime() / 1000 - data.gameStatus.ap.lastApAddTime) / 360
+                const crossTime = (new Date().getTime() / 1000 - data.status.ap.lastApAddTime) / 360
 
-                data.gameStatus.ap.current += parseInt(crossTime.toString())
-                if (data.gameStatus.ap.current >= data.gameStatus.ap.max) {
-                    data.gameStatus.ap.current = data.gameStatus.ap.max
+                data.status.ap.current += parseInt(crossTime.toString())
+                if (data.status.ap.current >= data.status.ap.max) {
+                    data.status.ap.current = data.status.ap.max
                 }
 
                 this.$set(this, 'data', data)
             },
             secretary(charId) {
                 return {
-                    backgroundImage: `url(../../../resource/gamedata/skin/skin/${charId}_1b.png)`
+                    backgroundImage: `url(../../../../resource/gamedata/skin/skin/${charId}_1b.png)`
                 }
             },
             avatar(skinId) {
-                skinId = skinId.replace(/#/g, '_')
-                return `../../../resource/gamedata/avatar/${skinId}.png`
+                return getSkinAvatarUrl(skinId)
+            },
+            stageProgress() {
+                const stage = this.data.stageInfoMap[this.data.status.mainStageProgress]
+                if (stage) {
+                    return stage.code
+                }
+                return '全部完成'
             },
             dateTime(time, format = 'y-m-d h:i:s') {
                 const mSec = time * (time.toString().length < 13 ? 1000 : 1)
