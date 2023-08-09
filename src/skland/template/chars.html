@@ -83,7 +83,7 @@
 
                 for (const r in chars) {
                     chars[r].sort((a, b) => {
-                        return b.level * b.evolvePhase - a.level * a.evolvePhase
+                        return (b.level * b.evolvePhase + b.potentialRank) - (a.level * a.evolvePhase + a.potentialRank)
                     })
                     result.push(
                         {

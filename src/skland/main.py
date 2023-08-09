@@ -46,7 +46,7 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
 
 bot = SKLandPluginInstance(
     name='森空岛（Beta）',
-    version='1.7',
+    version='1.9',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -70,13 +70,13 @@ async def is_token_str(data: Message):
 async def check_user_info(data: Message):
     token = await bot.get_token(data.user_id)
     if not token:
-        await data.send(Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 进行查看绑定说明。'))
-        return
+        await data.send(Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 查看绑定说明。'))
+        return None, None
 
     user_info = await bot.get_user_info(token)
     if not user_info:
         await data.send(Chain(data).text('Token 无效，无法获取信息，请重新绑定或确认您是否具备森空岛测试资格。>.<'))
-        return
+        return None, token
 
     return user_info, token
 

@@ -1,18 +1,18 @@
 import os
 
-from typing import List
+from typing import List, Set
 from amiyabot import PluginInstance, Message, Chain
 from core.database.bot import DisabledFunction
 from core.util import get_index_from_text, get_doc, check_file_content
-from core import bot as main_bot
+from core import bot as main_bot, AmiyaBotPluginInstance
 
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='功能管理',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-functions',
     plugin_type='official',
-    description='管理已安装的功能',
+    description='管理已安装的插件功能',
     document=f'{curr_dir}/README.md'
 )
 
@@ -24,33 +24,29 @@ async def _(data: Message):
     )
     disabled = [n.function_id for n in disabled_funcs]
 
-    content = "功能清单\n\n" \
-              "频道/群管理员发送 `兔兔开启功能/关闭功能` 可开关单个功能\n\n"
+    with open(f'{curr_dir}/template.md', mode='r', encoding='utf-8') as template:
+        content = template.read().strip('\n')
 
     index = 1
     funcs = []
+    items = ''
     for _, item in main_bot.plugins.items():
         if item.plugin_id == bot.plugin_id:
             continue
 
+        status = '<span style="color: #4caf50">开启</span>'
+        if item.plugin_id in disabled:
+            status = '<span style="color: #f44336">已关闭</span>'
+
         funcs.append(item)
-        content += f'[{index}]{item.name}%s\n' % ('（已关闭）' if item.plugin_id in disabled else '')
+        items += f'|{index}|{item.name}|{item.version}|{item.description}|{status}|\n'
         index += 1
 
-    content += '\n回复【序号】查询详细的功能描述'
-
-    reply = await data.wait(Chain(data).text_image(content))
+    reply = await data.wait(Chain(data).markdown(content.format(items=items)))
     if reply:
         index = get_index_from_text(reply.text_digits, funcs)
         if index is not None:
-            instance = funcs[index]
-
-            if hasattr(instance, 'instruction'):
-                content = check_file_content(instance.instruction)
-                if content:
-                    return Chain(reply).markdown(f'# {instance.name}\n\n{content}')
-
-            return Chain(reply).markdown(get_doc(instance))
+            return Chain(reply).markdown(get_plugin_use_doc(funcs[index]))
 
 
 @bot.on_message(keywords='开启功能', level=5)
@@ -60,21 +56,12 @@ async def _(data: Message):
 
     disabled: List[DisabledFunction] = DisabledFunction.select().where(DisabledFunction.channel_id == data.channel_id)
 
-    func_ids = set(main_bot.plugins.keys()) & set([n.function_id for n in disabled])
+    func_ids = get_plugins_set() & set([n.function_id for n in disabled])
 
     if func_ids:
-        content = '有以下可开启的功能：\n\n'
-        index = 1
-        funcs = []
-        for n in func_ids:
-            item = main_bot.plugins[n]
-            funcs.append(item)
-            content += f'[{index}]{item.name}\n'
-            index += 1
+        content, funcs = get_plugins_content(func_ids)
 
-        content += '\n回复【序号】开启对应功能'
-
-        reply = await data.wait(Chain(data).text(content))
+        reply = await data.wait(Chain(data).text('有以下可开启的功能，回复【序号】开启对应功能').markdown(content))
         if reply:
             index = get_index_from_text(reply.text_digits, funcs)
             if index is not None:
@@ -83,7 +70,7 @@ async def _(data: Message):
                 DisabledFunction.delete().where(DisabledFunction.channel_id == data.channel_id,
                                                 DisabledFunction.function_id == func.plugin_id).execute()
 
-                return Chain(data).text(f'已开启功能【{func.name}】').markdown(get_doc(func))
+                return Chain(data).text(f'已开启功能【{func.name}】').markdown(get_plugin_use_doc(func))
     else:
         return Chain(data).text('未关闭任何功能，无需开启~')
 
@@ -95,21 +82,12 @@ async def _(data: Message):
 
     disabled: List[DisabledFunction] = DisabledFunction.select().where(DisabledFunction.channel_id == data.channel_id)
 
-    func_ids = set(main_bot.plugins.keys()) - set([n.function_id for n in disabled])
+    func_ids = get_plugins_set() - set([n.function_id for n in disabled])
 
     if func_ids:
-        content = '有以下可关闭的功能：\n\n'
-        index = 1
-        funcs = []
-        for n in func_ids:
-            item = main_bot.plugins[n]
-            funcs.append(item)
-            content += f'[{index}]{item.name}\n'
-            index += 1
+        content, funcs = get_plugins_content(func_ids)
 
-        content += '\n回复【序号】关闭对应功能'
-
-        reply = await data.wait(Chain(data).text(content))
+        reply = await data.wait(Chain(data).text('有以下可关闭的功能，回复【序号】关闭对应功能').markdown(content))
         if reply:
             index = get_index_from_text(reply.text_digits, funcs)
             if index is not None:
@@ -123,3 +101,34 @@ async def _(data: Message):
                 return Chain(data).text(f'已关闭功能【{func.name}】')
     else:
         return Chain(data).text('已经没有可以关闭的功能了~')
+
+
+def get_plugin_use_doc(instance: AmiyaBotPluginInstance):
+    if hasattr(instance, 'instruction'):
+        content = check_file_content(instance.instruction)
+        if content:
+            return f'# {instance.name}\n\n{content}'
+
+    return get_doc(instance)
+
+
+def get_plugins_set():
+    return set(
+        [plugin_id for plugin_id in main_bot.plugins.keys() if plugin_id != bot.plugin_id]
+    )
+
+
+def get_plugins_content(func_ids: Set[str]):
+    content = '|序号|插件名|版本|描述|\n|----|----|----|----|\n'
+    index = 1
+    funcs = []
+    for n in func_ids:
+        item = main_bot.plugins[n]
+        if item.plugin_id == bot.plugin_id:
+            continue
+
+        funcs.append(item)
+        content += f'|{index}|{item.name}|{item.version}|{item.description}|\n'
+        index += 1
+
+    return content, funcs
