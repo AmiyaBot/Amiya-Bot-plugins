@@ -11,14 +11,14 @@
 </head>
 <body>
 <div id="template" v-if="Object.keys(data).length" :style="secretary(data.status.secretary.charId)">
-    <div style="display: flex">
+    <div style="display: flex; align-items: center;">
         <div class="avatar">
             <img style="width: 100%;"
                  :src="avatar(data.status.secretary.skinId)"
                  :alt="data.status.avatar.type"
                  onerror="changeImage(this)">
         </div>
-        <div style="display: flex; align-items: center; flex-direction: column;">
+        <div style="display: flex; align-items: center; flex-direction: column; margin-right: 30px;">
             <div style="display: flex; align-items: center;">
                 <div class="level">{{ data.status.level }}</div>
                 <div>
@@ -28,6 +28,16 @@
             </div>
             <div style="font-size: 14px; color: #9E9E9E; margin-top: 5px">
                 入职日：{{ dateTime(data.status.registerTs, 'y-m-d') }}
+            </div>
+        </div>
+        <div class="resource shadow" v-for="values in data.values">
+            <div v-for="item in values">
+                <div>{{ item.name }}</div>
+                <div style="display: flex;">
+                    <span style="color: #03A9F4;">{{ item.value }}</span>
+                    <span style="margin: 0 2px">/</span>
+                    <span>{{ item.max }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -42,18 +52,46 @@
         </div>
         <div class="count-info">
             <div>干员数量</div>
-            <div>{{ data.chars.length }}</div>
+            <div>{{ charsNum() }}</div>
         </div>
         <div class="count-info">
-            <div>时装</div>
+            <div>时装数量</div>
             <div>{{ data.skins.length }}</div>
         </div>
+        <div class="count-info">
+            <div>家具保有量</div>
+            <div>{{ data.building.furniture.total }}</div>
+        </div>
     </div>
-    <div class="ap">
-        <span style="color: #03A9F4;">{{ data.status.ap.current }}</span> / {{ data.status.ap.max }}
-    </div>
-    <div style="font-size: 12px; color: #9E9E9E; margin-top: 3px">
-        最后记录于{{ dateTime(data.status.ap.lastApAddTime) }}
+    <div class="assist">
+        <div class="assist-char" v-for="char in data.assistChars">
+            <div class="assist-char-avatar">
+                <img style="height: 100%;" :src="avatar(char.skinId)" :alt="char.skinId">
+                <img class="evolve-phase shadow" :src="evolvePhase(char.evolvePhase)" alt="evolvePhase">
+                <img class="potential-rank shadow" :src="potentialRank(char.potentialRank)" alt="potentialRank">
+                <div class="char-level">{{ char.level }}</div>
+            </div>
+            <div class="assist-char-info">
+                <div style="height: 25px; display: flex; align-items: center;">
+                    <template v-if="char.equip && data.equipmentInfoMap[char.equip.id].typeIcon !== 'original'">
+                        <div class="equip">
+                            <img :src="equipColor(char.equip)" alt="equip">
+                            <img :src="equipIcon(char.equip)" alt="equip">
+                        </div>
+                        <div style="font-size: 14px; padding-left: 5px;">
+                            {{ equip(char.equip).typeIcon.toUpperCase() }}
+                            <span style="font-size: 14px; padding-left: 3px; color: #FF5722">
+                                Lv.{{ char.equip.level }}
+                            </span>
+                        </div>
+                    </template>
+                </div>
+                <div style="margin-top: 5px;">
+                    <img class="skill" :src="skillIcon(char.skillId)" :alt="char.skillId">
+                    <div class="skill-level">Rank.{{ char.mainSkillLvl + char.specializeLevel }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>
@@ -64,26 +102,96 @@
         e.src = '../logo.png'
     }
 
+    const gamedataPath = '../../../resource/gamedata'
+
     const template = new Vue({
         el: '#template',
         methods: {
             init(data) {
-                const crossTime = (new Date().getTime() / 1000 - data.status.ap.lastApAddTime) / 360
-
-                data.status.ap.current += parseInt(crossTime.toString())
-                if (data.status.ap.current >= data.status.ap.max) {
-                    data.status.ap.current = data.status.ap.max
-                }
+                data.values = [
+                    [
+                        {
+                            name: '理智',
+                            value: this.restoreCalc(data.status.ap.current, data.status.ap.max, data.status.ap.lastApAddTime),
+                            max: data.status.ap.max
+                        },
+                        {
+                            name: '无人机',
+                            value: this.restoreCalc(data.building.labor.value, data.building.labor.maxValue, data.building.labor.lastUpdateTime),
+                            max: data.building.labor.maxValue
+                        },
+                        {
+                            name: '联络次数',
+                            value: data.building.hire.refreshCount,
+                            max: 3
+                        },
+                        {
+                            name: '日常任务',
+                            value: data.routine.daily.current,
+                            max: data.routine.daily.total
+                        },
+                    ],
+                    [
+                        {
+                            name: '周常任务',
+                            value: data.routine.weekly.current,
+                            max: data.routine.weekly.total
+                        },
+                        {
+                            name: '剿灭作战',
+                            value: data.campaign.reward.current,
+                            max: data.campaign.reward.total
+                        },
+                        {
+                            name: '保全派驻',
+                            value: data.tower.reward.lowerItem.current,
+                            max: data.tower.reward.lowerItem.total
+                        },
+                        {
+                            name: '',
+                            value: data.tower.reward.higherItem.current,
+                            max: data.tower.reward.higherItem.total
+                        },
+                    ]
+                ]
 
                 this.$set(this, 'data', data)
             },
+            restoreCalc(value, max, lastDate) {
+                return Math.min(Math.round((Date.now() / 1000 - lastDate) / 360 + value), max)
+            },
             secretary(charId) {
                 return {
-                    backgroundImage: `url(../../../resource/gamedata/skin/skin/${charId}_1b.png)`
+                    backgroundImage: `url(${gamedataPath}/skin/skin/${charId}_1b.png)`
                 }
             },
+            equip(item) {
+                return this.data.equipmentInfoMap[item.id]
+            },
+            equipIcon(item) {
+                return getEquipTypeIconUrl(this.equip(item).typeIcon)
+            },
+            equipColor(item) {
+                return getEquipTypeShiningUrl(this.equip(item).shiningColor)
+            },
             avatar(skinId) {
-                return getSkinAvatarUrl(skinId)
+                // return getSkinAvatarUrl(skinId)
+                skinId = skinId.replace(/@/g, '_')
+                if (skinId.match(/_/g).length > 2) {
+                    skinId = skinId.replace(/#/g, '%23')
+                } else {
+                    skinId = skinId.replace(/#/g, '_')
+                }
+                return `${gamedataPath}/avatar/${skinId}.png`
+            },
+            potentialRank(level) {
+                return `./assets/potentialRank/${level}.png`
+            },
+            evolvePhase(level) {
+                return `./assets/evolvePhase/${level}.png`
+            },
+            skillIcon(skillId) {
+                return `${gamedataPath}/skill/skill_icon_${skillId}.png`
             },
             stageProgress() {
                 const stage = this.data.stageInfoMap[this.data.status.mainStageProgress]
@@ -91,6 +199,9 @@
                     return stage.code
                 }
                 return '全部完成'
+            },
+            charsNum() {
+                return this.data.chars.find(char => char.charId === 'char_1001_amiya2') ? this.data.chars.length - 1 : this.data.chars.length
             },
             dateTime(time, format = 'y-m-d h:i:s') {
                 const mSec = time * (time.toString().length < 13 ? 1000 : 1)

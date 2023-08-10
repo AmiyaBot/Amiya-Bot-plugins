@@ -9,8 +9,8 @@ body {
 }
 
 #template {
-    width: 650px;
-    height: 300px;
+    width: 800px;
+    height: 400px;
     background: #252525 right -100px top 20px / auto 600px no-repeat;
     padding: 25px;
 }
@@ -45,7 +45,7 @@ body {
 }
 
 .count-info > div:first-child:after {
-    content: '\\\\';
+    content: '//';
     color: #03A9F4;
     padding-left: 10px;
 }
@@ -54,9 +54,106 @@ body {
     font-size: 25px;
 }
 
-.ap {
-    line-height: 25px;
-    background: url(assets/intellect.png) center left 0 / 25px no-repeat;
-    padding-left: 30px;
-    margin-top: 15px;
+.resource {
+    padding-left: 10px;
+    margin-right: 10px;
+}
+
+.resource > div {
+    height: 20px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+}
+
+.resource * {
+    font-size: 14px;
+}
+
+.resource > div > div:first-child {
+    width: 65px;
+}
+
+.assist {
+    width: fit-content;
+    padding: 15px;
+    border-radius: 6px;
+    background: rgb(0 0 0 / 80%);
+    margin-top: 20px;
+    display: flex;
+}
+
+.assist > div {
+    display: flex;
+}
+
+.assist-char {
+    min-width: 220px;
+}
+
+.assist-char-avatar {
+    height: 80px;
+    padding: 3px;
+    margin-right: 5px;
+    border-radius: 6px;
+    background: rgb(158 158 158 / 10%);
+    position: relative;
+}
+
+.evolve-phase {
+    width: 25px;
+    position: absolute;
+    bottom: 27px;
+    right: 0;
+}
+
+.potential-rank {
+    width: 25px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.char-level {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ffdc00;
+    background: rgb(0 0 0 / 80%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: -10px;
+    bottom: -10px;
+}
+
+.equip {
+    height: 100%;
+    position: relative;
+}
+
+.equip > img {
+    height: 100%;
+    text-align: center;
+}
+
+.equip > img:first-child {
+    position: absolute;
+    top: 0;
+    left: -6px;
+}
+
+.skill {
+    width: 30px;
+}
+
+.skill-level {
+    font-size: 14px;
+}
+
+.shadow {
+    padding: 2px;
+    border-radius: 6px;
+    background: rgb(0 0 0 / 50%);
 }

@@ -46,7 +46,7 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
 
 bot = SKLandPluginInstance(
     name='森空岛（Beta）',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -89,7 +89,9 @@ async def _(data: Message):
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
 
-    return Chain(data).html(f'{curr_dir}/template/userInfo.html', character_info, width=650, height=300)
+    return Chain(data) \
+        .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。') \
+        .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400)
 
 
 @bot.on_message(keywords=['我的干员信息'], level=5)
