@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="no-referrer"/>
     <link type="text/css" rel="styleSheet" href="font/font.css"/>
     <link type="text/css" rel="styleSheet" href="userInfo.css"/>
     <title>template</title>
@@ -66,7 +67,8 @@
     <div class="assist">
         <div class="assist-char" v-for="char in data.assistChars">
             <div class="assist-char-avatar">
-                <img style="height: 100%;" :src="avatar(char.skinId)" :alt="char.skinId">
+                <img style="height: 100%;" :src="avatar(char.skinId)" :alt="char.skinId" :skinId="char.skinId"
+                     onerror="changeUrl(this)">
                 <img class="evolve-phase shadow" :src="evolvePhase(char.evolvePhase)" alt="evolvePhase">
                 <img class="potential-rank shadow" :src="potentialRank(char.potentialRank)" alt="potentialRank">
                 <div class="char-level">{{ char.level }}</div>
@@ -102,7 +104,11 @@
         e.src = '../logo.png'
     }
 
-    const gamedataPath = '../../../resource/gamedata'
+    function changeUrl(e) {
+        e.src = getSkinAvatarUrl(e.attributes.skinId.value)
+    }
+
+    const gamedataPath = '../../../../resource/gamedata'
 
     const template = new Vue({
         el: '#template',
@@ -175,7 +181,6 @@
                 return getEquipTypeShiningUrl(this.equip(item).shiningColor)
             },
             avatar(skinId) {
-                // return getSkinAvatarUrl(skinId)
                 skinId = skinId.replace(/@/g, '_')
                 if (skinId.match(/_/g).length > 2) {
                     skinId = skinId.replace(/#/g, '%23')
