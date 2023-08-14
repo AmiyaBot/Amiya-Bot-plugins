@@ -96,13 +96,7 @@
                 this.$set(this, 'chars', result.sort((a, b) => b.rarity - a.rarity))
             },
             skinPortrait(skinId) {
-                skinId = skinId.replace(/@/g, '_')
-                if (skinId.match(/_/g).length > 2) {
-                    skinId = skinId.replace(/#/g, '%23')
-                } else {
-                    skinId = skinId.replace(/#/g, '_')
-                }
-                return `../../../../resource/gamedata/portrait/${skinId}.png`
+                return `${gamedataPath}/portrait/${changeGameDataSkinId(skinId)}.png`
             }
         },
         data() {

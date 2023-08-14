@@ -41,6 +41,15 @@
                 </div>
             </div>
         </div>
+        <div class="recruit">
+            <div class="shadow" v-for="(item, index) in data.recruit">
+                <div style="font-size: 14px">公招位 {{ index + 1 }}</div>
+                <div class="progress">
+                    <div :style="{ width: recruit(item) + '%' }"
+                         :class="{ finished: Date.now() / 1000 >= item.finishTs }"></div>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="dr-name">
         {{ data.status.name }}
@@ -67,8 +76,7 @@
     <div class="assist">
         <div class="assist-char" v-for="char in data.assistChars">
             <div class="assist-char-avatar">
-                <img style="height: 100%;" :src="avatar(char.skinId)" :alt="char.skinId" :skinId="char.skinId"
-                     onerror="changeUrl(this)">
+                <img style="height: 100%;" :src="avatar(char.skinId)" :alt="char.skinId">
                 <img class="evolve-phase shadow" :src="evolvePhase(char.evolvePhase)" alt="evolvePhase">
                 <img class="potential-rank shadow" :src="potentialRank(char.potentialRank)" alt="potentialRank">
                 <div class="char-level">{{ char.level }}</div>
@@ -103,12 +111,6 @@
     function changeImage(e) {
         e.src = '../logo.png'
     }
-
-    function changeUrl(e) {
-        e.src = getSkinAvatarUrl(e.attributes.skinId.value)
-    }
-
-    const gamedataPath = '../../../../resource/gamedata'
 
     const template = new Vue({
         el: '#template',
@@ -166,6 +168,18 @@
             restoreCalc(value, max, lastDate) {
                 return Math.min(Math.round((Date.now() / 1000 - lastDate) / 360 + value), max)
             },
+            recruit(data) {
+                switch (data.state) {
+                    case 1:
+                        return 0
+                    case 3:
+                        return 100
+                    case 2:
+                        const remaining = data.finishTs - Date.now() / 1000
+                        if (remaining <= 0) return 100
+                        return (data.duration - remaining) / data.duration * 100
+                }
+            },
             secretary(charId) {
                 return {
                     backgroundImage: `url(${gamedataPath}/skin/skin/${charId}_1b.png)`
@@ -181,13 +195,7 @@
                 return getEquipTypeShiningUrl(this.equip(item).shiningColor)
             },
             avatar(skinId) {
-                skinId = skinId.replace(/@/g, '_')
-                if (skinId.match(/_/g).length > 2) {
-                    skinId = skinId.replace(/#/g, '%23')
-                } else {
-                    skinId = skinId.replace(/#/g, '_')
-                }
-                return `${gamedataPath}/avatar/${skinId}.png`
+                return getSkinAvatarUrl(skinId)
             },
             potentialRank(level) {
                 return `./assets/potentialRank/${level}.png`
@@ -196,7 +204,7 @@
                 return `./assets/evolvePhase/${level}.png`
             },
             skillIcon(skillId) {
-                return `${gamedataPath}/skill/skill_icon_${skillId}.png`
+                return getSkillIconUrl(skillId)
             },
             stageProgress() {
                 const stage = this.data.stageInfoMap[this.data.status.mainStageProgress]
