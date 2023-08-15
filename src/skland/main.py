@@ -52,7 +52,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛（Beta）',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -95,9 +95,6 @@ async def _(data: Message):
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
 
-    from core.util import create_test_data
-    create_test_data(character_info, 'log/test.js')
-
     return Chain(data, chain_builder=WaitALLRequestsDone()) \
         .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400, render_time=1000) \
         .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。')
@@ -123,6 +120,20 @@ async def _(data: Message):
     return Chain(data, chain_builder=WaitALLRequestsDone()) \
         .html(f'{curr_dir}/template/chars.html', render_data, width=1580, render_time=1000) \
         .text(tips)
+
+
+@bot.on_message(keywords=['我的基建信息'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    await data.send(Chain(data).text('开始获取并生成基建信息，请稍后...'))
+
+    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+
+    return Chain(data, chain_builder=WaitALLRequestsDone()) \
+        .html(f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000)
 
 
 @bot.on_message(keywords='绑定', allow_direct=True)

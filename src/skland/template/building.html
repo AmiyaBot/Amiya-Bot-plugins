@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="no-referrer"/>
+    <title>template</title>
+    <link type="text/css" rel="styleSheet" href="font/font.css"/>
+    <link type="text/css" rel="stylesheet" href="building.css">
+</head>
+<body>
+<div id="template" v-if="Object.keys(data).length">
+    <div class="floor">
+        <room class="room-none room-corridor"></room>
+        <room class="room-none room-normal"></room>
+        <room class="room-none room-normal"></room>
+        <room class="room-none room-normal"></room>
+        <room class="room-elevator"></room>
+        <room class="room-big">
+            <div class="control">
+                <div>
+                    <div style="font-size: 25px;">控制中枢</div>
+                    <div>LEVEL OF CONTROL INTERFACE <span class="level">Lv.{{ building.control.level }}</span></div>
+                </div>
+                <resident-chars :chars="building.control.chars" :max-chars="5"></resident-chars>
+            </div>
+        </room>
+        <room class="room-elevator"></room>
+        <room class="room-long">
+            <div class="normal-title" style="border-color: #de40f9">
+                <div>会客室 <span class="level">Lv.{{ building.meeting.level }}</span></div>
+                <div v-if="building.meeting.clue.sharing" class="sharing">线索交流开启中</div>
+            </div>
+            <div class="rate">
+                <div class="progress normal">
+                    <div style="background-color: #de40f9;"
+                         :style="{ width: building.meeting.clue.own / 10 * 100 + '%' }"></div>
+                </div>
+                <div>{{ building.meeting.clue.own }} / 10</div>
+            </div>
+            <div style="display: flex;">
+                <resident-chars :chars="building.meeting.chars" char-width="43px" :max-chars="2"></resident-chars>
+                <div class="clues">
+                    <div class="clue clue1"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'RHINE') }"></div>
+                    <div class="clue clue2"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'PENGUIN') }"></div>
+                    <div class="clue clue3"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'BLACKSTEEL') }"></div>
+                    <div class="clue clue4"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'URSUS') }"></div>
+                    <div class="clue clue5"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'GLASGOW') }"></div>
+                    <div class="clue clue6"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'KJERAG') }"></div>
+                    <div class="clue clue7"
+                         :class="{ on: building.meeting.clue.board.find(n => n === 'RHODES') }"></div>
+                </div>
+            </div>
+        </room>
+    </div>
+    <div class="floor">
+        <room class="room-none room-corridor"></room>
+        <component :is="slot('slot_24').roomType" :data="slot('slot_24')"></component>
+        <component :is="slot('slot_25').roomType" :data="slot('slot_25')"></component>
+        <component :is="slot('slot_26').roomType" :data="slot('slot_26')"></component>
+        <room class="room-elevator"></room>
+        <dormitories :data="slot('slot_28')"></dormitories>
+        <room class="room-corridor"></room>
+        <room class="room-elevator"></room>
+        <room class="room-corridor"></room>
+        <room class="room-normal">
+            <div class="normal-title">
+                <div>加工站</div>
+            </div>
+            <div class="no-info">NO INFO</div>
+        </room>
+    </div>
+    <div class="floor">
+        <component :is="slot('slot_14').roomType" :data="slot('slot_14')"></component>
+        <component :is="slot('slot_15').roomType" :data="slot('slot_15')"></component>
+        <component :is="slot('slot_16').roomType" :data="slot('slot_16')"></component>
+        <room class="room-corridor"></room>
+        <room class="room-elevator"></room>
+        <room class="room-corridor"></room>
+        <dormitories :data="slot('slot_20')"></dormitories>
+        <room class="room-elevator"></room>
+        <room class="room-corridor"></room>
+        <room class="room-normal">
+            <div class="normal-title" style="border-color: #009688">
+                <div>办公室 <span class="level">Lv.{{ building.hire.level }}</span></div>
+            </div>
+            <div class="rate">
+                <div class="progress normal">
+                    <div style="background-color: #009688;"
+                         :style="{ width: building.hire.refreshCount / 3 * 100 + '%' }"></div>
+                </div>
+                <div>{{ building.hire.refreshCount }} / 3</div>
+            </div>
+            <resident-chars :chars="building.hire.chars" char-width="43px" :max-chars="1"></resident-chars>
+        </room>
+    </div>
+    <div class="floor">
+        <room class="room-none room-corridor"></room>
+        <component :is="slot('slot_5').roomType" :data="slot('slot_5')"></component>
+        <component :is="slot('slot_6').roomType" :data="slot('slot_6')"></component>
+        <component :is="slot('slot_7').roomType" :data="slot('slot_7')"></component>
+        <room class="room-elevator"></room>
+        <dormitories :data="slot('slot_9')"></dormitories>
+        <room class="room-corridor"></room>
+        <room class="room-elevator"></room>
+        <room class="room-corridor"></room>
+        <room class="room-normal">
+            <div class="normal-title" style="border-color: #f44336">
+                <div>训练室 <span class="level">Lv.{{ building.training.level }}</span></div>
+                <div class="training">{{ building.training.speed * 100 }}%</div>
+            </div>
+            <div class="rate">
+                <div class="progress normal" style="display: flex; justify-content: flex-end;">
+                    <div style="background-color: #f44336;"
+                         :style="{ width: (1 - building.training.remainSecs / building.training.remainPoint) * 100 + '%' }"></div>
+                </div>
+                <div>{{ convertSecondsToTimeFormat(building.training.remainSecs) }}</div>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+                <resident-chars :chars="[{...building.training.trainer, index: 0}]" char-width="43px"
+                                :max-chars="1"></resident-chars>
+                <div class="trainee">
+                    <img :src="avatar(building.training.trainee.charId)" :alt="building.training.trainee.charId">
+                    <template v-if="building.training.trainee.skill">
+                        <img :src="skill(building.training.trainee.skill.id)"
+                             :alt="building.training.trainee.skill.skillId">
+                        <div style="font-size: 12px; margin-left: 10px;">
+                            Lv.{{ building.training.trainee.skill.specializeLevel + 7 }} >>
+                            Lv.{{ building.training.trainee.skill.specializeLevel + 8 }}
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </room>
+    </div>
+    <div class="floor">
+        <room class="room-none room-corridor"></room>
+        <room class="room-none room-normal"></room>
+        <room class="room-none room-normal"></room>
+        <room class="room-none room-normal"></room>
+        <room class="room-elevator"></room>
+        <room class="room-corridor"></room>
+        <dormitories :data="slot('slot_3')"></dormitories>
+        <room class="room-elevator"></room>
+    </div>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<script src="js/character.js"></script>
+<script src="js/dataMap.js"></script>
+<script>
+    function avatar (charId) {
+        return getSkinAvatarUrl(charMap[charId].skinId)
+    }
+
+    function skill (skillId) {
+        return getSkillIconUrl(skillId)
+    }
+
+    function convertSecondsToTimeFormat (seconds) {
+        let hours = Math.floor(seconds / 3600)
+        let minutes = Math.floor((seconds % 3600) / 60)
+        let remainingSeconds = seconds % 60
+
+        hours = hours < 10 ? '0' + hours : hours
+        minutes = minutes < 10 ? '0' + minutes : minutes
+        remainingSeconds = remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds
+
+        return hours + ':' + minutes + ':' + remainingSeconds
+    }
+
+    Vue.component('room', {
+        template: `
+            <div><div><div><slot></slot></div></div></div>
+        `
+    })
+    // 制造站
+    Vue.component('manufactures', {
+        props: {
+            data: Object
+        },
+        template: `
+            <room class="room-normal manufactures">
+            <div class="normal-title" style="border-color: #f5c93b;">
+                <div>制造站 <span class="level">Lv.{{ data.level }}</span></div>
+                <div class="speed">{{ data.speed * 100 }}%</div>
+            </div>
+            <div class="rate">
+                <div class="progress normal">
+                    <div style="background-color: #f5c93b;"
+                         :style="{ width: data.weight / data.capacity * 100 + '%' }"></div>
+                </div>
+                <div>{{ data.weight }} / {{ data.capacity }}</div>
+            </div>
+            <div style="display: flex;">
+                <resident-chars :chars="data.chars" char-width="43px"/>
+                <div class="result">
+                    <div style="font-size: 12px; color: #f5c93b;">{{ formula[data.formulaId] }}</div>
+                    <div style="font-size: 14px;">已生产：{{ data.complete }}</div>
+                </div>
+            </div>
+            </room>
+        `
+    })
+    // 贸易站
+    Vue.component('tradings', {
+        props: {
+            data: Object
+        },
+        template: `
+            <room class="room-normal tradings">
+            <div class="normal-title" style="border-color: #5acbfd;">
+                <div>贸易站 <span class="level">Lv.{{ data.level }}</span></div>
+                <div style="font-size: 14px; color: #5acbfd;">
+                    {{ data.strategy == 'O_GOLD' ? '龙门商法' : '开采协力' }}
+                </div>
+            </div>
+            <div class="rate">
+                <div class="progress normal">
+                    <div style="background-color: #5acbfd;"
+                         :style="{ width: data.stock.length / data.stockLimit * 100 + '%' }"></div>
+                </div>
+                <div>{{ data.stock.length }} / {{ data.stockLimit }}</div>
+            </div>
+            <div style="display: flex;">
+                <resident-chars :chars="data.chars" char-width="43px"/>
+                <div class="result">
+                    <div style="font-size: 12px;">订单总价值：</div>
+                    <div style="font-size: 14px; color: #5acbfd;">
+                        {{ count }}
+                    </div>
+                </div>
+            </div>
+            </room>
+        `,
+        computed: {
+            count () {
+                let count = 0
+                for (const item of this.data.stock) {
+                    count += item.gain.count
+                }
+                return count
+            }
+        }
+    })
+    // 发电站
+    Vue.component('powers', {
+        props: {
+            data: Object
+        },
+        template: `
+            <room class="room-normal powers">
+            <div class="normal-title" style="border-color: #cdfe71;">
+                <div>发电站 <span class="level">Lv.{{ data.level }}</span></div>
+                <div class="power">{{ power }}</div>
+            </div>
+            <div class="rate">
+                <div class="progress normal">
+                    <div style="background-color: #cdfe71;"
+                         :style="{ width: labor / data.labor.maxValue * 100 + '%' }"></div>
+                </div>
+                <div>{{ labor }} / {{ data.labor.maxValue }}</div>
+            </div>
+            <resident-chars :chars="data.chars" char-width="43px" :max-chars="1"/>
+            </room>
+        `,
+        computed: {
+            power () {
+                return 2 ** (this.data.level - 1) * 60 + (2 ** (this.data.level - 1) - 1) * 10
+            },
+            labor () {
+                return this.restoreCalc(this.data.labor.value, this.data.labor.maxValue, this.data.labor.lastUpdateTime)
+            }
+        },
+        methods: {
+            restoreCalc (value, max, lastDate) {
+                return Math.min(Math.round((Date.now() / 1000 - lastDate) / 360 + value), max)
+            }
+        }
+    })
+    // 宿舍
+    Vue.component('dormitories', {
+        props: {
+            data: Object
+        },
+        template: `
+            <room class="room-long">
+            <div class="normal-title">
+                <div>宿舍 <span class="level">Lv.{{ data.level }}</span></div>
+                <div class="comfort">{{ data.comfort }}</div>
+            </div>
+            <resident-chars style="width: 100%; justify-content: space-around;" :chars="data.chars" :max-chars="5"/>
+            </room>
+        `
+    })
+    Vue.component('resident-chars', {
+        props: {
+            chars: Array,
+            charWidth: {
+                type: String,
+                default: '60px'
+            },
+            maxChars: {
+                type: Number,
+                default: 3
+            }
+        },
+        template: `
+            <div class="resident-chars">
+            <div class="resident-char-item" :style="{ width: charWidth }" v-for="item in charIndexes">
+                <template v-if="item">
+                    <div class="resident-char-item-avatar">
+                        <img :src="avatar(item.charId)" :alt="item.charId">
+                        <div :class="charApClass(item)"></div>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div :class="charApClass(item)" :style="{ width: charAp(item) + '%' }"></div>
+                    </div>
+                </template>
+                <template v-else>
+                    <div class="empty-char"></div>
+                </template>
+            </div>
+            </div>
+        `,
+        computed: {
+            charIndexes () {
+                const indexes = new Array(this.maxChars).fill(null)
+                for (const item of this.chars) {
+                    indexes[item.index] = item
+                }
+                return indexes
+            }
+        },
+        methods: {
+            charAp (char) {
+                const value = char.ap <= 0 && char.index !== -1 ? 100 : char.ap / 86400
+                return value <= 3 ? 3 : value
+            },
+            charApClass (char) {
+                if (char.ap <= 0) return 'red'
+                if (char.ap === 8640000) return 'green'
+            }
+        }
+    })
+
+    const charMap = {}
+    const roomMap = {}
+    const template = new Vue({
+        el: '#template',
+        methods: {
+            init (data) {
+                for (const item of data.chars) {
+                    charMap[item.charId] = item
+                }
+                for (const key of ['dormitories', 'manufactures', 'tradings', 'powers']) {
+                    for (const room of data.building[key]) {
+                        roomMap[room.slotId] = {
+                            ...room,
+                            roomType: key
+                        }
+                        if (key === 'powers') {
+                            roomMap[room.slotId].labor = data.building.labor
+                        }
+                    }
+                }
+
+                const training = data.building.training
+                if (training.trainee && training.trainee.targetSkill != -1) {
+                    training.trainee.skill = charMap[training.trainee.charId].skills[training.trainee.targetSkill]
+                }
+
+                this.$set(this, 'data', data)
+                this.$set(this, 'building', data.building)
+            },
+            slot (slotId) {
+                return roomMap[slotId]
+            }
+        },
+        data () {
+            return {
+                data: {},
+                building: {},
+            }
+        },
+        mounted () {
+            window.init = this.init
+        }
+    })
+</script>
+</html>
