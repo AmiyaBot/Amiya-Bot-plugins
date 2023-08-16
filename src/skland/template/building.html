@@ -12,6 +12,19 @@
 </head>
 <body>
 <div id="template" v-if="Object.keys(data).length">
+    <div class="readme">
+        <div>
+            森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。
+            <div>数据最后记录时间为：<span class="level">{{ dateTime(building.labor.lastUpdateTime) }}</span></div>
+        </div>
+        <div style="display: flex; margin-top: 20px;">
+            干员有头像下的进度条为<span class="level">心情值</span>，
+            中枢副手会显示一条额外的<span class="level">信赖值</span>；
+        </div>
+        <div style="display: flex; align-items: center;">
+            <span class="tag" style="color: #cdfe71;">发电站</span>的进度为无人机恢复进度；
+        </div>
+    </div>
     <div class="floor">
         <room class="room-none room-corridor"></room>
         <room class="room-none room-normal"></room>
@@ -24,7 +37,13 @@
                     <div style="font-size: 25px;">控制中枢</div>
                     <div>LEVEL OF CONTROL INTERFACE <span class="level">Lv.{{ building.control.level }}</span></div>
                 </div>
-                <resident-chars :chars="building.control.chars" :max-chars="5"></resident-chars>
+                <div>
+                    <div>管理员：{{ data.status.name }}</div>
+                    <div>家具拥有数：<span class="level">{{ building.furniture.total }}</span></div>
+                </div>
+                <div style="height: 90px;">
+                    <resident-chars :chars="building.control.chars" :max-chars="5" :show-favor="true"></resident-chars>
+                </div>
             </div>
         </room>
         <room class="room-elevator"></room>
@@ -40,7 +59,7 @@
                 </div>
                 <div>{{ building.meeting.clue.own }} / 10</div>
             </div>
-            <div style="display: flex;">
+            <div style="display: flex; flex: 2;">
                 <resident-chars :chars="building.meeting.chars" char-width="43px" :max-chars="2"></resident-chars>
                 <div class="clues">
                     <div class="clue clue1"
@@ -122,22 +141,31 @@
                     <div style="background-color: #f44336;"
                          :style="{ width: (1 - building.training.remainSecs / building.training.remainPoint) * 100 + '%' }"></div>
                 </div>
-                <div>{{ convertSecondsToTimeFormat(building.training.remainSecs) }}</div>
-            </div>
-            <div style="display: flex; align-items: flex-end;">
-                <resident-chars :chars="[{...building.training.trainer, index: 0}]" char-width="43px"
-                                :max-chars="1"></resident-chars>
-                <div class="trainee">
-                    <img :src="avatar(building.training.trainee.charId)" :alt="building.training.trainee.charId">
-                    <template v-if="building.training.trainee.skill">
-                        <img :src="skill(building.training.trainee.skill.id)"
-                             :alt="building.training.trainee.skill.skillId">
-                        <div style="font-size: 12px; margin-left: 10px;">
-                            Lv.{{ building.training.trainee.skill.specializeLevel + 7 }} >>
-                            Lv.{{ building.training.trainee.skill.specializeLevel + 8 }}
-                        </div>
+                <div>
+                    <template v-if="trainee && trainee.targetSkill !== -1">
+                        {{ convertSeconds(building.training.remainSecs) }}
+                    </template>
+                    <template v-else>
+                        无训练
                     </template>
                 </div>
+            </div>
+            <div style="display: flex; align-items: flex-end; flex: 2;">
+                <resident-chars :chars="[building.training.trainer ? {...building.training.trainer, index: 0} : null]"
+                                :max-chars="1" char-width="43px"></resident-chars>
+                <div class="trainee" v-if="trainee">
+                    <img :src="avatar(trainee.charId)" :alt="trainee.charId">
+                    <div v-if="trainee.skill" style="margin-left: 5px;">
+                        <img :src="skill(trainee.skill.id)"
+                             :alt="trainee.skill.skillId">
+                        <div style="font-size: 12px;">
+                            专精 {{ trainee.skill.specializeLevel }}
+                            <span style="color: #f44336; font-size: 12px;">>></span>
+                            专精 {{ trainee.skill.specializeLevel + 1 }}
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="empty-char" style="width: 57px; height: 57px; margin-left: 10px;"></div>
             </div>
         </room>
     </div>
@@ -156,16 +184,29 @@
 <script src="js/vue.min.js"></script>
 <script src="js/character.js"></script>
 <script src="js/dataMap.js"></script>
+<script src="js/tools.js"></script>
 <script>
+    const charMap = {}
+    const roomMap = {}
+
     function avatar (charId) {
-        return getSkinAvatarUrl(charMap[charId].skinId)
+        if (charId) {
+            return getSkinAvatarUrl(charMap[charId].skinId)
+        }
     }
 
     function skill (skillId) {
         return getSkillIconUrl(skillId)
     }
 
-    function convertSecondsToTimeFormat (seconds) {
+    function convertSeconds (seconds) {
+        if (seconds === -1) {
+            return '无训练'
+        }
+        if (seconds === 0) {
+            return '训练完成'
+        }
+
         let hours = Math.floor(seconds / 3600)
         let minutes = Math.floor((seconds % 3600) / 60)
         let remainingSeconds = seconds % 60
@@ -177,6 +218,7 @@
         return hours + ':' + minutes + ':' + remainingSeconds
     }
 
+    // 房间
     Vue.component('room', {
         template: `
             <div><div><div><slot></slot></div></div></div>
@@ -191,7 +233,7 @@
             <room class="room-normal manufactures">
             <div class="normal-title" style="border-color: #f5c93b;">
                 <div>制造站 <span class="level">Lv.{{ data.level }}</span></div>
-                <div class="speed">{{ data.speed * 100 }}%</div>
+                <div class="speed">{{ (data.speed * 100).toFixed(0) }}%</div>
             </div>
             <div class="rate">
                 <div class="progress normal">
@@ -200,7 +242,7 @@
                 </div>
                 <div>{{ data.weight }} / {{ data.capacity }}</div>
             </div>
-            <div style="display: flex;">
+            <div style="display: flex; flex: 2;">
                 <resident-chars :chars="data.chars" char-width="43px"/>
                 <div class="result">
                     <div style="font-size: 12px; color: #f5c93b;">{{ formula[data.formulaId] }}</div>
@@ -230,7 +272,7 @@
                 </div>
                 <div>{{ data.stock.length }} / {{ data.stockLimit }}</div>
             </div>
-            <div style="display: flex;">
+            <div style="display: flex; flex: 2;">
                 <resident-chars :chars="data.chars" char-width="43px"/>
                 <div class="result">
                     <div style="font-size: 12px;">订单总价值：</div>
@@ -301,6 +343,7 @@
             </room>
         `
     })
+    // 干员列表
     Vue.component('resident-chars', {
         props: {
             chars: Array,
@@ -311,6 +354,10 @@
             maxChars: {
                 type: Number,
                 default: 3
+            },
+            showFavor: {
+                type: Boolean,
+                default: false
             }
         },
         template: `
@@ -324,6 +371,10 @@
                     <div class="progress" style="height: 5px;">
                         <div :class="charApClass(item)" :style="{ width: charAp(item) + '%' }"></div>
                     </div>
+                    <div class="progress" style="height: 5px; margin-top: 5px" v-if="showFavor">
+                        <div
+                            :style="{ width: charMap[item.charId].favorPercent / 200 * 100 + '%', background: '#03a9f4' }"></div>
+                    </div>
                 </template>
                 <template v-else>
                     <div class="empty-char"></div>
@@ -335,7 +386,9 @@
             charIndexes () {
                 const indexes = new Array(this.maxChars).fill(null)
                 for (const item of this.chars) {
-                    indexes[item.index] = item
+                    if (item) {
+                        indexes[item.index] = item
+                    }
                 }
                 return indexes
             }
@@ -352,10 +405,13 @@
         }
     })
 
-    const charMap = {}
-    const roomMap = {}
     const template = new Vue({
         el: '#template',
+        computed: {
+            trainee () {
+                return this.data.building ? this.data.building.training.trainee : null
+            }
+        },
         methods: {
             init (data) {
                 for (const item of data.chars) {
