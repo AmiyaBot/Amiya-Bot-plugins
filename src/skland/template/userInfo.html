@@ -16,7 +16,7 @@
         <div class="avatar">
             <img style="width: 100%;"
                  :src="avatar(data.status.secretary.skinId)"
-                 :alt="data.status.avatar.type"
+                 :alt="data.status.secretary.skinId"
                  onerror="changeImage(this)">
         </div>
         <div style="display: flex; align-items: center; flex-direction: column; margin-right: 30px;">
@@ -42,7 +42,7 @@
             </div>
         </div>
         <div class="recruit">
-            <div class="shadow" v-for="(item, index) in data.recruit">
+            <div class="shadow" v-for="(item, index) in (data.recruit || [])">
                 <div style="font-size: 14px">公招位 {{ index + 1 }}</div>
                 <div class="progress">
                     <div :style="{ width: recruit(item) + '%' }"

@@ -52,7 +52,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛（Beta）',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -131,9 +131,6 @@ async def _(data: Message):
     await data.send(Chain(data).text('开始获取并生成基建信息，请稍后...'))
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
-
-    from core.util import create_test_data
-    create_test_data(character_info, 'log/test.js')
 
     return Chain(data, chain_builder=WaitALLRequestsDone()) \
         .html(f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000)
