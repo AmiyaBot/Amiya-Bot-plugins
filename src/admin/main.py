@@ -4,13 +4,13 @@ import time
 from amiyabot import PluginInstance, Message, Chain, Equal
 
 from core.util import TimeRecorder, any_match
-from core.database.bot import FunctionUsed, DisabledFunction
+from core.database.bot import Admin
 from core.database.group import GroupActive, check_group_active
 
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='管理员模块',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-admin',
     plugin_type='official',
     description='可使用 BOT 的开关功能以及获取频道信息',
@@ -18,26 +18,17 @@ bot = PluginInstance(
 )
 
 
+@bot.message_created
+async def _(data: Message, _):
+    if not data.is_admin:
+        data.is_admin = bool(Admin.get_or_none(account=data.user_id))
+
+
 @bot.message_before_handle
 async def _(data: Message, factory_name: str, _):
-    disabled = DisabledFunction.get_or_none(
-        function_id=factory_name,
-        channel_id=data.channel_id
-    )
-    if disabled:
-        return False
-
     if not check_group_active(data.channel_id):
         return data.is_admin and bool(any_match(data.text, ['工作', '上班']))
-
     return True
-
-
-@bot.message_after_handle
-async def _(data: Chain, factory_name: str, _):
-    _, is_created = FunctionUsed.get_or_create(function_id=factory_name)
-    if not is_created:
-        FunctionUsed.update(use_num=FunctionUsed.use_num + 1).where(FunctionUsed.function_id == factory_name).execute()
 
 
 @bot.on_message(keywords=['工作', '上班'])

@@ -113,6 +113,9 @@ class GuessProcess:
         }
 
     def get_tips(self):
+        if not self.closed_tags:
+            return False
+
         if self.tips_lock:
             return None
 

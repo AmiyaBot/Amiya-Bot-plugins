@@ -2,19 +2,35 @@ import os
 
 from typing import List, Set
 from amiyabot import PluginInstance, Message, Chain
-from core.database.bot import DisabledFunction
+from core.database.bot import DisabledFunction, FunctionUsed
 from core.util import get_index_from_text, get_doc, check_file_content
 from core import bot as main_bot, AmiyaBotPluginInstance
 
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='功能管理',
-    version='1.6',
+    version='1.7',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
     document=f'{curr_dir}/README.md'
 )
+
+
+@bot.message_before_handle
+async def _(data: Message, factory_name: str, _):
+    disabled = DisabledFunction.get_or_none(
+        function_id=factory_name,
+        channel_id=data.channel_id
+    )
+    return not bool(disabled)
+
+
+@bot.message_after_handle
+async def _(data: Chain, factory_name: str, _):
+    _, is_created = FunctionUsed.get_or_create(function_id=factory_name)
+    if not is_created:
+        FunctionUsed.update(use_num=FunctionUsed.use_num + 1).where(FunctionUsed.function_id == factory_name).execute()
 
 
 @bot.on_message(keywords=['功能', '帮助', '说明', 'help'], allow_direct=True)

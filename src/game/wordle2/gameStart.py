@@ -69,12 +69,17 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
         # 揭示一条信息
         if data.text in ['线索', '提示']:
             tips = process.get_tips()
-            if tips:
-                await send(f'揭示了一个线索：【{tips.title}】{tips.value}')
-                process.tips_lock = True
-                process.display = True
-            else:
+            if tips is False:
+                await send('已经没有可揭示的线索了')
+                continue
+
+            if tips is None:
                 await send('不能连续揭示两个线索哦，请猜一次后继续~')
+                continue
+
+            await send(f'揭示了一个线索：【{tips.title}】{tips.value}')
+            process.tips_lock = True
+            process.display = True
             continue
 
         # 跳过
