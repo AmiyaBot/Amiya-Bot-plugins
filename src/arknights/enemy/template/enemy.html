@@ -13,7 +13,7 @@
 <div id="template">
     <div v-if="Object.keys(data).length">
         <div class="avatar">
-            <img :src="'../../../resource/gamedata/enemy/' + data.info.enemyId + '.png'" alt="enemy"
+            <img :src="gamedataPath + '/' + data.info.enemyId + '.png'" alt="enemy"
                  onerror="hideImage(this)">
             <div class="name">
                 <div class="tags">
@@ -31,6 +31,21 @@
             </div>
         </div>
         <div>
+            <template v-if="data.link_items.length">
+                <div class="title">关联单位</div>
+                <div style="display: flex; flex-wrap: wrap;">
+                    <div style="display: flex; margin-right: 30px;"
+                         v-for="item in data.link_items">
+                        <img :src="gamedataPath + '/' + item.info.enemyId + '.png'" alt="enemy" style="width: 100px"
+                             onerror="hideImage(this)">
+                        <div style="padding-top: 10px;">
+                                <span style="margin: 0;" class="tag"
+                                      :class="data.info.enemyLevel">{{ level[data.info.enemyLevel] }}</span>
+                            <div style="margin-top: 10px">{{ item.info.name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </template>
             <div class="title">能力</div>
             <div>
                 <div v-for="item in data.info.abilityList" :class="'ability-' + item.textFormat">
@@ -77,7 +92,7 @@
 <script src="js/vue.min.js"></script>
 <script>
     function hideImage(e) {
-        e.style.display = 'none'
+        e.src = './img/enemy.png'
     }
 
     const template = new Vue({
@@ -102,7 +117,8 @@
                     'NORMAL': '普通',
                     'ELITE': '精英',
                     'BOSS': 'BOSS',
-                }
+                },
+                gamedataPath: '../../../resource/gamedata/enemy'
             }
         },
         mounted() {

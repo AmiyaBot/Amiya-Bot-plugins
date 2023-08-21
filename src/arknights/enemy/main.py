@@ -12,27 +12,18 @@ line_height = 16
 side_padding = 10
 
 
-def get_value(key, source):
-    for item in key.split('.'):
-        if item in source:
-            source = source[item]
-    return source['m_defined'], integer(source['m_value'])
-
-
 class Enemy:
     @classmethod
     def find_enemies(cls, name: str):
         result = []
         for e_name, item in ArknightsGameData.enemies.items():
-            if name.lower() == e_name or name.lower() in e_name:
+            if name.lower() == e_name.lower() or name.lower() in e_name.lower():
                 result.append([e_name, item])
 
         return result
 
     @classmethod
-    def get_enemy(cls, name: str):
-        enemies = ArknightsGameData.enemies
-
+    def get_enemy(cls, name: str, get_links: bool = True):
         key_map = {
             'attributes.maxHp': {'title': 'maxHp', 'value': ''},
             'attributes.atk': {'title': 'atk', 'value': ''},
@@ -51,15 +42,17 @@ class Enemy:
             'lifePointReduce': {'title': 'lifePointReduce', 'value': ''},
         }
 
+        enemy = ArknightsGameData.enemies.get(name)
         attrs = {}
+        link_items = []
 
-        if enemies[name]['data']:
-            for item in enemies[name]['data']:
+        if enemy['data']:
+            for item in enemy['data']:
                 attrs[item['level'] + 1] = {}
 
                 detail_data = item['enemyData']
                 for key in key_map:
-                    defined, value = get_value(key, detail_data)
+                    defined, value = cls.get_value(key, detail_data)
                     if defined:
                         key_map[key]['value'] = value
                     else:
@@ -67,15 +60,33 @@ class Enemy:
 
                     attrs[item['level'] + 1][key_map[key]['title']] = value
 
+        if get_links:
+            for link_id in enemy['info']['linkEnemies']:
+                link_items.append(
+                    cls.get_enemy(link_id, get_links=False)
+                )
+
         return {
-            **enemies[name],
-            'attrs': attrs
+            **enemy,
+            'attrs': attrs,
+            'link_items': link_items
         }
 
+    @classmethod
+    def get_value(cls, key, source):
+        for item in key.split('.'):
+            if item in source:
+                source = source[item]
+        return source['m_defined'], integer(source['m_value'])
 
-bot = PluginInstance(
+
+class EnemiesPluginInstance(PluginInstance):
+    ...
+
+
+bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.1',
+    version='2.2',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',

@@ -187,7 +187,7 @@ def init_enemies():
 
     data = {}
     for e_id, info in enemies_info['enemyData'].items():
-        name = info['name'].lower()
+        name = info['name']
 
         if name == '-':
             continue
@@ -196,10 +196,11 @@ def init_enemies():
         if name in counter:
             name += f'（{counter[name]}）'
 
-        data[name] = {
+        item = {
             'info': info,
             'data': enemies_data_map.get(e_id)
         }
+        data[name] = data[info['enemyId']] = item
 
     return data
 
