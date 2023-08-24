@@ -174,15 +174,18 @@ async def _(data: Chain, factory_name: str, _):
         return
 
     user_id = data.data.user_id
-    feeling = 2
 
     if not User.get_or_none(user_id=user_id):
         return None
 
+    user: UserInfo = UserInfo.get_user(user_id)
+
+    feeling = 2
     if hasattr(data, 'feeling'):
         feeling = getattr(data, 'feeling')
 
-    user: UserInfo = UserInfo.get_user(user_id)
+    if user.user_mood <= 0:
+        feeling = 0
 
     user_mood = user.user_mood + feeling
     if user_mood <= 0:

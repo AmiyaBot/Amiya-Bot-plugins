@@ -1,5 +1,5 @@
 call:
-    positive: [ '阿米娅','阿米兔','兔兔','兔子','小兔子','Amiya','amiya' ]
+    positive: [ '阿米娅', '阿米兔', '兔兔', '兔子', '小兔子', 'Amiya', 'amiya' ]
     inactive: [ '阿米驴', '阿驴', '小驴子', '驴子', '驴驴' ]
 
 talk:
