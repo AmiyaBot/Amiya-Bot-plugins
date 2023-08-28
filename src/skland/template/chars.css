@@ -1,4 +1,5 @@
 * {
+    color: #fff;
     font-size: 18px;
     box-sizing: border-box;
 }
@@ -8,20 +9,95 @@ body {
 }
 
 #template {
+    width: 1640px;
     padding: 20px;
     background: #202020;
+}
+
+.dr-name {
+    margin: 20px 0 30px 0;
+    display: flex;
+    align-items: center;
+}
+
+.dr-name .avatar {
+    background: rgb(255, 255, 255);
+    width: 65px;
+    height: 65px;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-right: 20px;
+}
+
+.star-title {
+    border-left: 5px solid;
+    padding-left: 10px;
+}
+
+.star-title.r5 {
+    border-color: #FF4343;
+}
+
+.star-title.r4 {
+    border-color: #FEA63A;
+}
+
+.star-title.r3 {
+    border-color: #A288B5;
+}
+
+.star-title .star {
+    height: 20px;
+    background: center left / auto 20px no-repeat;
 }
 
 .chars-list {
     display: flex;
     flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.char-item {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.char-skills {
+    height: 100%;
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.skill-item {
+    width: fit-content;
+    height: 40px;
+    border: 3px solid transparent;
+    position: relative;
+    margin-top: 10px;
+}
+
+.skill-item.default {
+    border-color: #2196f3;
+}
+
+.skill-item > img:first-child {
+    height: 100%;
+}
+
+.skill-item > img:last-child {
+    width: 20px;
+    border-radius: 4px;
+    background: rgb(0 0 0 / 60%);
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
 }
 
 .char-info {
     width: 90px;
     height: 180px;
-    margin-right: 25px;
-    margin-bottom: 15px;
     background: center / 100% auto no-repeat;
     position: relative;
 }
@@ -139,4 +215,38 @@ body {
     height: 10px;
     font-size: 12px;
     zoom: 0.7;
+}
+
+.strength {
+    width: 70px;
+    display: flex;
+    flex-direction: column;
+}
+
+.equip {
+    width: 45px;
+    height: 30px;
+    position: relative;
+}
+
+.equip > img {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.info-span,
+.info-span > span {
+    font-size: 14px;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+td {
+    padding-right: 15px;
 }

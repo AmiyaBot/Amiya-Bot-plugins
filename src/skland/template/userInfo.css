@@ -164,19 +164,17 @@ body {
 }
 
 .equip {
-    height: 100%;
+    width: 35px;
+    height: 30px;
     position: relative;
 }
 
 .equip > img {
     height: 100%;
-    text-align: center;
-}
-
-.equip > img:first-child {
     position: absolute;
     top: 0;
-    left: -6px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .skill {

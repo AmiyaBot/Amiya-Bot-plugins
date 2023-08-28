@@ -13,90 +13,238 @@
 <body>
 <div id="template" v-if="Object.keys(data).length">
     <div>
-        <div class="chars-list" v-for="charsList in chars">
-            <div class="char-info" v-for="char in charsList.chars"
-                 :style="{ backgroundImage: `url(./assets/rarity_bg/R${char.charInfo.rarity}.png)` }">
-                <div class="char-skin">
-                    <img :src="skinPortrait(char.skinId)" :alt="char.skinId" :skinId="char.skinId"
-                         onerror="changeImage(this)">
-                </div>
-                <div class="left-top-tag"
-                     :style="{ backgroundImage: `url(./assets/rarity_tag/R${char.charInfo.rarity}.png)` }"></div>
-                <div class="left-bottom-tag"></div>
-                <div class="color-bar"
-                     :style="{ backgroundImage: `url(./assets/rarity_bar/${char.charInfo.rarity}.png)` }"></div>
-                <div class="block-bar"
-                     :style="{ backgroundImage: `url(./assets/rarity_bar/R${char.charInfo.rarity}.png)` }">
-                    {{ char.charInfo.charId === 'char_1001_amiya2' ? '阿米娅（近卫）' : char.charInfo.name }}
-                </div>
-                <div class="char-classes-star">
-                    <div class="classes"
-                         :style="{ backgroundImage: `url(./assets/classes/${char.charInfo.profession}.png)` }"></div>
-                    <div class="star"
-                         :style="{ backgroundImage: `url(./assets/rarity_star/${char.charInfo.rarity}.png)` }"></div>
-                </div>
-                <div class="evolve-phase"
-                     :style="{ backgroundImage: `url(./assets/evolvePhase/${char.evolvePhase}.png)` }"></div>
-                <div class="potential-rank"
-                     :style="{ backgroundImage: `url(./assets/potentialRank/${char.potentialRank}.png)` }"></div>
-                <div class="char-level">
-                    <div>Lv</div>
-                    {{ char.level }}
-                </div>
+        <div>
+            森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。
+            <div>
+                数据最后记录时间为：
+                <span style="color: #03A9F4">{{ dateTime(data.building.labor.lastUpdateTime) }}</span>
             </div>
         </div>
+        <div class="dr-name">
+            <div class="avatar">
+                <img style="width: 100%;"
+                     :src="getSkinAvatarUrl(data.status.secretary.skinId)"
+                     :alt="data.status.secretary.skinId"
+                     onerror="changeAvatar(this)">
+            </div>
+            <div>
+                <div style="font-size: 28px;">{{ data.status.name }}</div>
+                <info-span :value="charsNum()">干员招募总数量</info-span>
+            </div>
+        </div>
+        <template v-for="charsList in chars">
+            <div class="star-title" :class="'r' + charsList.rarity">
+                <div class="star"
+                     :style="{ backgroundImage: 'url(./assets/rarity_star/' + charsList.rarity + '.png)' }"></div>
+                <div>{{ Number(charsList.rarity) + 1 }} 星干员练度 TOP 10</div>
+                <table>
+                    <tr>
+                        <td>
+                            <info-span :value="charsList.chars.length">干员招募数量</info-span>
+                        </td>
+                        <td>
+                            <info-span :value="charsList.counts.sp1count">专一技能数量</info-span>
+                        </td>
+                        <td>
+                            <info-span :value="'未知'">一级模组数量</info-span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <info-span :value="charsList.counts.ep1count">精一干员数量</info-span>
+                        </td>
+                        <td>
+                            <info-span :value="charsList.counts.sp2count">专二技能数量</info-span>
+                        </td>
+                        <td>
+                            <info-span :value="charsList.counts.eq2count">二级模组数量</info-span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <info-span :value="charsList.counts.ep2count">精二干员数量</info-span>
+                        </td>
+                        <td>
+                            <info-span :value="charsList.counts.sp3count">专三技能数量</info-span>
+                        </td>
+                        <td>
+                            <info-span :value="charsList.counts.eq3count">三级模组数量</info-span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="chars-list">
+                <template v-for="char in charsList.chars.slice(0, 10)">
+                    <div class="char-item">
+                        <char-card :char="char"></char-card>
+                        <div class="strength">
+                            <div class="equip" v-if="char.equipMax">
+                                <img :src="equipColor(char.equipMax)" alt="">
+                                <img :src="equipIcon(char.equipMax)" alt="">
+                            </div>
+                            <div class="char-skills">
+                                <div class="skill-item" :class="{ default: skill.id === char.defaultSkillId }"
+                                     v-for="skill in char.skills">
+                                    <img :src="getSkillIconUrl(skill.id)" :alt="skill.id">
+                                    <img :src="'./assets/skillsLevel/master' + skill.specializeLevel +'.png'" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
     </div>
 </div>
 </body>
 <script src="js/vue.min.js"></script>
 <script src="js/character.js"></script>
+<script src="js/tools.js"></script>
 <script>
+    Vue.component('infoSpan', {
+        props: ['value'],
+        template: '<div class="info-span"><slot></slot>：<span style="color: #03A9F4">{{ value }}</span></div>'
+    })
+    Vue.component('charCard', {
+        props: ['char'],
+        template: `
+            <div class="char-info"
+                 :style="{ backgroundImage: 'url(./assets/rarity_bg/R' + char.charInfo.rarity + '.png)' }">
+            <div class="char-skin">
+                <img :src="getSkinPortraitUrl(char.skinId)" :alt="char.skinId" :skinId="char.skinId"
+                     onerror="changeImage(this)">
+            </div>
+            <div class="left-top-tag"
+                 :style="{ backgroundImage: 'url(./assets/rarity_tag/R' + char.charInfo.rarity + '.png)' }"></div>
+            <div class="left-bottom-tag"></div>
+            <div class="color-bar"
+                 :style="{ backgroundImage: 'url(./assets/rarity_bar/' + char.charInfo.rarity + '.png)' }"></div>
+            <div class="block-bar"
+                 :style="{ backgroundImage: 'url(./assets/rarity_bar/R' + char.charInfo.rarity + '.png)' }">
+                {{ char.charId === 'char_1001_amiya2' ? '阿米娅近卫' : char.charInfo.name }}
+            </div>
+            <div class="char-classes-star">
+                <div class="classes"
+                     :style="{ backgroundImage: 'url(./assets/classes/' + char.charInfo.profession + '.png)' }"></div>
+                <div class="star"
+                     :style="{ backgroundImage: 'url(./assets/rarity_star/' + char.charInfo.rarity + '.png)' }"></div>
+            </div>
+            <div class="evolve-phase"
+                 :style="{ backgroundImage: 'url(./assets/evolvePhase/' + char.evolvePhase + '.png)' }"></div>
+            <div class="potential-rank"
+                 :style="{ backgroundImage: 'url(./assets/potentialRank/' + char.potentialRank + '.png)' }"></div>
+            <div class="char-level">
+                <div>Lv</div>
+                {{ char.level }}
+            </div>
+            </div>
+        `
+    })
+
     function changeImage(e) {
-        e.src = getSkinPortraitUrl(e.attributes.skinId.value)
+        e.style.display = 'none'
+    }
+
+    function changeAvatar(e) {
+        e.src = '../logo.png'
     }
 
     const template = new Vue({
         el: '#template',
         methods: {
             init(data) {
-                this.$set(this, 'data', data.data)
-                this.initChars(data.minEvolvePhase, data.minRarity)
+                this.$set(this, 'data', data)
+                this.initChars(0, 3)
             },
-            initChars(minEvolvePhase, minRarity) {
+            initChars(minEvolvePhase = 0, minRarity = 0) {
                 const chars = {}
                 const result = []
+                const counts = {}
+
+                const charWeight = (char) => {
+                    const lv = char.level * (char.evolvePhase + 1) + char.potentialRank
+                    const sp = char.skills.reduce((sum, n) => sum + n.specializeLevel * 20, 0)
+                    const eq = char.equip.reduce((max, n) => Math.max(max, n.level), 0)
+
+                    return lv + sp + (eq - 1)
+                }
 
                 for (const item of this.data.chars) {
                     const info = this.data.charInfoMap[item.charId]
                     if (item.evolvePhase >= minEvolvePhase && info.rarity >= minRarity) {
+
                         if (!chars[info.rarity]) {
                             chars[info.rarity] = []
                         }
+                        if (!counts[info.rarity]) {
+                            counts[info.rarity] = {
+                                ep1count: 0,
+                                ep2count: 0,
+                                sp1count: 0,
+                                sp2count: 0,
+                                sp3count: 0,
+                                eq1count: -1,
+                                eq2count: 0,
+                                eq3count: 0,
+                            }
+                        }
+
+                        counts[info.rarity].ep1count += Number(item.evolvePhase === 1)
+                        counts[info.rarity].ep2count += Number(item.evolvePhase === 2)
+
+                        for (const skill of item.skills) {
+                            counts[info.rarity].sp1count += Number(skill.specializeLevel === 1)
+                            counts[info.rarity].sp2count += Number(skill.specializeLevel === 2)
+                            counts[info.rarity].sp3count += Number(skill.specializeLevel === 3)
+                        }
+
+                        for (const skill of item.equip) {
+                            counts[info.rarity].eq2count += Number(skill.level === 2)
+                            counts[info.rarity].eq3count += Number(skill.level === 3)
+                        }
+
                         chars[info.rarity].push(
                             {
                                 ...item,
-                                charInfo: info
+                                charInfo: info,
+                                equipMax: this.equip(item.defaultEquipId)
                             }
                         )
                     }
                 }
 
                 for (const r in chars) {
-                    chars[r].sort((a, b) => {
-                        return (b.level * b.evolvePhase + b.potentialRank) - (a.level * a.evolvePhase + a.potentialRank)
-                    })
+                    chars[r].sort((a, b) => charWeight(b) - charWeight(a))
                     result.push(
                         {
                             rarity: r,
-                            chars: chars[r]
+                            chars: chars[r],
+                            counts: counts[r] || {}
                         }
                     )
                 }
 
                 this.$set(this, 'chars', result.sort((a, b) => b.rarity - a.rarity))
             },
-            skinPortrait(skinId) {
-                return `${gamedataPath}/portrait/${changeGameDataSkinId(skinId)}.png`
+            equip(equipId) {
+                if (!equipId) {
+                    return null
+                }
+                const data = this.data.equipmentInfoMap[equipId]
+
+                if (data.typeIcon === 'original') {
+                    return null
+                }
+                return data
+            },
+            equipIcon(equip) {
+                return getEquipTypeIconUrl(equip.typeIcon)
+            },
+            equipColor(equip) {
+                return getEquipTypeShiningUrl(equip.shiningColor)
+            },
+            charsNum() {
+                return this.data.chars.find(char => char.charId === 'char_1001_amiya2') ? this.data.chars.length - 1 : this.data.chars.length
             }
         },
         data() {
