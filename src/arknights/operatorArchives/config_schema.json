@@ -31,8 +31,15 @@
             "properties": {
                 "similarMode": {
                     "title": "模糊匹配模式",
+                    "description": "模糊匹配下，会匹配相似的干员名，如“赛“雷娅",
                     "type": "boolean",
                     "default": false
+                },
+                "lengthLimit": {
+                    "title": "句子单词数量限制",
+                    "description": "当句子的单词数量超过限制时，不触发功能",
+                    "type": "integer",
+                    "default": 10
                 }
             }
         }

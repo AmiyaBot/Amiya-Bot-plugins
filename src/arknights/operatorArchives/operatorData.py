@@ -3,7 +3,7 @@ import copy
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 from core.util import integer, snake_case_to_pascal_case
 
-from .operatorSearch import OperatorSearchInfo
+from .operatorCore import OperatorSearchInfo
 
 
 class OperatorData:

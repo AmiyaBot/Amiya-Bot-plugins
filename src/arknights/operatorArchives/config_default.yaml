@@ -6,3 +6,4 @@ operatorSkin:
 
 searchSetting:
     similarMode: false
+    lengthLimit: 10

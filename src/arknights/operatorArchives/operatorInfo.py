@@ -1,5 +1,6 @@
 import os
 import re
+import jieba
 
 from typing import Dict, List
 from core import log
@@ -38,6 +39,19 @@ class OperatorInfo:
         cls.operator_group_map = {}
 
     @classmethod
+    def set_jieba_dict(cls):
+        with open(f'{curr_dir}/operators.txt', mode='w', encoding='utf-8') as file:
+            words = []
+            for name in cls.operator_list:
+                words.append(f'{name} 1 n')
+                if len(name) == 1:
+                    jieba.del_word(f'兔兔{name}')
+
+            file.write('\n'.join(words))
+
+        jieba.load_userdict(f'{curr_dir}/operators.txt')
+
+    @classmethod
     async def init_operator(cls):
         log.info('building operator keywords...')
 
@@ -60,6 +74,8 @@ class OperatorInfo:
 
             if len(name) == 1:
                 cls.operator_one_char_list.append(name)
+
+        cls.set_jieba_dict()
 
     @classmethod
     async def init_stories_keywords(cls):

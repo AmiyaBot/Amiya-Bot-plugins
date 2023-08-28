@@ -5,7 +5,7 @@ from amiyabot.adapters.tencent import TencentBotInstance
 from core import Chain, Message
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 
-from .operatorSearch import bot, default_level, get_index, search_info, FuncsVerify, OperatorSearchInfo
+from .operatorCore import bot, default_level, get_index, search_info, FuncsVerify, OperatorSearchInfo
 from .operatorInfo import OperatorInfo, curr_dir
 from .operatorData import OperatorData
 

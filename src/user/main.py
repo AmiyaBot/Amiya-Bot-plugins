@@ -91,6 +91,7 @@ async def _(data: Message):
 
     reply = Chain(data)
     setattr(reply, 'feeling', 5)
+    setattr(reply, 'unlock', True)
 
     if not info or info.user_mood >= 15:
         return reply.text('博士为什么要这么说呢，嗯……博士是不是偷偷做了对不起阿米娅的事[face:181]')
@@ -184,7 +185,7 @@ async def _(data: Chain, factory_name: str, _):
     if hasattr(data, 'feeling'):
         feeling = getattr(data, 'feeling')
 
-    if user.user_mood <= 0:
+    if user.user_mood <= 0 and not hasattr(data, 'unlock'):
         feeling = 0
 
     user_mood = user.user_mood + feeling
