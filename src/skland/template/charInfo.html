@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="no-referrer"/>
+    <link type="text/css" rel="styleSheet" href="font/font.css"/>
+    <link type="text/css" rel="styleSheet" href="charInfo.css"/>
+    <title>template</title>
+</head>
+<body>
+<div id="template" v-if="Object.keys(data).length" :style="skinPos()">
+    <div class="layout">
+        <div class="left">
+            <div class="skins">
+                <div v-for="item in data.charSkins"
+                     :class="{ 'not': !isHasSkin(item), 'default': item.skin_id === data.char.skinId }">
+                    <img :src="getSkinPortraitUrl(item.skin_id)" alt="">
+                    <div class="skin-name" :class="{ 'is-skin': item.skin_key.startsWith('skin') }">
+                        <div>
+                            <div>{{ item.skin_name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td>生命值</td>
+                        <td>{{ calcAttr('maxHp') }}</td>
+                        <td>再部署时间</td>
+                        <td>{{ calcAttr('respawnTime') }}s</td>
+                    </tr>
+                    <tr>
+                        <td>攻击力</td>
+                        <td>{{ calcAttr('atk') }}</td>
+                        <td>COST</td>
+                        <td>{{ calcAttr('cost') }}</td>
+                    </tr>
+                    <tr>
+                        <td>防御力</td>
+                        <td>{{ calcAttr('def') }}</td>
+                        <td>阻挡数</td>
+                        <td>{{ calcAttr('blockCnt') }}</td>
+                    </tr>
+                    <tr>
+                        <td>法术抗性</td>
+                        <td>{{ calcAttr('magicResistance') }}</td>
+                        <td>攻击间隔</td>
+                        <td>{{ attackSpeed() }}s</td>
+                    </tr>
+                </table>
+                <div style="margin-top: 20px; background: rgb(255 255 255 / 60%); padding: 5px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="color: #000;">信赖值</div>
+                        <div style="color: #000;">{{ data.char.favorPercent }}%</div>
+                    </div>
+                    <div style="width: 100%; height: 4px; border-radius: 20px; margin-top: 2px; overflow: hidden;">
+                        <div style="height: 100%; background: #FF9800;"
+                             :style="{ width: data.char.favorPercent / 200 * 100 + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="shadow-text" style="font-size: 40px">
+                    {{ data.charData.appellation }}
+                </div>
+                <div class="shadow-text" style="font-size: 70px">
+                    {{ data.charData.name }}
+                </div>
+            </div>
+        </div>
+        <div class="right" style="padding-top: 50px;">
+            <div class="char-level box">
+                <div>
+                    <span style="font-size: 20px; padding-right: 3px;">Lv.</span>
+                    <span style="font-size: 60px; color: #ffdc00;">{{ data.char.level }}</span>
+                    <span style="font-size: 20px;"> / {{ data.charData.phases[data.char.evolvePhase].maxLevel }}</span>
+                </div>
+                <div class="center-tag">
+                    <div class="tag">等级</div>
+                </div>
+            </div>
+            <div class="rank">
+                <div class="box" style="margin-right: 10px;">
+                    <img :src="`./assets/evolvePhase/${data.char.evolvePhase}.png`" alt="">
+                    <div class="center-tag">
+                        <div class="tag">精英化</div>
+                    </div>
+                </div>
+                <div class="box">
+                    <img :src="`./assets/potentialRank/${data.char.potentialRank}.png`" alt="">
+                    <div class="center-tag">
+                        <div class="tag">潜能</div>
+                    </div>
+                </div>
+            </div>
+            <div class="char-skills box">
+                <div class="skills-con">
+                    <div class="skill-item" :class="{ 'default': skill.id === data.char.defaultSkillId }"
+                         v-for="skill in data.char.skills">
+                        <img :src="getSkillIconUrl(skill.id)" :alt="skill.id">
+                        <img :src="'./assets/skillsLevel/master' + skill.specializeLevel +'.png'" alt="">
+                    </div>
+                </div>
+                <div class="center-tag">
+                    <div class="tag">
+                        Rank {{ data.char.mainSkillLvl }}
+                    </div>
+                </div>
+            </div>
+            <div class="box" style="margin-top: 50px" v-if="Object.keys(data.equips).length">
+                <div class="equip-list">
+                    <div v-for="item in data.equips">
+                        <div class="equip-con" :class="{ 'default': item.id === data.char.defaultEquipId }">
+                            <div class="equip">
+                                <img :src="getEquipTypeIconUrl(item.typeIcon)" alt="">
+                                <img :src="getEquipTypeShiningUrl(item.shiningColor)" alt="">
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px">
+                            <div style="font-size: 12px;">{{ item.typeIcon.toUpperCase() }}</div>
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                Level
+                                <span style="font-size: 18px; font-weight: bold; color: #ff5722; margin-left: 3px;">
+                                    {{ item.level }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<script src="js/character.js"></script>
+<script src="js/tools.js"></script>
+<script>
+    const attributeType = {
+        0: 'maxHp',
+        1: 'atk',
+        2: 'def',
+        3: 'magicResistance',
+        4: 'cost',
+        7: 'attackSpeed',
+        21: 'respawnTime'
+    }
+
+    const template = new Vue({
+        el: '#template',
+        methods: {
+            init(data) {
+                this.$set(this, 'data', data)
+            },
+            calcAttr(name) {
+                const attrs = this.data.charData.phases[this.data.char.evolvePhase]
+                const favorAttrs = this.data.charData.favorKeyFrames[1]
+
+                const minValue = attrs.attributesKeyFrames[0].data[name]
+                const maxValue = attrs.attributesKeyFrames[1].data[name]
+
+                let equipValue = 0
+                let defaultEquipId = this.data.char.defaultEquipId
+                if (this.data.charModules[defaultEquipId]) {
+                    let level = 0
+                    for (const item of this.data.char.equip) {
+                        if (item.id === defaultEquipId) {
+                            level = item.level - 1
+                        }
+                    }
+                    if (this.data.charModules[defaultEquipId][level]) {
+                        equipValue = this.data.charModules[defaultEquipId][level][name] || 0
+                    }
+                }
+
+                let rankValue = 0
+                for (let n = 0; n < this.data.char.potentialRank; n++) {
+                    const rank = this.data.charData.potentialRanks[n]
+                    if (rank.buff) {
+                        for (let buff of rank.buff.attributes.attributeModifiers) {
+                            if (attributeType[buff.attributeType] === name) {
+                                rankValue += buff.value
+                            }
+                        }
+                    }
+                }
+
+                return rankValue
+                    + equipValue
+                    + minValue
+                    + Math.floor((maxValue - minValue) * (this.data.char.level / attrs.maxLevel))
+                    + Math.floor(favorAttrs.data[name] * ((this.data.char.favorPercent > 100 ? 100 : this.data.char.favorPercent) / 100))
+            },
+            attackSpeed() {
+                return (this.calcAttr('attackSpeed') / 100 * this.data.charData.phases[this.data.char.evolvePhase].attributesKeyFrames[0].data['baseAttackTime']).toFixed(1)
+            },
+            isHasSkin(item) {
+                if (item.skin_group === '默认服装') {
+                    if (item.skin_name === '精英二') {
+                        return this.data.char.evolvePhase === 2
+                    }
+                    return true
+                }
+                return item.skin_id in this.data.skins
+            },
+            skinPos() {
+                const y = []
+                for (const item of this.data.charSkinFacePos) {
+                    y.push(item[1])
+                }
+                return {
+                    backgroundImage: `url(${gamedataPath}/skin/skin/${changeGameDataSkinId(this.data.char.skinId)}b.png)`,
+                    backgroundPositionY: -(Math.min(y) - 50) + 'px'
+                }
+            }
+        },
+        data() {
+            return {
+                data: {}
+            }
+        },
+        mounted() {
+            window.init = this.init
+        }
+    })
+</script>
+</html>

@@ -18,3 +18,21 @@ function dateTime(time, format = 'y-m-d h:i:s') {
 
     return format
 }
+
+function splitInteger(number, length) {
+    if (length >= number) {
+        return [number]
+    }
+
+    const result = new Array(length).fill(0).map(() => parseInt(number / length))
+
+    for (let i = 0; i < number % length; i++) {
+        result[i] += 1
+    }
+
+    return result.sort((a, b) => a - b)
+}
+
+function sumValues(array, n) {
+    return array.slice(0, n).reduce((a, b) => a + b, 0)
+}

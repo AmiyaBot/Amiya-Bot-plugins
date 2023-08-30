@@ -79,8 +79,8 @@
                         <char-card :char="char"></char-card>
                         <div class="strength">
                             <div class="equip" v-if="char.equipMax">
-                                <img :src="equipColor(char.equipMax)" alt="">
-                                <img :src="equipIcon(char.equipMax)" alt="">
+                                <img :src="getEquipTypeIconUrl(char.equipMax.typeIcon)" alt="">
+                                <img :src="getEquipTypeShiningUrl(char.equipMax.shiningColor)" alt="">
                             </div>
                             <div class="char-skills">
                                 <div class="skill-item" :class="{ default: skill.id === char.defaultSkillId }"
@@ -162,11 +162,12 @@
                 const counts = {}
 
                 const charWeight = (char) => {
-                    const lv = char.level * (char.evolvePhase + 1) + char.potentialRank
+                    const lv = char.level + (char.evolvePhase + 1) * 100
+                    const pr = char.potentialRank
                     const sp = char.skills.reduce((sum, n) => sum + n.specializeLevel * 20, 0)
                     const eq = char.equip.reduce((max, n) => Math.max(max, n.level), 0)
 
-                    return lv + sp + (eq - 1)
+                    return lv + pr + sp + (eq - 1)
                 }
 
                 for (const item of this.data.chars) {
@@ -236,12 +237,6 @@
                     return null
                 }
                 return data
-            },
-            equipIcon(equip) {
-                return getEquipTypeIconUrl(equip.typeIcon)
-            },
-            equipColor(equip) {
-                return getEquipTypeShiningUrl(equip.shiningColor)
             },
             charsNum() {
                 return this.data.chars.find(char => char.charId === 'char_1001_amiya2') ? this.data.chars.length - 1 : this.data.chars.length

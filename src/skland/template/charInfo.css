@@ -1,0 +1,233 @@
+* {
+    color: #fff;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#template {
+    width: 1200px;
+    height: 600px;
+    padding: 20px;
+    background: #e9e9e9 center / 100% auto no-repeat;
+    position: relative;
+}
+
+.layout {
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.layout .left {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.skins {
+    display: flex;
+}
+
+.skins > div {
+    margin-right: 10px;
+    background: rgb(0 0 0 / 15%);
+    border: 2px solid transparent;
+    display: flex;
+    position: relative;
+}
+
+.skins > div.default {
+    border-color: #4caf50;
+    box-shadow: 0 0 5px #4caf50;
+}
+
+.skins > div > img {
+    width: 60px;
+}
+
+.skins > div.not > img {
+    filter: grayscale(100%);
+}
+
+.skin-name {
+    width: 100%;
+    height: 50px;
+    overflow: hidden;
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+}
+
+.skin-name > div {
+    width: 70px;
+    height: 15px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e88e5;
+    transform: rotate(-45deg);
+    position: absolute;
+    right: -17px;
+    bottom: 13px;
+}
+
+.skin-name > div > div {
+    zoom: 0.7;
+}
+
+.skin-name.is-skin > div {
+    /*background: #1e88e5;*/
+}
+
+.not .skin-name > div {
+    background: #9e9e9e;
+}
+
+table {
+    border-spacing: 0 5px;
+}
+
+td {
+    font-size: 16px;
+    padding: 2px 30px 2px 10px;
+}
+
+td:nth-child(2n + 1) {
+    background: rgb(0 0 0 / 100%);
+}
+
+td:nth-child(2n) {
+    color: #222;
+    font-weight: bold;
+    background: rgb(255 255 255 / 60%);
+}
+
+.shadow-text {
+    text-shadow: 1px 2px 2px black;
+}
+
+.box {
+    background: rgb(49 49 49);
+    box-shadow: 0 0 5px 0 #000;
+}
+
+.tag {
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: #505050;
+}
+
+.center-tag {
+    flex: 2;
+    height: 100%;
+    padding-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.rank {
+    padding-top: 50px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rank > div {
+    width: 160px;
+    height: 50px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.rank > div > img {
+    height: 80px;
+}
+
+.char-skills {
+    height: 60px;
+    margin-top: 50px;
+    display: flex;
+}
+
+.skills-con {
+    padding-left: 10px;
+    display: flex;
+    position: relative;
+    bottom: 12px;
+}
+
+.skill-item {
+    width: fit-content;
+    height: 60px;
+    border: 3px solid transparent;
+    position: relative;
+    margin-right: 10px;
+}
+
+.skill-item.default {
+    border-color: #2196f3;
+}
+
+.skill-item > img:first-child {
+    height: 100%;
+}
+
+.skill-item > img:last-child {
+    width: 20px;
+    border-radius: 2px;
+    background: rgb(0 0 0 / 80%);
+    position: absolute;
+    top: -5px;
+    left: -5px;
+}
+
+.char-level {
+    height: 80px;
+    padding: 5px 0 5px 15px;
+    display: flex;
+    align-items: center;
+}
+
+.equip-list {
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.equip-list > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.equip-con {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #5c5c5c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.equip-con.default {
+    border-color: #2196f3;
+}
+
+.equip {
+    height: 40px;
+    position: relative;
+}
+
+.equip > img {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}

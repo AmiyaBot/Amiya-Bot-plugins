@@ -15,7 +15,7 @@
     <div style="display: flex; align-items: center;">
         <div class="avatar">
             <img style="width: 100%;"
-                 :src="avatar(data.status.secretary.skinId)"
+                 :src="getSkinAvatarUrl(data.status.secretary.skinId)"
                  :alt="data.status.secretary.skinId"
                  onerror="changeImage(this)">
         </div>
@@ -76,7 +76,7 @@
     <div class="assist">
         <div class="assist-char" v-for="char in data.assistChars">
             <div class="assist-char-avatar">
-                <img style="height: 100%;" :src="avatar(char.skinId)" :alt="char.skinId">
+                <img style="height: 100%;" :src="getSkinAvatarUrl(char.skinId)" :alt="char.skinId">
                 <img class="evolve-phase shadow" :src="evolvePhase(char.evolvePhase)" alt="evolvePhase">
                 <img class="potential-rank shadow" :src="potentialRank(char.potentialRank)" alt="potentialRank">
                 <div class="char-level">{{ char.level }}</div>
@@ -85,8 +85,8 @@
                 <div style="height: 25px; display: flex; align-items: center;">
                     <template v-if="char.equip && data.equipmentInfoMap[char.equip.id].typeIcon !== 'original'">
                         <div class="equip">
-                            <img :src="equipColor(char.equip)" alt="equip">
-                            <img :src="equipIcon(char.equip)" alt="equip">
+                            <img :src="getEquipTypeIconUrl(equip(char.equip).typeIcon)" alt="equip">
+                            <img :src="getEquipTypeShiningUrl(equip(char.equip).shiningColor)" alt="equip">
                         </div>
                         <div style="font-size: 14px; padding-left: 5px;">
                             {{ equip(char.equip).typeIcon.toUpperCase() }}
@@ -97,7 +97,7 @@
                     </template>
                 </div>
                 <div style="margin-top: 5px;">
-                    <img class="skill" :src="skillIcon(char.skillId)" :alt="char.skillId">
+                    <img class="skill" :src="getSkillIconUrl(char.skillId)" :alt="char.skillId">
                     <div class="skill-level">Rank.{{ char.mainSkillLvl + char.specializeLevel }}</div>
                 </div>
             </div>
@@ -111,6 +111,20 @@
 <script>
     function changeImage(e) {
         e.src = '../logo.png'
+    }
+
+    function secretary(charId) {
+        return {
+            backgroundImage: `url(${gamedataPath}/skin/skin/${charId}_1b.png)`
+        }
+    }
+
+    function potentialRank(level) {
+        return `./assets/potentialRank/${level}.png`
+    }
+
+    function evolvePhase(level) {
+        return `./assets/evolvePhase/${level}.png`
     }
 
     const template = new Vue({
@@ -181,31 +195,8 @@
                         return (data.duration - remaining) / data.duration * 100
                 }
             },
-            secretary(charId) {
-                return {
-                    backgroundImage: `url(${gamedataPath}/skin/skin/${charId}_1b.png)`
-                }
-            },
             equip(item) {
                 return this.data.equipmentInfoMap[item.id]
-            },
-            equipIcon(item) {
-                return getEquipTypeIconUrl(this.equip(item).typeIcon)
-            },
-            equipColor(item) {
-                return getEquipTypeShiningUrl(this.equip(item).shiningColor)
-            },
-            avatar(skinId) {
-                return getSkinAvatarUrl(skinId)
-            },
-            potentialRank(level) {
-                return `./assets/potentialRank/${level}.png`
-            },
-            evolvePhase(level) {
-                return `./assets/evolvePhase/${level}.png`
-            },
-            skillIcon(skillId) {
-                return getSkillIconUrl(skillId)
             },
             stageProgress() {
                 const stage = this.data.stageInfoMap[this.data.status.mainStageProgress]
