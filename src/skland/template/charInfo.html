@@ -212,9 +212,11 @@
                 for (const item of this.data.charSkinFacePos) {
                     y.push(item[1])
                 }
+
+                const min = Math.min(y)
                 return {
                     backgroundImage: `url(${gamedataPath}/skin/skin/${changeGameDataSkinId(this.data.char.skinId)}b.png)`,
-                    backgroundPositionY: -(Math.min(y) - 50) + 'px'
+                    backgroundPositionY: -(min ? (min - 50) : 0) + 'px'
                 }
             }
         },
