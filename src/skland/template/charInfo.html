@@ -216,7 +216,7 @@
                 const min = Math.min(y)
                 return {
                     backgroundImage: `url(${gamedataPath}/skin/skin/${changeGameDataSkinId(this.data.char.skinId)}b.png)`,
-                    backgroundPositionY: -(min ? (min - 50) : 0) + 'px'
+                    backgroundPositionY: min ? (-(min - 50) + 'px') : 'center'
                 }
             }
         },

@@ -177,6 +177,20 @@ async def _(data: Message):
         .html(f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000)
 
 
+@bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    await data.send(Chain(data).text('开始获取并生成关卡进度信息，请稍后...'))
+
+    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+
+    from core.util import create_test_data
+    create_test_data(character_info, 'log/test.js')
+
+
 @bot.on_message(keywords='绑定', allow_direct=True)
 async def _(data: Message):
     with open(f'{curr_dir}/README_TOKEN.md', mode='r', encoding='utf-8') as md:

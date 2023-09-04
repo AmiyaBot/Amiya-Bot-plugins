@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="no-referrer"/>
+    <link type="text/css" rel="styleSheet" href="font/font.css"/>
+    <link type="text/css" rel="styleSheet" href="progress.css"/>
+    <title>template</title>
+    <script src="../../../../log/test.js"></script>
+</head>
+<body>
+<div id="template" v-if="Object.keys(data).length">
+    <img :src="getActivityLogoUrl('camp_01')" alt="">
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<script src="js/character.js"></script>
+<script src="js/tools.js"></script>
+<script>
+    const template = new Vue({
+        el: '#template',
+        methods: {
+            init(data) {
+                const records = {}
+                const campaign = {}
+
+                for (const item of data.campaign.records) {
+                    records[item.campaignId] = item.maxKills
+                }
+
+                for (const item of Object.values(data.campaignInfoMap)) {
+                    const zone = data.campaignZoneInfoMap[item.campaignZoneId]
+
+                    if (!campaign[zone.name]) {
+                        campaign[zone.name] = {
+                            ...zone,
+                            'campaigns': []
+                        }
+                    }
+
+                    campaign[zone.name]['campaigns'].push(
+                        {
+                            ...item,
+                            'maxKills': records[item.id]
+                        }
+                    )
+                }
+
+                this.$set(this, 'data', data)
+                this.$set(this, 'campaign', campaign)
+            }
+        },
+        data() {
+            return {
+                data: {},
+                campaign: {}
+            }
+        },
+        mounted() {
+            window.init = this.init
+
+            this.init(testData)
+            console.log(JSON.parse(JSON.stringify(testData)))
+            console.log(JSON.parse(JSON.stringify(this.campaign)))
+            for (const item of Object.keys(this.campaign)) {
+                console.log(item)
+            }
+        }
+    })
+</script>
+</html>
