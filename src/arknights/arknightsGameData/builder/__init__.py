@@ -1,28 +1,45 @@
 import os
 import re
+import json
 
-from typing import List
+from typing import List, Dict
+from amiyabot.util import extract_zip, create_dir
+from amiyabot.network.download import download_sync, download_async
 from collections import Counter
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, STR_DICT_MAP, STR_DICT_LIST
 from core.database.bot import OperatorIndex
 from core.util import remove_xml_tag, remove_punctuation, sorted_dict
 from core import log
 
-from .common import ArknightsConfig, JsonData
+from .common import ArknightsConfig, JsonData, initialize_progress
 from .operatorBuilder import OperatorImpl, TokenImpl, Collection, parse_template
 from .wiki import PRTS
+from .sklandApi import *
 
 gamedata_path = 'resource/gamedata'
 
 
-def initialize(cls: ArknightsGameData):
-    if not os.path.exists('resource/gamedata/version'):
+class SkinIndexes:
+    url_indexes: Dict[str, str] = {}
+
+
+def gamedata_initialize(cls: ArknightsGameData):
+    if not os.path.exists('resource/gamedata/version.txt'):
         return None
 
-    with open('resource/gamedata/version', mode='r', encoding='utf-8') as file:
+    extract_zip(f'{gamedata_path}/gamedata.zip', f'{gamedata_path}/gamedata', overwrite=True)
+
+    with open('resource/gamedata/version.txt', mode='r', encoding='utf-8') as file:
         cls.version = file.read().strip('\n') or 'none'
 
-    log.info(f'initialize ArknightsGameData@{cls.version}...')
+    log.info(f'Initializing ArknightsGameData@{cls.version}...')
+
+    with open('resource/gamedata/indexes/skinUrls.json', mode='r', encoding='utf-8') as file:
+        skin_urls = json.load(file)
+
+    for item in skin_urls.values():
+        for skin_id, url in item.items():
+            SkinIndexes.url_indexes[skin_id] = url
 
     cls.enemies = init_enemies()
     cls.stages, cls.stages_map, cls.side_story_map = init_stages()
@@ -78,7 +95,7 @@ def init_operators():
     operators: List[OperatorImpl] = []
     birth = {}
 
-    for code, item in operators_list.items():
+    for code, item in initialize_progress(operators_list.items(), 'operators'):
         if item['profession'] not in ArknightsConfig.classes:
             token = TokenImpl(code, item)
             Collection.tokens_map[code] = token
@@ -86,13 +103,13 @@ def init_operators():
             Collection.tokens_map[token.en_name] = token
             continue
 
-        operators.append(
-            OperatorImpl(
-                code=code,
-                data=item,
-                is_recruit=item['name'] in recruit_operators
-            )
+        operator = OperatorImpl(
+            code=code,
+            data=item,
+            is_recruit=item['name'] in recruit_operators
         )
+        operators.append(operator)
+        download_operator_resource(operator)
 
     for item in operators:
         for story in item.stories():
@@ -300,14 +317,44 @@ def init_stages():
     return stage_list, stage_map, side_story_map
 
 
+def download_operator_resource(operator: OperatorImpl):
+    create_dir(f'{gamedata_path}/skill')
+    create_dir(f'{gamedata_path}/avatar')
+    create_dir(f'{gamedata_path}/portrait')
+
+    skills = operator.skills()[1]
+    if skills:
+        for n in skills:
+            save_img(get_skill_icon_url(n), f'{gamedata_path}/skill/{n}.png')
+
+    skins = operator.skins()
+    if skins:
+        for n in skins:
+            save_img(get_skin_avatar_url(n['skin_id']), f'{gamedata_path}/avatar/%s.png' % n['skin_id'])
+            save_img(get_skin_portrait_url(n['skin_id']), f'{gamedata_path}/portrait/%s.png' % n['skin_id'])
+
+
+def save_img(url, filename):
+    if os.path.exists(filename):
+        return
+
+    content = download_sync(url)
+    if content:
+        with open(filename, mode='wb') as file:
+            file.write(content)
+
+
 async def get_skin_file(skin_data: dict, encode_url: bool = False):
     skin_id = skin_data['skin_id']
-    if '@' in skin_id:
-        skin_id = skin_id.replace('@', '_')
-    else:
-        skin_id = skin_id.replace('#', '_')
+    skin_path = f'resource/gamedata/skin/{skin_id}.png'
 
-    skin_path = f'resource/gamedata/skin/skin/{skin_id}b.png'
+    if not os.path.exists(skin_path):
+        create_dir(f'{gamedata_path}/skin')
+        if skin_id in SkinIndexes.url_indexes:
+            content = await download_async(SkinIndexes.url_indexes[skin_id])
+            if content:
+                with open(skin_path, mode='wb') as file:
+                    file.write(content)
 
     if not os.path.exists(skin_path):
         return None
@@ -333,7 +380,7 @@ async def get_real_name(operator: str = None):
     return await PRTS.get_real_name(operator)
 
 
-ArknightsGameData.initialize_methods.append(initialize)
+ArknightsGameData.initialize_methods.append(gamedata_initialize)
 ArknightsGameData.get_real_name = get_real_name
 ArknightsGameDataResource.get_skin_file = get_skin_file
 ArknightsGameDataResource.get_voice_file = get_voice_file

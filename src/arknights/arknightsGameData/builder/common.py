@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 
 from core.resource.arknightsGameData import ArknightsConfig
@@ -37,11 +38,11 @@ html_symbol = {
 }
 
 
-def initialize(cls: ArknightsConfig):
+def config_initialize(cls: ArknightsConfig):
     limit = []
     unavailable = []
 
-    log.info(f'initialize ArknightsConfig...')
+    log.info(f'Initializing ArknightsConfig...')
 
     for item in OperatorConfig.select():
         item: OperatorConfig
@@ -58,6 +59,32 @@ def initialize(cls: ArknightsConfig):
     cls.unavailable = unavailable
 
     log.info(f'ArknightsConfig initialize completed.')
+
+
+def initialize_progress(_list, name: str = ''):
+    count = len(_list)
+
+    def print_bar():
+        p = int(curr / count * 100)
+        block = int(p / 4)
+        progress_line = '=' * block + ' ' * (25 - block)
+
+        msg = f'Initializing {name}...progress: [{progress_line}] {curr}/{count} ({p}%)'
+
+        print('\r', end='')
+        print(msg, end='')
+
+        sys.stdout.flush()
+
+    curr = 0
+
+    print_bar()
+    for item in _list:
+        yield item
+        curr += 1
+        print_bar()
+
+    print()
 
 
 class JsonData:
@@ -83,4 +110,4 @@ class JsonData:
             cls.cache = {}
 
 
-ArknightsConfig.initialize_methods.append(initialize)
+ArknightsConfig.initialize_methods.append(config_initialize)

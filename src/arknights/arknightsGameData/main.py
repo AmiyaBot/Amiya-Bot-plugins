@@ -1,17 +1,15 @@
 import os
-import re
-import configparser
 
 from amiyabot import Message, Chain, Equal, event_bus
-from amiyabot.util import extract_zip
 
-from core import AmiyaBotPluginInstance, GitAutomation
+from core import AmiyaBotPluginInstance, GitAutomation, log
 from core.util import TimeRecorder
 from core.database.bot import Admin
 
-from .builder import ArknightsGameData, ArknightsConfig
+from .builder import ArknightsGameData, ArknightsConfig, gamedata_path
 
 curr_dir = os.path.dirname(__file__)
+repo = 'https://gitee.com/amiya-bot/amiya-bot-assets.git'
 
 
 def initialize_data():
@@ -21,33 +19,18 @@ def initialize_data():
 
 
 def download_gamedata():
-    gamedata_path = 'resource/gamedata'
-    repo = bot.get_config('repo')
+    if os.path.exists(gamedata_path) and not os.path.exists(f'{gamedata_path}/version.txt'):
+        log.warning(f'资源已不可用，请删除 {gamedata_path} 目录并发送“更新资源”或重启。')
+        return
 
     GitAutomation(gamedata_path, repo).update(['--depth 1'])
-
-    if os.path.exists(f'{gamedata_path}/.gitmodules'):
-        config = configparser.ConfigParser()
-        config.read(f'{gamedata_path}/.gitmodules', encoding='utf-8')
-
-        for submodule in config.values():
-            path = submodule.get('path')
-            url = submodule.get('url')
-            if path:
-                folder = f'{gamedata_path}/{path}'
-                GitAutomation(folder, url).update(['--depth 1'])
-                for root, _, files in os.walk(folder):
-                    for file in files:
-                        r = re.search(r'splice_\d+\.zip', file)
-                        if r:
-                            extract_zip(os.path.join(root, file), folder + '/skin', overwrite=True)
 
     event_bus.publish('gameDataFetched')
 
 
 class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
     def install(self):
-        if bot.get_config('autoUpdate'):
+        if bot.get_config('autoUpdate') or not os.path.exists(gamedata_path):
             download_gamedata()
         else:
             initialize_data()
@@ -55,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -76,6 +59,9 @@ async def _(data: Message):
     if not bool(Admin.get_or_none(account=data.user_id)):
         return None
 
+    if os.path.exists(gamedata_path) and not os.path.exists(f'{gamedata_path}/version.txt'):
+        return Chain(data).text(f'资源已不可用，请删除 {gamedata_path} 目录并重试。')
+
     await data.send(Chain(data).text('即将开始检查更新，更新过程中所有功能将会无响应...'))
 
     time_rec = TimeRecorder()
@@ -83,3 +69,17 @@ async def _(data: Message):
     download_gamedata()
 
     return Chain(data).text(f'更新完成，耗时{time_rec.total()}')
+
+
+@bot.on_message(keywords=Equal('解析资源'))
+async def _(data: Message):
+    if not bool(Admin.get_or_none(account=data.user_id)):
+        return None
+
+    await data.send(Chain(data).text('即将开始解析资源，解析过程中所有功能将会无响应...'))
+
+    time_rec = TimeRecorder()
+
+    initialize_data()
+
+    return Chain(data).text(f'解析完成，耗时{time_rec.total()}')
