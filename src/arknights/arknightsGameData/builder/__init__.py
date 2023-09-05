@@ -4,14 +4,14 @@ import json
 
 from typing import List, Dict
 from amiyabot.util import extract_zip, create_dir
-from amiyabot.network.download import download_sync, download_async
+from amiyabot.network.download import download_async
 from collections import Counter
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, STR_DICT_MAP, STR_DICT_LIST
 from core.database.bot import OperatorIndex
 from core.util import remove_xml_tag, remove_punctuation, sorted_dict
 from core import log
 
-from .common import ArknightsConfig, JsonData, initialize_progress
+from .common import ArknightsConfig, JsonData
 from .operatorBuilder import OperatorImpl, TokenImpl, Collection, parse_template
 from .wiki import PRTS
 from .sklandApi import *
@@ -95,7 +95,7 @@ def init_operators():
     operators: List[OperatorImpl] = []
     birth = {}
 
-    for code, item in initialize_progress(operators_list.items(), 'operators'):
+    for code, item in operators_list.items():
         if item['profession'] not in ArknightsConfig.classes:
             token = TokenImpl(code, item)
             Collection.tokens_map[code] = token
@@ -109,7 +109,6 @@ def init_operators():
             is_recruit=item['name'] in recruit_operators
         )
         operators.append(operator)
-        download_operator_resource(operator)
 
     for item in operators:
         for story in item.stories():
@@ -315,33 +314,6 @@ def init_stages():
                 stage_map[key].append(stage_id)
 
     return stage_list, stage_map, side_story_map
-
-
-def download_operator_resource(operator: OperatorImpl):
-    create_dir(f'{gamedata_path}/skill')
-    create_dir(f'{gamedata_path}/avatar')
-    create_dir(f'{gamedata_path}/portrait')
-
-    skills = operator.skills()[1]
-    if skills:
-        for n in skills:
-            save_img(get_skill_icon_url(n), f'{gamedata_path}/skill/{n}.png')
-
-    skins = operator.skins()
-    if skins:
-        for n in skins:
-            save_img(get_skin_avatar_url(n['skin_id']), f'{gamedata_path}/avatar/%s.png' % n['skin_id'])
-            save_img(get_skin_portrait_url(n['skin_id']), f'{gamedata_path}/portrait/%s.png' % n['skin_id'])
-
-
-def save_img(url, filename):
-    if os.path.exists(filename):
-        return
-
-    content = download_sync(url)
-    if content:
-        with open(filename, mode='wb') as file:
-            file.write(content)
 
 
 async def get_skin_file(skin_data: dict, encode_url: bool = False):
