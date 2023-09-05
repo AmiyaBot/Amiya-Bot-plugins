@@ -35,6 +35,8 @@ def build(dist, upload=False):
             with temp_sys_path(parent_dir):
                 with temp_sys_path(plugin):
                     module = importlib.import_module(path_split[-1])
+                    if not hasattr(module, 'bot'):
+                        continue
                     instance: PluginInstance = getattr(module, 'bot')
 
             profile = {

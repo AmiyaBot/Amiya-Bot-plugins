@@ -68,6 +68,8 @@ async def is_token_str(data: Message):
         res = json.loads(data.text)
         token = res['data']['content']
 
+        assert isinstance(token, str) and '鹰角网络通行证账号' in res['data']['msg']
+
         return True, 10, token
     except Exception:
         pass
