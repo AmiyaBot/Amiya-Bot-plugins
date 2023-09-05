@@ -11,7 +11,7 @@
     <title>template</title>
 </head>
 <body>
-<div id="template" v-if="Object.keys(data).length" :style="secretary(data.status.secretary.charId)">
+<div id="template" v-if="Object.keys(data).length" :style="secretary(data.backgroundImage)">
     <div style="display: flex; align-items: center;">
         <div class="avatar">
             <img style="width: 100%;"
@@ -113,9 +113,9 @@
         e.src = '../logo.png'
     }
 
-    function secretary(charId) {
+    function secretary(absPath) {
         return {
-            backgroundImage: `url(${gamedataPath}/skin/skin/${charId}_1b.png)`
+            backgroundImage: `url(${gamedataPath}${absPath})`
         }
     }
 

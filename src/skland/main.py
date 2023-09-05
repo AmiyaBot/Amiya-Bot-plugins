@@ -6,7 +6,7 @@ from amiyabot.database import *
 from core import AmiyaBotPluginInstance, Message, Chain
 from core.util import snake_case_to_pascal_case, integer
 from core.database.user import UserBaseModel
-from core.resource.arknightsGameData import ArknightsGameData
+from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 
 from .api import SKLandAPI, log
 from .tools import *
@@ -54,7 +54,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛（Beta）',
-    version='3.0',
+    version='3.1',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -98,6 +98,11 @@ async def _(data: Message):
         return
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+    character_info['backgroundImage'] = await ArknightsGameDataResource.get_skin_file(
+        {
+            'skin_id': character_info['status']['secretary']['charId']
+        }
+    )
 
     return Chain(data, chain_builder=WaitALLRequestsDone()) \
         .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400, render_time=1000) \
@@ -132,7 +137,11 @@ async def _(data: Message):
                 item['id']: {**character_info['equipmentInfoMap'][item['id']], **item}
                 for item in char['equip']
             }
-            skin_file = os.path.abspath('resource/gamedata/skin/skin/%sb.png' % change_gamedata_skin_id(char['skinId']))
+            skin_file = await ArknightsGameDataResource.get_skin_file(
+                {
+                    'skin_id': character_info['status']['secretary']['charId']
+                }
+            )
             result = {
                 'user': character_info['status'],
                 'char': char,
@@ -141,7 +150,8 @@ async def _(data: Message):
                 'charData': char_info.data,
                 'charSkins': char_info.skins(),
                 'charModules': {},
-                'charSkinFacePos': face_detect(skin_file)
+                'charSkinFacePos': face_detect(os.path.abspath(skin_file)),
+                'backgroundImage': skin_file
             }
 
             for module in char_info.modules() or []:

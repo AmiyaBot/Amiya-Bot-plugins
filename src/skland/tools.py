@@ -21,13 +21,3 @@ def face_detect(file_name: str, cascade_name: str = f'{curr_dir}/lbpcascade_anim
         ...
 
     return pos
-
-
-def change_gamedata_skin_id(skin_id):
-    skin_id = skin_id.replace('@', '_')
-    if skin_id.count('_') > 2:
-        # skin_id = skin_id.replace('#', '%23')
-        pass
-    else:
-        skin_id = skin_id.replace('#', '_')
-    return skin_id

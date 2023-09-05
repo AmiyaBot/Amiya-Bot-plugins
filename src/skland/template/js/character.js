@@ -1,14 +1,4 @@
-const gamedataPath = '../../../resource/gamedata'
-
-const changeGameDataSkinId = (skinId) => {
-    skinId = skinId.replace(/@/g, '_')
-    if (skinId.match(/_/g).length > 2) {
-        skinId = skinId.replace(/#/g, '%23')
-    } else {
-        skinId = skinId.replace(/#/g, '_')
-    }
-    return skinId
-}
+const gamedataPath = '../../../'
 
 const getSkinAvatarUrl = (skinId) => {
     skinId = skinId.replace(/@/g, '%40')
