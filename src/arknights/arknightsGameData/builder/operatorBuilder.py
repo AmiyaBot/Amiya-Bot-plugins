@@ -205,7 +205,7 @@ class OperatorImpl(Operator):
                 continue
 
             detail = skill_data[code]
-            icon = 'skill_icon_' + (detail['iconId'] or detail['skillId'])
+            icon = detail['iconId'] or detail['skillId']
 
             if bool(detail) is False:
                 continue
