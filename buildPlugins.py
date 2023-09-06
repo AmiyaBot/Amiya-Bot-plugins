@@ -20,7 +20,17 @@ def build(dist, upload=False):
         os.makedirs(dist)
 
     profiles = []
-    for root, dirs, _ in os.walk(os.path.dirname(os.path.abspath(__file__)) + '/src'):
+    plugin_dir = []
+
+    for root, dirs, files in os.walk(os.path.dirname(os.path.abspath(__file__)) + '/src'):
+        is_plugin = False
+        for exist in plugin_dir:
+            if exist in root:
+                is_plugin = True
+
+        if is_plugin:
+            continue
+
         for item in dirs:
             plugin: str = os.path.join(root, item)
 
@@ -61,12 +71,13 @@ def build(dist, upload=False):
                     profile['logo'] = 'data:image/png;base64,' + base64.b64encode(logo.read()).decode()
 
             profiles.append(profile)
+            plugin_dir.append(plugin)
 
             package = f'{dist}/{instance.plugin_id}-{instance.version}.zip'
 
             with zipfile.ZipFile(package, 'w') as pack:
-                for plugin_root, _, files in os.walk(plugin):
-                    for index, filename in enumerate(files):
+                for plugin_root, _, plugin_files in os.walk(plugin):
+                    for index, filename in enumerate(plugin_files):
                         target = str(os.path.join(plugin_root, filename))
                         if '__pycache__' in target:
                             continue

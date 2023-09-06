@@ -8,6 +8,12 @@
             "description": "在启动时自动更新资源",
             "type": "boolean",
             "default": false
+        },
+        "quality": {
+            "title": "立绘图片质量",
+            "description": "0~100，100为高清无损原图，除90以外下载速度可能会降低",
+            "type": "integer",
+            "default": 90
         }
     }
 }

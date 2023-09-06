@@ -9,17 +9,115 @@
     <link type="text/css" rel="styleSheet" href="font/font.css"/>
     <link type="text/css" rel="styleSheet" href="progress.css"/>
     <title>template</title>
-    <script src="../../../../log/test.js"></script>
 </head>
 <body>
 <div id="template" v-if="Object.keys(data).length">
-    <img :src="getActivityLogoUrl('camp_01')" alt="">
+    <div class="dr-name">
+        <div class="avatar">
+            <img style="width: 100%;"
+                 :src="getSkinAvatarUrl(data.status.secretary.skinId)"
+                 :alt="data.status.secretary.skinId"
+                 onerror="changeAvatar(this)">
+        </div>
+        <div>
+            <div style="font-size: 28px;">{{ data.status.name }}</div>
+        </div>
+    </div>
+    <div class="title main">
+        主线故事：{{ stageProgress() }}
+    </div>
+    <div class="title sideStories">别传&插曲</div>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="sideStory" v-for="item in data.activity"
+             v-if="data.activityInfoMap[item.actId].type === 'SIDESTORY'">
+            <img :src="getActivityLogoUrl(item.actId)" alt="" @error="showName(item.actId)">
+            <div class="ssName" :id="item.actId">{{ data.activityInfoMap[item.actId].name }}</div>
+            <div>{{ isComplete(item) }}</div>
+        </div>
+    </div>
+    <div class="title roguelike">集成战略</div>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="rogue" v-for="item in data.rogue.records">
+            <img :src="getRougeBannerUrl(item.rogueId)" alt="">
+            <div style="display: flex; justify-content: space-around; margin-top: 5px;">
+                <div>投资系统：{{ item.bank.record }}</div>
+                <div>解锁道具：{{ item.relicCnt }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="title campaigns">剿灭作战</div>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="comp" v-for="(item, faction) in campaign">
+            <div class="faction" :style="{ backgroundImage: `url(./assets/factions/${compsIcon[faction]})` }"></div>
+            <div class="missions">
+                <div v-for="mission in item.campaigns">
+                    <div>{{ mission.name }}</div>
+                    <div>{{ mission.maxKills }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="title campaigns">保全派驻</div>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div class="tower" v-for="item in data.tower.records">
+            <!--<img :src="getTowerIconUrl(item.towerId)" alt="">-->
+            <div>
+                <div style="color: #00b3ff">{{ data.towerInfoMap[item.towerId].name }}</div>
+                <div style="font-size: 12px; color: #9e9e9e">{{ data.towerInfoMap[item.towerId].subName }}</div>
+            </div>
+            <div style="font-size: 30px; color: #FF5722;">
+                {{ item.best }}
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 <script src="js/vue.min.js"></script>
 <script src="js/character.js"></script>
 <script src="js/tools.js"></script>
 <script>
+    const compsIcon = {
+        '乌萨斯': 'logo_ursus.png',
+        '炎国龙门': 'logo_yan.png',
+        '卡西米尔': 'logo_kazimierz.png',
+        '汐斯塔': 'logo_siesta.png',
+        '伊比利亚': 'logo_iberia.png',
+        '萨尔贡': 'logo_sargon.png',
+        '玻利瓦尔': 'logo_bolivar.png',
+        '哥伦比亚': 'logo_columbia.png',
+        '维多利亚': 'logo_victoria.png',
+        '炎国': 'logo_sui.png',
+        '拉特兰': 'logo_laterano.png',
+        '莱塔尼亚': 'logo_leithanien.png'
+    }
+
+    function isComplete(item) {
+        let total = 0
+        let cleared = 0
+
+        const rec = {}
+        for (const zoneIndex in item.zones) {
+            const zone = item.zones[zoneIndex]
+
+            total += zone.totalStage
+            cleared += zone.clearedStage
+
+            if (zone.clearedStage !== zone.totalStage) {
+                rec[zoneIndex] = zone.clearedStage + '/' + zone.totalStage
+            }
+        }
+
+        if (total === cleared) {
+            return '已全部完成'
+        } else {
+            let text = ['未完成']
+            for (const i in rec) {
+                text.push(`区域${i}：${rec[i]}`)
+            }
+            return text.join(' ')
+        }
+    }
+
     const template = new Vue({
         el: '#template',
         methods: {
@@ -51,6 +149,16 @@
 
                 this.$set(this, 'data', data)
                 this.$set(this, 'campaign', campaign)
+            },
+            stageProgress() {
+                const stage = this.data.stageInfoMap[this.data.status.mainStageProgress]
+                if (stage) {
+                    return stage.code + ' ' + stage.name
+                }
+                return '全部完成'
+            },
+            showName(id) {
+                document.querySelector('#' + id).style.display = 'block'
             }
         },
         data() {
@@ -61,13 +169,6 @@
         },
         mounted() {
             window.init = this.init
-
-            this.init(testData)
-            console.log(JSON.parse(JSON.stringify(testData)))
-            console.log(JSON.parse(JSON.stringify(this.campaign)))
-            for (const item of Object.keys(this.campaign)) {
-                console.log(item)
-            }
         }
     })
 </script>

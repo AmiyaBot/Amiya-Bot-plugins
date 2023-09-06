@@ -2,51 +2,10 @@ import os
 
 from amiyabot import Message, Chain, Equal, event_bus
 
-from core import AmiyaBotPluginInstance, GitAutomation, log
 from core.util import TimeRecorder
 from core.database.bot import Admin
 
-from .builder import ArknightsGameData, ArknightsConfig, gamedata_path
-
-curr_dir = os.path.dirname(__file__)
-repo = 'https://gitee.com/amiya-bot/amiya-bot-assets.git'
-
-
-def initialize_data():
-    ArknightsConfig.initialize()
-    ArknightsGameData.initialize()
-    event_bus.publish('gameDataInitialized')
-
-
-def download_gamedata():
-    if os.path.exists(gamedata_path) and not os.path.exists(f'{gamedata_path}/version.txt'):
-        log.warning(f'资源已不可用，请删除 {gamedata_path} 目录并发送“更新资源”或重启。')
-        return
-
-    GitAutomation(gamedata_path, repo).update(['--depth 1'])
-
-    event_bus.publish('gameDataFetched')
-
-
-class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
-    def install(self):
-        if bot.get_config('autoUpdate') or not os.path.exists(gamedata_path):
-            download_gamedata()
-        else:
-            initialize_data()
-
-
-bot = ArknightsGameDataPluginInstance(
-    name='明日方舟数据解析',
-    version='1.8',
-    plugin_id='amiyabot-arknights-gamedata',
-    plugin_type='official',
-    description='明日方舟游戏数据解析，为内置的静态类提供数据。',
-    document=f'{curr_dir}/README.md',
-    global_config_schema=f'{curr_dir}/config_schema.json',
-    global_config_default=f'{curr_dir}/config_default.yaml',
-    priority=999
-)
+from .builder import bot, initialize_data, download_gamedata, gamedata_path
 
 
 @event_bus.subscribe('gameDataFetched')

@@ -68,7 +68,7 @@ async def is_token_str(data: Message):
         res = json.loads(data.text)
         token = res['data']['content']
 
-        assert isinstance(token, str) and '鹰角网络通行证账号' in res['data']['msg']
+        assert isinstance(token, str) and '鹰角网络通行证账号' in res['msg']
 
         return True, 10, token
     except Exception:
@@ -189,18 +189,18 @@ async def _(data: Message):
         .html(f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000)
 
 
-# @bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
-# async def _(data: Message):
-#     user_info, token = await check_user_info(data)
-#     if not user_info:
-#         return
-#
-#     await data.send(Chain(data).text('开始获取并生成关卡进度信息，请稍后...'))
-#
-#     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
-#
-#     from core.util import create_test_data
-#     create_test_data(character_info, 'log/test.js')
+@bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    await data.send(Chain(data).text('开始获取并生成关卡进度信息，请稍后...'))
+
+    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+
+    return Chain(data, chain_builder=WaitALLRequestsDone()) \
+        .html(f'{curr_dir}/template/progress.html', character_info, width=1200, render_time=1000)
 
 
 @bot.on_message(keywords='绑定', allow_direct=True)

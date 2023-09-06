@@ -2,8 +2,10 @@ import os
 import json
 
 from core.resource.arknightsGameData import ArknightsConfig
-from core.database.bot import OperatorConfig
+from core.database.bot import BotBaseModel, OperatorConfig
 from amiyabot import log
+from amiyabot.database import *
+from amiyabot.network.download import download_async
 
 config = {
     'classes': {
@@ -35,6 +37,44 @@ html_symbol = {
     '<替身>': '&lt;替身&gt;',
     '<支援装置>': '&lt;支援装置&gt;'
 }
+
+gamedata_path = 'resource/gamedata'
+
+
+@table
+class SkinsPathCache(BotBaseModel):
+    skin_id: str = CharField(unique=True)
+    skin_path: str = CharField()
+    quality: int = IntegerField()
+
+    @classmethod
+    async def get_skin_file(cls, skin_id: str, url: str, quality: int = 90):
+        skin_path = f'{gamedata_path}/skin/{skin_id}.png'
+
+        cache: SkinsPathCache = cls.get_or_none(skin_id=skin_id)
+        need_download = True
+
+        if os.path.exists(skin_path) and cache and cache.quality == quality:
+            need_download = False
+
+        if need_download:
+            create_dir(skin_path, is_file=True)
+
+            log.debug(f'downloading {skin_id}.png (Q{quality})...')
+
+            content = await download_async(url)
+            if content:
+                with open(skin_path, mode='wb') as file:
+                    file.write(content)
+
+                if cache:
+                    cls.update(quality=quality, skin_path=skin_path).where(cls.skin_id == skin_id).execute()
+                else:
+                    cls.create(skin_id=skin_id, skin_path=skin_path, quality=quality)
+            else:
+                return None
+
+        return skin_path
 
 
 def config_initialize(cls: ArknightsConfig):

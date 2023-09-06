@@ -3,24 +3,62 @@ import re
 import json
 
 from typing import List, Dict
-from amiyabot.util import extract_zip, create_dir
-from amiyabot.network.download import download_async
+from amiyabot import event_bus
+from amiyabot.util import extract_zip
 from collections import Counter
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, STR_DICT_MAP, STR_DICT_LIST
 from core.database.bot import OperatorIndex
 from core.util import remove_xml_tag, remove_punctuation, sorted_dict
-from core import log
+from core import AmiyaBotPluginInstance, GitAutomation, log
 
-from .common import ArknightsConfig, JsonData
+from .common import ArknightsConfig, JsonData, SkinsPathCache, gamedata_path
 from .operatorBuilder import OperatorImpl, TokenImpl, Collection, parse_template
 from .wiki import PRTS
 from .sklandApi import *
 
-gamedata_path = 'resource/gamedata'
+curr_dir = os.path.dirname(__file__)
+repo = 'https://gitee.com/amiya-bot/amiya-bot-assets.git'
 
 
 class SkinIndexes:
     url_indexes: Dict[str, str] = {}
+
+
+class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
+    def install(self):
+        if bot.get_config('autoUpdate') or not os.path.exists(gamedata_path):
+            download_gamedata()
+        else:
+            initialize_data()
+
+
+bot = ArknightsGameDataPluginInstance(
+    name='明日方舟数据解析',
+    version='1.8',
+    plugin_id='amiyabot-arknights-gamedata',
+    plugin_type='official',
+    description='明日方舟游戏数据解析，为内置的静态类提供数据。',
+    document=f'{curr_dir}/../README.md',
+    global_config_schema=f'{curr_dir}/../config_schema.json',
+    global_config_default=f'{curr_dir}/../config_default.yaml',
+    priority=999
+)
+
+
+def initialize_data():
+    ArknightsConfig.initialize()
+    ArknightsGameData.initialize()
+    event_bus.publish('gameDataInitialized')
+
+
+def download_gamedata():
+    if os.path.exists(gamedata_path) and not os.path.exists(f'{gamedata_path}/version.txt'):
+        log.warning(f'资源已不可用，请删除 {gamedata_path} 目录并发送“更新资源”或重启。')
+        return
+
+    GitAutomation(gamedata_path, repo).update(['--depth 1'])
+
+    event_bus.publish('gameDataFetched')
 
 
 def gamedata_initialize(cls: ArknightsGameData):
@@ -318,23 +356,15 @@ def init_stages():
 
 async def get_skin_file(skin_data: dict, encode_url: bool = False):
     skin_id = skin_data['skin_id']
-    skin_path = f'resource/gamedata/skin/{skin_id}.png'
 
-    if not os.path.exists(skin_path):
-        create_dir(f'{gamedata_path}/skin')
-        if skin_id in SkinIndexes.url_indexes:
-            content = await download_async(SkinIndexes.url_indexes[skin_id])
-            if content:
-                with open(skin_path, mode='wb') as file:
-                    file.write(content)
+    if skin_id in SkinIndexes.url_indexes:
+        quality = bot.get_config('quality')
+        url = SkinIndexes.url_indexes[skin_id].replace('quality,Q_90', f'quality,Q_{quality}')
+        skin_path = await SkinsPathCache.get_skin_file(skin_id, url, quality)
 
-    if not os.path.exists(skin_path):
-        return None
-
-    if encode_url:
-        skin_path = skin_path.replace('#', '%23')
-
-    return skin_path
+        if encode_url and skin_path:
+            skin_path = skin_path.replace('#', '%23')
+            return skin_path
 
 
 async def get_voice_file(operator: OperatorImpl, voice_key: str, voice_type: str = ''):
