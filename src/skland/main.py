@@ -100,8 +100,9 @@ async def _(data: Message):
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
     character_info['backgroundImage'] = await ArknightsGameDataResource.get_skin_file(
         {
-            'skin_id': character_info['status']['secretary']['charId']
-        }
+            'skin_id': character_info['status']['secretary']['charId'] + '#1'
+        },
+        encode_url=True
     )
 
     return Chain(data, chain_builder=WaitALLRequestsDone()) \
@@ -151,7 +152,7 @@ async def _(data: Message):
                 'charSkins': char_info.skins(),
                 'charModules': {},
                 'charSkinFacePos': face_detect(os.path.abspath(skin_file)),
-                'backgroundImage': skin_file
+                'backgroundImage': skin_file.replace('#', '%23')
             }
 
             for module in char_info.modules() or []:

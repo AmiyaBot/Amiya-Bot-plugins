@@ -3,7 +3,7 @@ import os
 curr_dir = os.path.dirname(__file__)
 
 
-def face_detect(file_name: str, cascade_name: str = f'{curr_dir}/lbpcascade_animeface.xml'):
+def face_detect(file_name: str, reel_width: int = 1200, cascade_name: str = f'{curr_dir}/lbpcascade_animeface.xml'):
     if not os.path.exists(file_name):
         return []
 
@@ -15,7 +15,11 @@ def face_detect(file_name: str, cascade_name: str = f'{curr_dir}/lbpcascade_anim
         face_cascade = cv2.CascadeClassifier(cascade_name)
 
         for item in face_cascade.detectMultiScale(img):
-            pos.append([int(n) for n in item])
+            x, y = [int(n) for n in item][:2]
+            height, width = img.shape[:2]
+            reel_height = height * (reel_width / width)
+
+            pos.append([x / width * reel_width, y / height * reel_height])
 
     except Exception:
         ...

@@ -214,10 +214,15 @@
                 }
 
                 const min = Math.min(y)
-                return {
+                const style = {
                     backgroundImage: `url(${gamedataPath}${this.data.backgroundImage})`,
-                    backgroundPositionY: min ? (-(min - 50) + 'px') : 'center'
+                    backgroundSize: '100% auto',
+                    backgroundPositionY: 'top'
                 }
+                if (min) {
+                    style.backgroundPositionY = -(min - 50) + 'px'
+                }
+                return style
             }
         },
         data() {
