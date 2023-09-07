@@ -53,8 +53,8 @@ class WaitALLRequestsDone(ChainBuilder):
 
 
 bot = SKLandPluginInstance(
-    name='森空岛（Beta）',
-    version='3.1',
+    name='森空岛',
+    version='3.2',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -139,7 +139,7 @@ async def _(data: Message):
             }
             skin_file = await ArknightsGameDataResource.get_skin_file(
                 {
-                    'skin_id': character_info['status']['secretary']['charId']
+                    'skin_id': char['skinId']
                 }
             )
             result = {

@@ -32,7 +32,7 @@ def get_user_box(user_id):
             if operator.rarity in collect:
                 collect[operator.rarity].append(
                     {
-                        'avatar': f'resource/gamedata/avatar/{operator.id}.png',
+                        'avatar': f'resource/gamedata/avatar/{operator.id}#1.png',
                         'rank': f'{curr_dir}/rank/{count if int(count) <= 6 else 6}.png'
                     }
                 )
@@ -41,7 +41,7 @@ def get_user_box(user_id):
     rank = 20
     padding = 10
 
-    y_pos = 26 - size
+    y_pos = 52 - size
     max_length = 10
     for rarity, items in collect.items():
         x_pos = padding
@@ -66,12 +66,14 @@ def get_user_box(user_id):
             else:
                 x_pos += size
 
-    return create_image(text='博士，这是您的干员列表（按获取顺序）',
-                        width=size * max_length + padding * 2,
-                        height=y_pos + padding + size,
-                        images=images,
-                        padding=padding,
-                        bgcolor='#F5F5F5')
+    return create_image(
+        text='博士，这是您的干员列表（按获取顺序）\n请注意，以下为“兔兔抽卡”插件记录的 BOX，并非您的真实 BOX。',
+        width=size * max_length + padding * 2,
+        height=y_pos + padding + size,
+        images=images,
+        padding=padding,
+        bgcolor='#F5F5F5'
+    )
 
 
 def get_user_gacha_detail(user_id):
