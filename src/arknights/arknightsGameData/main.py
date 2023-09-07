@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from amiyabot import Message, Chain, Equal, event_bus
 
@@ -42,3 +43,15 @@ async def _(data: Message):
     initialize_data()
 
     return Chain(data).text(f'解析完成，耗时{time_rec.total()}')
+
+
+@bot.on_message(keywords=Equal('清除立绘缓存'))
+async def _(data: Message):
+    if not bool(Admin.get_or_none(account=data.user_id)):
+        return None
+
+    time_rec = TimeRecorder()
+
+    shutil.rmtree(f'{gamedata_path}/skin')
+
+    return Chain(data).text(f'已清除立绘缓存，耗时{time_rec.total()}')

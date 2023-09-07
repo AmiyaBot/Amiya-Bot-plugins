@@ -31,10 +31,14 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
         else:
             initialize_data()
 
+    def uninstall(self):
+        event_bus.unsubscribe('gameDataFetched', initialize_data)
+        ArknightsGameData.initialize_methods.remove(gamedata_initialize)
+
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='1.9',
+    version='2.1',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -383,7 +387,7 @@ async def get_real_name(operator: str = None):
     return await PRTS.get_real_name(operator)
 
 
-ArknightsGameData.initialize_methods.append(gamedata_initialize)
+ArknightsGameData.initialize_methods = [gamedata_initialize]
 ArknightsGameData.get_real_name = get_real_name
 ArknightsGameDataResource.get_skin_file = get_skin_file
 ArknightsGameDataResource.get_voice_file = get_voice_file
