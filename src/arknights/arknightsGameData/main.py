@@ -20,7 +20,11 @@ async def _(data: Message):
         return None
 
     if os.path.exists(gamedata_path) and not os.path.exists(f'{gamedata_path}/version.txt'):
-        return Chain(data).text(f'资源已不可用，请删除 {gamedata_path} 目录并重试。')
+        # noinspection PyBroadException
+        try:
+            shutil.rmtree(gamedata_path)
+        except Exception:
+            return Chain(data).text(f'资源已不可用，请删除 {gamedata_path} 目录并重试。')
 
     await data.send(Chain(data).text('即将开始检查更新，更新过程中所有功能将会无响应...'))
 
