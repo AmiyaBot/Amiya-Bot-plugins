@@ -34,27 +34,6 @@ body {
     display: inline-block;
 }
 
-.skill-type {
-    display: flex;
-    margin-bottom: 5px;
-}
-
-.skill-type > div {
-    margin-right: 5px;
-    background: #737373;
-    padding: 0 5px;
-    border-radius: 4px;
-}
-
-.skill-type > .t1 {
-    background: #98c043 !important;
-}
-
-.skill-type > .t2,
-.skill-type > .t4 {
-    background: #ec7e4c !important;
-}
-
 .mark {
     color: #00b3ff;
 }

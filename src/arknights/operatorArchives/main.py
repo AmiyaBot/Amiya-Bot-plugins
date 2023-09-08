@@ -1,3 +1,5 @@
+from amiyabot import ChainBuilder
+from amiyabot.adapters.kook import KOOKBotInstance
 from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent import TencentBotInstance
@@ -8,6 +10,12 @@ from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameData
 from .operatorCore import bot, default_level, get_index, search_info, FuncsVerify, OperatorSearchInfo
 from .operatorInfo import OperatorInfo, curr_dir
 from .operatorData import OperatorData
+
+
+class WaitALLRequestsDone(ChainBuilder):
+    @classmethod
+    async def on_page_rendered(cls, page):
+        await page.wait_for_load_state('networkidle')
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=default_level)
@@ -29,9 +37,9 @@ async def _(data: Message):
     if not result:
         return Chain(data).text(f'博士，干员{info.name}尚未拥有模组')
     if is_story:
-        return Chain(data).text_image(result)
+        return Chain(data).markdown(result)
     else:
-        return Chain(data).html(f'{curr_dir}/template/operatorModule.html', result)
+        return Chain(data, chain_builder=WaitALLRequestsDone()).html(f'{curr_dir}/template/operatorModule.html', result)
 
 
 @bot.on_message(group_id='operator', keywords=['语音'], level=default_level)
@@ -73,12 +81,16 @@ async def _(data: Message):
     index = get_index(data.text_digits, voices)
 
     if not info.voice_key and index is None:
-        text = f'博士，这是干员{opt.name}的语音列表\n\n'
-        for i, item in enumerate(voices):
-            text += f'[{i + 1}] %s\n' % item['voice_title']
-        text += '\n回复【序号】查询对应的语音资料'
+        text = f'博士，这是干员{opt.name}的语音列表\n回复【<span style="color: red">序号</span>】查询对应的语音资料\n\n'
+        text += '|标题|标题|标题|\n|----|----|----|\n'
 
-        wait = await data.wait(Chain(data).text(text))
+        for i, item in enumerate(voices):
+            text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>' \
+                    + item['voice_title']
+            if (i + 1) % 3 == 0:
+                text += '|\n'
+
+        wait = await data.wait(Chain(data).markdown(text))
         if wait:
             index = get_index(wait.text_digits, voices)
 
@@ -127,12 +139,16 @@ async def _(data: Message):
     index = get_index(data.text_digits, stories)
 
     if not info.story_key and index is None:
-        text = f'博士，这是干员{opt.name}的档案列表\n\n'
-        for i, item in enumerate(stories):
-            text += f'[{i + 1}] %s\n' % item['story_title']
-        text += '\n回复【序号】查询对应的档案资料'
+        text = f'博士，这是干员{opt.name}的档案列表\n回复【<span style="color: red">序号</span>】查询对应的档案资料\n\n'
+        text += '|标题|标题|标题|\n|----|----|----|\n'
 
-        wait = await data.wait(Chain(data).text(text))
+        for i, item in enumerate(stories):
+            text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>' \
+                    + item['story_title']
+            if (i + 1) % 3 == 0:
+                text += '|\n'
+
+        wait = await data.wait(Chain(data).markdown(text))
         if wait:
             index = get_index(wait.text_digits, stories)
 
@@ -143,12 +159,14 @@ async def _(data: Message):
         return None
 
     if info.story_key in stories_map:
-        return Chain(data).text(f'博士，这是干员{info.name}《{info.story_key}》的档案\n\n{stories_map[info.story_key]}')
+        return Chain(data) \
+            .text(f'博士，这是干员{info.name}《{info.story_key}》的档案') \
+            .markdown(stories_map[info.story_key].replace('\n', '<br>'))
     else:
         return Chain(data).text(f'博士，没有找到干员{info.name}《{info.story_key}》的档案')
 
 
-@bot.on_message(group_id='operator', keywords=['皮肤', '服装', '衣服', '时装', '立绘'], level=default_level)
+@bot.on_message(group_id='operator', keywords=['皮肤', '立绘'], level=default_level)
 async def _(data: Message):
     info = search_info(data, source_keys=['skin_key', 'name'])
 
@@ -261,15 +279,16 @@ async def _(data: Message):
     source = type(data.instance)
     operator_group = OperatorInfo.operator_group_map[info.group_key]
 
-    if source is TencentBotInstance:
-        reply = Chain(data).text(f'查询到【{info.group_key}】拥有以下干员\n')
-
+    if source in [TencentBotInstance, KOOKBotInstance]:
+        text = f'## {info.group_key}\n'
         for item in operator_group:
-            reply.text(item.name + '\n')
+            text += f'- {item.name}\n'
 
-        return reply
+        return Chain(data).markdown(text)
+
     elif source is CQHttpBotInstance:
         reply = CQHTTPForwardMessage(data)
+
     else:
         reply = MiraiForwardMessage(data)
 
@@ -288,3 +307,16 @@ async def _(data: Message):
             await reply.add_message(node, user_id=data.instance.appid, nickname='AmiyaBot')
 
     await reply.send()
+
+
+@bot.on_message(group_id='operator', keywords='阵营', level=default_level)
+async def _(data: Message):
+    operator_group = OperatorInfo.operator_group_map
+
+    text = '|阵营名|干员|\n|----|----|\n'
+
+    for item in sorted(operator_group.keys()):
+        group = operator_group[item]
+        text += f'|{item}|%s|\n' % ('、'.join([n.name for n in group]))
+
+    return Chain(data).markdown(text)

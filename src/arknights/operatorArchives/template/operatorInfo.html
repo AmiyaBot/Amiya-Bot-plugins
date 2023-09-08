@@ -7,11 +7,12 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link type="text/css" rel="styleSheet" href="font.css"/>
     <link type="text/css" rel="styleSheet" href="operatorInfo.css"/>
+    <link type="text/css" rel="styleSheet" href="css/skillType.css"/>
     <title>template</title>
 </head>
 <body>
 <div id="template">
-    <div :style="{backgroundImage: `url('../../../${data.skin}')`}" v-if="Object.keys(data).length"
+    <div :style="{backgroundImage: `url('${gamedataPath}${data.skin}')`}" v-if="Object.keys(data).length"
          class="background">
         <div class="left">
             <div>
@@ -138,9 +139,9 @@
             <div>
                 <div class="title">基建技能</div>
                 <div class="exInfo bs" v-for="item in data.building_skills">
-                    <div style="width: 60px">精英{{ item.bs_unlocked }}</div>
+                    <div style="width: 60px">精英{{ item.bs_unlocked.toString().match(/(\d+)/)[1] }}</div>
                     <div class="bs-icon"
-                         :style="{backgroundImage: `url('../../../resource/gamedata/building_skill/${item.bs_icon}.png')`}">
+                         :style="{backgroundImage: `url('${buildingSkillIconPath(item.bs_icon)}')`}">
                     </div>
                     <div style="width: 100px">{{ item.bs_name }}</div>
                     <div style="width: calc(100% - 160px);padding-left: 10px">{{ item.bs_desc }}</div>
@@ -151,7 +152,8 @@
                     <div style="width: 120px;text-align: center">
                         <div>
                             <img style="width: 80px"
-                                 :src="'../../../resource/gamedata/skill/' + item.skill_icon + '.png'" alt="skill">
+                                 :src="skillIconPath(item.skill_icon)"
+                                 alt="skill">
                         </div>
                         <div>{{ item.skill_name }}</div>
                     </div>
@@ -176,9 +178,18 @@
 </div>
 </body>
 <script src="js/vue.min.js"></script>
+<script src="js/gamedata.js"></script>
 <script>
     const template = new Vue({
         el: '#template',
+        computed: {
+            lastModule() {
+                if (this.data.modules.length) {
+                    return this.data.modules[this.data.modules.length - 1].attrs
+                }
+                return {}
+            }
+        },
         methods: {
             init(data) {
                 this.$set(this, 'data', data)
@@ -186,67 +197,16 @@
             attr(name) {
                 return this.data.detail[name]
                     + (this.data.trust[name] ? `<span class="a">+${this.data.trust[name]}</span>` : '')
-                    + (this.data.modules[name] ? `<span class="b">+${this.data.modules[name]}</span>` : '').replace(/\+-/g, '-')
+                    + (this.lastModule[name] ? `<span class="b">+${this.lastModule[name]}</span>` : '').replace(/\+-/g, '-')
             },
             skillItem(item) {
                 const skills = this.data.skills_desc[item.skill_no]
                 return skills[skills.length - 1]
-            },
-            range(text) {
-                let lines = []
-                for (let line of text.split('\n')) {
-                    let items = []
-                    for (let char of line) {
-                        switch (char) {
-                            case '　':
-                                items.push('<div class="block"></div>')
-                                break
-                            case '□':
-                                items.push('<div class="block r"></div>')
-                                break
-                            case '■':
-                                items.push('<div class="block s"></div>')
-                                break
-                        }
-                    }
-                    lines.push(`<div class="block-group">${items.join('')}</div>`)
-                }
-                return lines.join('')
-            },
-            colorSpan(text, tag = true) {
-                text = text.replace('<', '&lt;').replace('>', '&gt;')
-                text = text.replace(/\n/g, '<br/>')
-                text = text.replace(/\s/g, '')
-                text = text.replace(/\[cl/g, tag ? '<span class="mark">' : '')
-                text = text.replace(/@#174CC6cle]/g, tag ? '</span>' : '')
-
-                return text
             }
         },
         data() {
             return {
-                data: {},
-                classesIcons: {
-                    '术师': 'caster.png',
-                    '医疗': 'medic.png',
-                    '先锋': 'pioneer.png',
-                    '狙击': 'sniper.png',
-                    '特种': 'special.png',
-                    '辅助': 'support.png',
-                    '重装': 'tank.png',
-                    '近卫': 'warrior.png'
-                },
-                spType: {
-                    1: '自动回复',
-                    2: '攻击回复',
-                    4: '受击回复',
-                    8: '被动'
-                },
-                skillType: {
-                    0: '被动',
-                    1: '手动触发',
-                    2: '自动触发'
-                }
+                data: {}
             }
         },
         mounted() {
