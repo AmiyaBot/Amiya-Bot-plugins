@@ -26,11 +26,12 @@
             <br>
             <i v-if="data.data.skin_desc">「{{ data.data.skin_desc }}」</i>
         </div>
-        <div class="skin-image" :style="{backgroundImage: `url('../../../${data.path}')`}"></div>
+        <div class="skin-image" :style="{backgroundImage: `url('${gamedataPath}${data.path}')`}"></div>
     </div>
 </div>
 </body>
 <script src="js/vue.min.js"></script>
+<script src="js/gamedata.js"></script>
 <script>
     const template = new Vue({
         el: '#template',

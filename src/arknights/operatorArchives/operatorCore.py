@@ -33,7 +33,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='3.8',
+    version='3.9',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -67,6 +67,9 @@ class FuncsVerify:
     @classmethod
     async def operator(cls, data: Message):
         info = search_info(data, source_keys=['name'])
+
+        if len(info.name) == 1 and '查询' not in data.text:
+            return False
 
         return bool(info.name), default_level if info.name != '阿米娅' else 0, info
 

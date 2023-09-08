@@ -21,53 +21,41 @@ class OperatorData:
         detail, trust = operator.detail()
         modules = operator.modules()
 
-        module_attr = {}
+        module_attrs = []
         if modules:
-            module = modules[-1]
-            if module['detail']:
-                attrs = module['detail']['phases'][-1]['attributeBlackboard']
-                for attr in attrs:
-                    module_attr[snake_case_to_pascal_case(attr['key'])] = integer(attr['value'])
+            for module in modules:
+                module_attr = {}
+                if module['detail']:
+                    attrs = module['detail']['phases'][-1]['attributeBlackboard']
+                    for attr in attrs:
+                        module_attr[snake_case_to_pascal_case(attr['key'])] = integer(attr['value'])
+
+                module_attrs.append({
+                    **module,
+                    'attrs': module_attr
+                })
 
         skills, skills_id, skills_cost, skills_desc = operator.skills()
         skins = operator.skins()
 
+        infos = [
+            'id', 'cv', 'type', 'tags', 'range', 'rarity', 'number', 'name', 'en_name', 'wiki_name', 'index_name',
+            'origin_name', 'classes', 'classes_sub', 'classes_code', 'race', 'drawer', 'team', 'group', 'nation',
+            'birthday', 'profile', 'impression', 'limit', 'unavailable', 'potential_item', 'is_recruit', 'is_sp'
+        ]
+
         operator_info = {
             'info': {
-                'id': operator.id,
-                'cv': operator.cv,
-                'type': operator.type,
-                'tags': operator.tags,
-                'range': operator.range,
-                'rarity': operator.rarity,
-                'number': operator.number,
-                'name': operator.name,
-                'en_name': operator.en_name,
                 'real_name': real_name,
-                'wiki_name': operator.wiki_name,
-                'index_name': operator.index_name,
-                'origin_name': operator.origin_name,
-                'classes': operator.classes,
-                'classes_sub': operator.classes_sub,
-                'classes_code': operator.classes_code,
-                'race': operator.race,
-                'drawer': operator.drawer,
-                'team': operator.team,
-                'group': operator.group,
-                'nation': operator.nation,
-                'birthday': operator.birthday,
-                'profile': operator.profile,
-                'impression': operator.impression,
-                'limit': operator.limit,
-                'unavailable': operator.unavailable,
-                'potential_item': operator.potential_item,
-                'is_recruit': operator.is_recruit,
-                'is_sp': operator.is_sp
+                **{
+                    n: getattr(operator, n)
+                    for n in infos
+                }
             },
             'skin': (await ArknightsGameDataResource.get_skin_file(skins[0], encode_url=True)) if skins else '',
             'trust': trust,
             'detail': detail,
-            'modules': module_attr,
+            'modules': module_attrs,
             'talents': operator.talents(),
             'potential': operator.potential(),
             'building_skills': operator.building_skills(),
@@ -168,7 +156,7 @@ class OperatorData:
             return None
 
         if is_story:
-            return cls.find_operator_module_story(info.name, modules)
+            return cls.find_operator_module_story(modules)
 
         def parse_trait_data(data):
             if data is None:
@@ -216,11 +204,10 @@ class OperatorData:
         return modules
 
     @staticmethod
-    def find_operator_module_story(name, modules):
-        text = f'博士，为您找到干员{name}的模组故事'
-
+    def find_operator_module_story(modules):
+        text = ''
         for item in modules:
-            text += '\n\n【%s】\n\n' % item['uniEquipName']
-            text += item['uniEquipDesc']
+            text += '\n\n## %s\n\n' % item['uniEquipName']
+            text += item['uniEquipDesc'].replace('\n', '<br>')
 
         return text

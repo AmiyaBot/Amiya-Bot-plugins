@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='2.1',
+    version='2.2',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -168,7 +168,7 @@ def init_operators():
                     item.birthday = f'{month}月{day}日'
                     birth[month][day].append(item)
 
-                r = re.search(r'性别】(\S+)\n', story['story_text'])
+                r = re.search(r'性别】(\S+)(\s+)?\n', story['story_text'])
                 if r:
                     item.sex = r.group(1)
 
@@ -239,7 +239,7 @@ def init_enemies():
     enemies_data = JsonData.get_json_data('enemy_database', folder='levels/enemydata')
 
     enemies_data_map = {
-        item['key']: item['value']
+        item['Key']: item['Value']
         for item in enemies_data['enemies']
     }
 
@@ -310,13 +310,15 @@ def init_stages():
             for wave in level_data['waves']:
                 for fragment in wave['fragments']:
                     for action in fragment['actions']:
-                        if action['key'] not in enemies_info['enemyData'] or action['actionType'] != 0:
+                        if action['key'] not in enemies_info['enemyData'] or action['actionType'] != 'SPAWN':
                             continue
+
                         if action['key'] not in enemies:
                             enemies[action['key']] = {
                                 **enemies_info['enemyData'][action['key']],
                                 'count': 0
                             }
+
                         enemies[action['key']]['count'] += action['count']
 
             level_data['enemiesCount'] = enemies

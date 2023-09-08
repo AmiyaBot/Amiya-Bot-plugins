@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="no-referrer"/>
     <link type="text/css" rel="styleSheet" href="font.css"/>
     <link type="text/css" rel="styleSheet" href="operatorModule.css"/>
     <title>template</title>
@@ -14,12 +15,19 @@
     <div>
         <div class="equip" v-for="equip in data">
             <div class="header">
-                <span class="title">{{ equip.uniEquipName }}</span>
-                <span class="type">
-                    {{ equip.typeName2 ? [equip.typeName1, equip.typeName2].join('-').toUpperCase() : equip.typeName1 }}
-                </span>
+                <div style="display: flex; align-items: center;">
+                    <span class="title">{{ equip.uniEquipName }}</span>
+                    <span class="type">{{ equip.typeIcon.toUpperCase() }}</span>
+                </div>
+                <div class="equipTypeIcon">
+                    <img :src="getEquipTypeIconUrl(equip.typeIcon)" alt="">
+                    <img :src="getEquipTypeShiningUrl(equip.equipShiningColor)" alt="">
+                </div>
             </div>
             <div class="detail" v-if="equip.detail">
+                <div class="module-image">
+                    <img :src="getEquipIconUrl(equip.uniEquipIcon)" alt="">
+                </div>
                 <div class="sub-title h1"><span>解锁任务</span></div>
                 <div class="missions">
                     <div>
@@ -75,7 +83,7 @@
                             <div class="materiel-costs">
                                 <div class="materiel" :use="count(item.count)"
                                      v-for="item in equip.itemCost[stage.equipLevel]">
-                                    <img :src="'../../../resource/gamedata/item/' + item.info.material_icon + '.png'"
+                                    <img :src="itemIconPath(item.info.material_icon)"
                                          :alt="item.info.material_name">
                                 </div>
                             </div>
@@ -83,20 +91,22 @@
                     </div>
                 </div>
             </div>
-            <div class="detail" style="color: black" v-else>{{ equip.uniEquipDesc }}</div>
+            <div class="detail" style="color: black" v-else v-html="equip.uniEquipDesc.replace(/\n/g, '<br>')"></div>
         </div>
     </div>
 </div>
 </body>
 <script src="js/vue.min.js"></script>
+<script src="js/gamedata.js"></script>
+<script src="js/character.js"></script>
 <script>
     const template = new Vue({
         el: '#template',
         methods: {
-            init (data) {
+            init(data) {
                 this.$set(this, 'data', data)
             },
-            colorSpan (text, tag = true) {
+            colorSpan(text, tag = true) {
                 text = text.replace(/\s/g, '')
                 text = text.replace(/\[cl/g, tag ? '<span class="mark">' : '')
                 text = text.replace(/@#174CC6cle]/g, tag ? '</span>' : '')
@@ -104,7 +114,7 @@
 
                 return '<span>' + text + '</span>'
             },
-            hasTalent (parts) {
+            hasTalent(parts) {
                 for (let part of parts) {
                     if (part.addOrOverrideTalentDataBundle.candidates) {
                         return true
@@ -112,21 +122,21 @@
                 }
                 return false
             },
-            talents (candidates) {
+            talents(candidates) {
                 let data = {}
                 for (let item of candidates || []) {
                     data[item.name] = item
                 }
                 return data
             },
-            count (num) {
+            count(num) {
                 if (num >= 1000) {
                     num = (num / 1000).toFixed(0) + 'k'
                 }
                 return num
             }
         },
-        data () {
+        data() {
             return {
                 data: {},
                 attrsDict: {
@@ -148,7 +158,7 @@
                 }
             }
         },
-        mounted () {
+        mounted() {
             window.init = this.init
         }
     })

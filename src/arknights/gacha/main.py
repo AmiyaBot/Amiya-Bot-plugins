@@ -47,7 +47,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -193,7 +193,7 @@ async def _(data: Message):
         if selected:
             all_people = False
             if type(data.instance) is TencentBotInstance:
-                if data.guild_id == '16459499741255637771' and data.is_admin:
+                if bool(Admin.get_or_none(account=data.user_id)):
                     all_people = '所有人' in data.text
 
             change_res = change_pool(selected, data.user_id if not all_people else None)
@@ -202,33 +202,17 @@ async def _(data: Message):
             return Chain(data).text_image(change_res[0])
 
     text = '博士，这是可更换的卡池列表：\n\n'
-    pools = []
-    max_len = 0
+    text += '|卡池名称|卡池名称|卡池名称|卡池名称|\n|----|----|----|----|\n'
+
     for index, item in enumerate(all_pools):
-        pool = '%s [ %s ]' % (('' if index + 1 >= 10 else '0') + str(index + 1), item.pool_name)
-        if index % 2 == 0 and len(pool) > max_len:
-            max_len = len(pool)
-        pools.append(pool)
+        text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{index + 1}</span> {item.pool_name}'
+        if (index + 1) % 4 == 0:
+            text += '|\n'
 
-    pools_table = ''
-    curr_row = 0
-    for index, item in enumerate(pools):
-        if index % 2 == 0:
-            pools_table += item
-            curr_row = len(item)
-        else:
-            spaces = max_len - curr_row + 2
-            pools_table += '%s%s\n' % ('　' * spaces, item)
-            curr_row = 0
-
-    if curr_row != 0:
-        pools_table += '\n'
-
-    text += pools_table
+    text += '\n\n> 如需切换卡池，请回复【<span style="color: red">序号</span>】或和阿米娅说「阿米娅切换卡池 "卡池名称" 」\n或「阿米娅切换第 N 个卡池」'
 
     wait = await data.wait(
-        Chain(data).text_image(text).text(
-            '要切换卡池，请回复【序号】或和阿米娅说「阿米娅切换卡池 "卡池名称" 」\n或「阿米娅切换第 N 个卡池」')
+        Chain(data).markdown(text)
     )
     if wait:
         r = re.search(r'(\d+)', wait.text_digits)
