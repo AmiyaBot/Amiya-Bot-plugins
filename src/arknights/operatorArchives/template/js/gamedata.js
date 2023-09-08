@@ -1,4 +1,4 @@
-const gamedataPath = '../../../../../'
+const gamedataPath = '../../../'
 
 const classesIcons = {
     '术师': 'caster.png',
