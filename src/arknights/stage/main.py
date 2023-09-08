@@ -38,7 +38,7 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -118,6 +118,9 @@ async def _(data: Message):
         if not os.path.exists('resource/gamedata/map/%s.png' % res['stageId'].replace('#f#', '')):
             res['stageId'] = res['stageId'].replace('tough', 'main').replace('easy', 'main')
 
+        from core.util import create_test_data
+        create_test_data(res, 'log/test2.js')
+
         return Chain(data).html(f'{curr_dir}/template/stage.html', res)
     else:
         for key in words:
@@ -134,11 +137,11 @@ async def _(data: Message):
                 return Chain(data).markdown(text)
 
         if '活动' in data.text:
-            text = f'博士，以下是活动列表。\n发送“兔兔地图 + 活动名”查看详情。\n|活动名|活动名|\n|----|----|\n'
+            text = f'博士，以下是活动列表。\n发送“兔兔地图 + 活动名”查看详情。\n|活动名|活动名|活动名|活动名|\n|----|----|----|----|\n'
             for index, act_name in enumerate(reversed(ArknightsGameData.side_story_map.keys())):
                 text += '|%s%s' % (
                     act_name,
-                    '|\n' if (index + 1) % 2 == 0 else ''
+                    '|\n' if (index + 1) % 4 == 0 else ''
                 )
             return Chain(data).markdown(text)
 

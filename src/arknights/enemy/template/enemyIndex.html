@@ -17,7 +17,9 @@
         </div>
         <div class="enemyBox">
             <div class="enemyItem" v-for="(item, name) in data.result">
-                <div class="avatar" :style="avatar(item)"></div>
+                <div class="avatar">
+                    <img style="width: 100%" :src="enemyIconPath(item.info.enemyId)" alt="" onerror="hideImage(this)">
+                </div>
                 <div class="detail">
                     <div>
                         <span class="indexNo">{{ Object.keys(data.result).indexOf(name) + 1 }}</span>
@@ -41,6 +43,16 @@
 </body>
 <script src="js/vue.min.js"></script>
 <script>
+    const gamedataPath = '../../../'
+
+    function enemyIconPath(enemyIcon) {
+        return gamedataPath + 'resource/gamedata/enemy/' + enemyIcon + '.png'
+    }
+
+    function hideImage(e) {
+        e.src = './img/enemy.png'
+    }
+
     const template = new Vue({
         el: '#template',
         methods: {

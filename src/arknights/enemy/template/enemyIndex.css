@@ -32,7 +32,6 @@ body {
 .enemyItem > .avatar {
     width: 80px;
     height: 80px;
-    background: center / 100% no-repeat;
 }
 
 .enemyItem > .detail {

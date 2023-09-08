@@ -91,6 +91,8 @@
 </body>
 <script src="js/vue.min.js"></script>
 <script>
+    const gamedataPath = '../../../resource/gamedata/enemy'
+
     function hideImage(e) {
         e.src = './img/enemy.png'
     }
@@ -117,8 +119,7 @@
                     'NORMAL': '普通',
                     'ELITE': '精英',
                     'BOSS': 'BOSS',
-                },
-                gamedataPath: '../../../resource/gamedata/enemy'
+                }
             }
         },
         mounted() {

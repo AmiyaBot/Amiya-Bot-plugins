@@ -48,7 +48,7 @@ class Enemy:
 
         if enemy['data']:
             for item in enemy['data']:
-                attrs[item['level'] + 1] = {}
+                attrs[item['level']] = {}
 
                 detail_data = item['enemyData']
                 for key in key_map:
@@ -58,7 +58,7 @@ class Enemy:
                     else:
                         value = key_map[key]['value']
 
-                    attrs[item['level'] + 1][key_map[key]['title']] = value
+                    attrs[item['level']][key_map[key]['title']] = value
 
         if get_links:
             for link_id in enemy['info']['linkEnemies']:
@@ -86,7 +86,7 @@ class EnemiesPluginInstance(PluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
