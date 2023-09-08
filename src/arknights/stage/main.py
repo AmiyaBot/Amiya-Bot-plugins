@@ -118,9 +118,6 @@ async def _(data: Message):
         if not os.path.exists('resource/gamedata/map/%s.png' % res['stageId'].replace('#f#', '')):
             res['stageId'] = res['stageId'].replace('tough', 'main').replace('easy', 'main')
 
-        from core.util import create_test_data
-        create_test_data(res, 'log/test2.js')
-
         return Chain(data).html(f'{curr_dir}/template/stage.html', res)
     else:
         for key in words:

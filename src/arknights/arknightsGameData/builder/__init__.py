@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -50,9 +50,10 @@ bot = ArknightsGameDataPluginInstance(
 
 
 def initialize_data():
-    ArknightsConfig.initialize()
-    ArknightsGameData.initialize()
-    event_bus.publish('gameDataInitialized')
+    with log.sync_catch():
+        ArknightsConfig.initialize()
+        ArknightsGameData.initialize()
+        event_bus.publish('gameDataInitialized')
 
 
 def download_gamedata():
@@ -66,35 +67,36 @@ def download_gamedata():
 
 
 def gamedata_initialize(cls: ArknightsGameData):
-    if not os.path.exists('resource/gamedata/version.txt'):
-        return None
+    with log.sync_catch():
+        if not os.path.exists('resource/gamedata/version.txt'):
+            return None
 
-    extract_zip(f'{gamedata_path}/gamedata.zip', f'{gamedata_path}/gamedata', overwrite=True)
+        extract_zip(f'{gamedata_path}/gamedata.zip', f'{gamedata_path}/gamedata', overwrite=True)
 
-    with open('resource/gamedata/version.txt', mode='r', encoding='utf-8') as file:
-        cls.version = file.read().strip('\n') or 'none'
+        with open('resource/gamedata/version.txt', mode='r', encoding='utf-8') as file:
+            cls.version = file.read().strip('\n') or 'none'
 
-    log.info(f'Initializing ArknightsGameData@{cls.version}...')
+        log.info(f'Initializing ArknightsGameData@{cls.version}...')
 
-    with open('resource/gamedata/indexes/skinUrls.json', mode='r', encoding='utf-8') as file:
-        skin_urls = json.load(file)
+        with open('resource/gamedata/indexes/skinUrls.json', mode='r', encoding='utf-8') as file:
+            skin_urls = json.load(file)
 
-    for item in skin_urls.values():
-        for skin_id, url in item.items():
-            SkinIndexes.url_indexes[skin_id] = url
+        for item in skin_urls.values():
+            for skin_id, url in item.items():
+                SkinIndexes.url_indexes[skin_id] = url
 
-    cls.enemies = init_enemies()
-    cls.stages, cls.stages_map, cls.side_story_map = init_stages()
-    cls.operators, cls.tokens, cls.birthday = init_operators()
-    cls.materials, cls.materials_map, cls.materials_made, cls.materials_source = init_materials()
+        cls.enemies = init_enemies()
+        cls.stages, cls.stages_map, cls.side_story_map = init_stages()
+        cls.operators, cls.tokens, cls.birthday = init_operators()
+        cls.materials, cls.materials_map, cls.materials_made, cls.materials_source = init_materials()
 
-    OperatorIndex.truncate_table()
-    OperatorIndex.batch_insert([
-        item.dict() for _, item in cls.operators.items()
-    ])
-    JsonData.clear_cache()
+        OperatorIndex.truncate_table()
+        OperatorIndex.batch_insert([
+            item.dict() for _, item in cls.operators.items()
+        ])
+        JsonData.clear_cache()
 
-    log.info(f'ArknightsGameData initialize completed.')
+        log.info(f'ArknightsGameData initialize completed.')
 
 
 def init_operators():
