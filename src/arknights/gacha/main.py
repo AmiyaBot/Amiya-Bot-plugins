@@ -47,7 +47,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='2.1',
+    version='2.2',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -147,7 +147,7 @@ async def _(data: Message):
                 return reply.text(f'博士，您的寻访资源不够哦~\n寻访凭证剩余{coupon}张\n合成玉剩余{user_info.jade_point}')
 
         if times <= 10:
-            return gc.detailed_mode(times, coupon_need, point_need, ten_times=times == 10)
+            return gc.detailed_mode(times, coupon_need, point_need)
         else:
             return gc.continuous_mode(times, coupon_need, point_need)
 
