@@ -190,7 +190,7 @@ class GachaBuilder:
 
         return Chain(self.data).text_image(result)
 
-    def detailed_mode(self, times, coupon, point):
+    def detailed_mode(self, times, coupon, point, *args, **kwargs):
         operators = self.start_gacha(times, coupon, point)
         operators_info = {}
 
@@ -233,7 +233,7 @@ class GachaBuilder:
         if times == 10:
             result_list = []
 
-            operator_name_list = ""
+            operator_name_list = ''
 
             for item in operators:
                 name = item['name']
