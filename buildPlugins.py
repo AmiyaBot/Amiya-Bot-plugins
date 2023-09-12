@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import base64
+import shutil
 import zipfile
 import logging
 import importlib
@@ -16,8 +17,10 @@ remote = 'plugins/official'
 
 
 def build(dist, upload=False):
-    if not os.path.exists(dist):
-        os.makedirs(dist)
+    if os.path.exists(dist):
+        shutil.rmtree(dist)
+
+    os.makedirs(dist)
 
     profiles = []
     plugin_dir = []
