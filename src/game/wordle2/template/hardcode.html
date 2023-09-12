@@ -32,7 +32,7 @@
         </div>
         <div class="opts" v-for="(item, code) in data.wrongs">
             <div class="avatar">
-                <img :src="'../../../resource/gamedata/avatar/' + code + '.png'" :alt="code">
+                <img :src="'../../../resource/gamedata/avatar/' + code + '%231.png'" :alt="code">
             </div>
             <div class="tip-icon" v-for="(tag, field) in data.tags" :class="item[field]"></div>
         </div>
