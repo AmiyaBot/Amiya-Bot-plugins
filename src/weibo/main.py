@@ -2,6 +2,7 @@ import os
 import html
 import time
 import asyncio
+import re
 
 from amiyabot import TencentBotInstance
 from amiyabot.builtin.message import MessageStructure
@@ -22,7 +23,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='微博推送',
-    version='2.5',
+    version='2.6',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='可在微博更新时自动推送到群',
@@ -158,6 +159,20 @@ async def _(_):
         if not result:
             await send_to_console_channel(Chain().text(f'微博获取失败\nUSER: {user}\nID: {new_id}'))
             return
+        
+        send = True
+        for regex in bot.get_config("block"):
+            if re.match(regex,html.unescape(result.html_text)):
+                await send_to_console_channel(Chain().text(f'微博正文触发正则屏蔽，跳过推送\nUSER: {user}\nID: {new_id}'))
+                send = False
+                break
+            if re.search(regex,html.unescape(result.html_text)):
+                await send_to_console_channel(Chain().text(f'微博正文触发搜索屏蔽，跳过推送\nUSER: {user}\nID: {new_id}'))
+                send = False
+                break
+        
+        if not send:
+            continue
 
         await send_to_console_channel(
             Chain().text(f'开始推送微博\nUSER: {result.user_name}\nID: {new_id}\n目标数: {len(target)}')
