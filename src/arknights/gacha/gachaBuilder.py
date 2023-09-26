@@ -28,6 +28,15 @@ bot_caller = {
 }
 
 
+@table
+class PoolSpOperator(BotBaseModel):
+    pool_id: Union[ForeignKeyField, int] = ForeignKeyField(Pool, db_column='pool_id', on_delete='CASCADE')
+    operator_name: str = CharField()
+    rarity: int = IntegerField()
+    classes: str = CharField()
+    image: str = CharField()
+
+
 class GachaBuilder:
     def __init__(self, data: Message):
         self.data = data
