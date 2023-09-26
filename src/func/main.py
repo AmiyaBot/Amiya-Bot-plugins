@@ -1,29 +1,74 @@
 import os
+import datetime
 
 from typing import List, Set
 from amiyabot import PluginInstance, Message, Chain
 from core.database.bot import DisabledFunction, FunctionUsed
 from core.util import get_index_from_text, get_doc, check_file_content
-from core import bot as main_bot, AmiyaBotPluginInstance
+from core import bot as main_bot,log, AmiyaBotPluginInstance
+
+from .database import AmiyaBotFunctionsGroupDataBase
 
 curr_dir = os.path.dirname(__file__)
-bot = PluginInstance(
+
+
+class  AmiyaBotFunctionsPluginInstance(AmiyaBotPluginInstance):
+    def install(self):
+        AmiyaBotFunctionsGroupDataBase.create_table(safe=True)
+
+bot = AmiyaBotFunctionsPluginInstance(
     name='功能管理',
-    version='1.7',
+    version='1.8',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    global_config_default=f'{curr_dir}/configs/global_config_default.json',
+    global_config_schema=f'{curr_dir}/configs/global_config_schema.json',
 )
+
 
 
 @bot.message_before_handle
 async def _(data: Message, factory_name: str, _):
+
+    # log.info(f'create0{data.channel_id}')
+
+    # 检查该 channel 是否已有禁用的功能
+    disabled_functions_for_channel = DisabledFunction.select().where(DisabledFunction.channel_id == data.channel_id)
+    
+    # 检查是否已存在与当前 channel_id 相关的记录
+    channel_record = AmiyaBotFunctionsGroupDataBase.get_or_none(channel_id=data.channel_id)
+
+    # 如果记录不存在，创建一个新的记录并写入当前消息时间
+    if not channel_record:
+        channel_record = AmiyaBotFunctionsGroupDataBase.create(channel_id=data.channel_id, last_message=datetime.datetime.now())
+               
+        # log.info(f'create1{data.channel_id}')
+
+        # 如果该 channel 中已有禁用的功能，不更改当前状态
+        if not disabled_functions_for_channel.exists():
+            
+            if bot.get_config("newChannelDisableAll", data.channel_id)!=True:         
+                log.info(f'New Channel! disable all functions for {data.channel_id}')
+                # 禁用所有功能
+                for func in get_plugins_set():
+                    if func != "amiyabot-functions":
+                        DisabledFunction.create(function_id=func, channel_id=data.channel_id)
+                return False
+    
+    # log.info(f'create2{data.channel_id}')
+    channel_record.last_message = datetime.datetime.now()
+    channel_record.save()
+
+    # 检查功能是否已被禁用
     disabled = DisabledFunction.get_or_none(
         function_id=factory_name,
         channel_id=data.channel_id
     )
     return not bool(disabled)
+
+
 
 
 @bot.message_after_handle
