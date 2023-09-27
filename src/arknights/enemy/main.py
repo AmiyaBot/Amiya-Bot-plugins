@@ -46,6 +46,9 @@ class Enemy:
         attrs = {}
         link_items = []
 
+        if not enemy:
+            return None
+
         if enemy['data']:
             for item in enemy['data']:
                 attrs[item['level']] = {}
@@ -62,9 +65,9 @@ class Enemy:
 
         if get_links:
             for link_id in enemy['info']['linkEnemies']:
-                link_items.append(
-                    cls.get_enemy(link_id, get_links=False)
-                )
+                res = cls.get_enemy(link_id, get_links=False)
+                if res:
+                    link_items.append(res)
 
         return {
             **enemy,
@@ -86,7 +89,7 @@ class EnemiesPluginInstance(PluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -124,7 +127,9 @@ async def _(data: Message):
 
     if not enemy_name:
         if data.verify.keypoint:
-            return Chain(data).html(f'{curr_dir}/template/enemy.html', Enemy.get_enemy(data.verify.keypoint))
+            res = Enemy.get_enemy(data.verify.keypoint)
+            if res:
+                return Chain(data).html(f'{curr_dir}/template/enemy.html', res)
 
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的敌方单位名称'))
         if not wait or not wait.text:
@@ -136,7 +141,9 @@ async def _(data: Message):
         result = Enemy.find_enemies(enemy_name)
         if result:
             if len(result) == 1:
-                return Chain(data).html(f'{curr_dir}/template/enemy.html', Enemy.get_enemy(result[0][0]))
+                res = Enemy.get_enemy(result[0][0])
+                if res:
+                    return Chain(data).html(f'{curr_dir}/template/enemy.html', res)
 
             init_data = {
                 'search': enemy_name,
@@ -152,6 +159,8 @@ async def _(data: Message):
             if wait:
                 index = get_index_from_text(wait.text_digits, result)
                 if index is not None:
-                    return Chain(data).html(f'{curr_dir}/template/enemy.html', Enemy.get_enemy(result[index][0]))
+                    res = Enemy.get_enemy(result[index][0])
+                    if res:
+                        return Chain(data).html(f'{curr_dir}/template/enemy.html', res)
         else:
             return Chain(data).text(f'博士，没有找到敌方单位{enemy_name}的资料 >.<')
