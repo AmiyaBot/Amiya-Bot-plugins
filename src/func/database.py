@@ -1,16 +1,10 @@
 from datetime import datetime
 
-from peewee import AutoField,CharField,TextField,DateTimeField
+from amiyabot.database import *
+from core.database.bot import BotBaseModel
 
-from amiyabot.database import ModelClass
 
-from core.database.plugin import db
-
-class AmiyaBotFunctionsGroupDataBase(ModelClass):
-    id: int = AutoField()
+@table
+class ChannelRecord(BotBaseModel):
     channel_id: str = CharField()
     last_message: datetime = DateTimeField(null=True)
-
-    class Meta:
-        database = db
-        table_name = "amiyabot-functions-group"
