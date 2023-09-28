@@ -34,8 +34,7 @@ async def _(data: Message, factory_name: str, _):
 
     # 如果记录不存在，创建一个新的记录并写入当前消息时间
     if not channel_record:
-        ChannelRecord.create(channel_id=data.channel_id,
-                             last_message=datetime.datetime.now())
+        ChannelRecord.create(channel_id=data.channel_id, last_message=datetime.datetime.now())
 
         # 如果该 channel 中已有禁用的功能，不更改当前状态
         if not disabled_functions_for_channel.exists():
@@ -50,10 +49,7 @@ async def _(data: Message, factory_name: str, _):
         channel_record.save()
 
     # 检查功能是否已被禁用
-    disabled = DisabledFunction.get_or_none(
-        function_id=factory_name,
-        channel_id=data.channel_id
-    )
+    disabled = DisabledFunction.get_or_none(function_id=factory_name, channel_id=data.channel_id)
 
     if disabled:
         if data.channel_id not in disabled_remind:
@@ -134,8 +130,9 @@ async def _(data: Message):
             if index is not None:
                 func = funcs[index]
 
-                DisabledFunction.delete().where(DisabledFunction.channel_id == data.channel_id,
-                                                DisabledFunction.function_id == func.plugin_id).execute()
+                DisabledFunction.delete().where(
+                    DisabledFunction.channel_id == data.channel_id, DisabledFunction.function_id == func.plugin_id
+                ).execute()
 
                 return Chain(data).text(f'已开启功能【{func.name}】').markdown(get_plugin_use_doc(func))
     else:
@@ -175,13 +172,7 @@ async def _(data: Message):
 
 
 def disabled_all(channel_id):
-    funcs = [
-        {
-            'function_id': func,
-            'channel_id': channel_id
-        }
-        for func in get_plugins_set()
-    ]
+    funcs = [{'function_id': func, 'channel_id': channel_id} for func in get_plugins_set()]
     DisabledFunction.batch_insert(funcs)
 
 
@@ -195,9 +186,7 @@ def get_plugin_use_doc(instance: AmiyaBotPluginInstance):
 
 
 def get_plugins_set():
-    return set(
-        [plugin_id for plugin_id in main_bot.plugins.keys() if plugin_id != bot.plugin_id]
-    )
+    return set([plugin_id for plugin_id in main_bot.plugins.keys() if plugin_id != bot.plugin_id])
 
 
 def get_plugins_content(func_ids: Set[str]):

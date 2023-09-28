@@ -69,11 +69,7 @@ class Enemy:
                 if res:
                     link_items.append(res)
 
-        return {
-            **enemy,
-            'attrs': attrs,
-            'link_items': link_items
-        }
+        return {**enemy, 'attrs': attrs, 'link_items': link_items}
 
     @classmethod
     def get_value(cls, key, source):
@@ -93,7 +89,7 @@ bot = EnemiesPluginInstance(
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
 )
 
 
@@ -145,15 +141,10 @@ async def _(data: Message):
                 if res:
                     return Chain(data).html(f'{curr_dir}/template/enemy.html', res)
 
-            init_data = {
-                'search': enemy_name,
-                'result': {item[0]: item[1] for item in result}
-            }
+            init_data = {'search': enemy_name, 'result': {item[0]: item[1] for item in result}}
 
             wait = await data.wait(
-                Chain(data)
-                .html(f'{curr_dir}/template/enemyIndex.html', init_data)
-                .text('回复【序号】查询对应的敌方单位资料')
+                Chain(data).html(f'{curr_dir}/template/enemyIndex.html', init_data).text('回复【序号】查询对应的敌方单位资料')
             )
 
             if wait:

@@ -40,7 +40,7 @@ bot = OperatorPluginInstance(
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
-    global_config_default=f'{curr_dir}/config_default.yaml'
+    global_config_default=f'{curr_dir}/config_default.yaml',
 )
 bot.set_group_config(GroupConfig('operator', allow_direct=True))
 
@@ -86,7 +86,7 @@ def search_info(data: Message, source_keys: list = None):
         'skin_key': list(OperatorInfo.skins_map.keys()),
         'group_key': list(OperatorInfo.operator_group_map.keys()),
         'voice_key': OperatorInfo.voice_keywords,
-        'story_key': OperatorInfo.stories_keywords
+        'story_key': OperatorInfo.stories_keywords,
     }
 
     info = OperatorSearchInfo()

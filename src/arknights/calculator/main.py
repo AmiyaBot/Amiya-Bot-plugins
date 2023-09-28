@@ -15,7 +15,7 @@ bot = PluginInstance(
     plugin_id='amiyabot-arknights-calculator',
     plugin_type='official',
     description='计算合成玉获得数量或龙门币花费数量等',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
 )
 
 
@@ -28,22 +28,14 @@ async def action(data: Message):
     return await calc_jade(Chain(wait), wait.text)
 
 
-@bot.on_message(
-    keywords=re.compile(r'多少(合成)?玉'),
-    allow_direct=True,
-    level=3
-)
+@bot.on_message(keywords=re.compile(r'多少(合成)?玉'), allow_direct=True, level=3)
 async def _(data: Message):
     reply = Chain(data)
 
     return await calc_jade(reply, data.text_original)
 
 
-@bot.on_message(
-    keywords=re.compile(r'(凑|计算|花掉|花费)\s*(\d+)\s*龙门币'),
-    allow_direct=True,
-    level=3
-)
+@bot.on_message(keywords=re.compile(r'(凑|计算|花掉|花费)\s*(\d+)\s*龙门币'), allow_direct=True, level=3)
 async def _(data: Message):
     money = int(data.verify.keypoint[1])
 

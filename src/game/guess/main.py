@@ -13,24 +13,18 @@ bot = PluginInstance(
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
 )
 
 
 @bot.on_message(keywords=['猜干员'])
 async def _(data: Message):
-    level = {
-        '初级': '立绘',
-        '中级': '技能',
-        '高级': '语音',
-        '资深': '档案'
-    }
+    level = {'初级': '立绘', '中级': '技能', '高级': '语音', '资深': '档案'}
     level_text = '\n'.join([f'【{lv}】{ct}猜干员' for lv, ct in level.items()])
 
-    select_level = f'博士，请选择难度：\n\n{level_text}\n\n' \
-                   '请回复【难度等级】开始游戏。\n' \
-                   '所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n' \
-                   '详细说明请查看功能菜单'
+    select_level = (
+        f'博士，请选择难度：\n\n{level_text}\n\n' '请回复【难度等级】开始游戏。\n' '所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n' '详细说明请查看功能菜单'
+    )
 
     choice = await data.wait(Chain(data).text(select_level), force=True)
 
@@ -103,10 +97,12 @@ async def _(data: Message):
     rewards_rate = (100 + (referee.total_rate if referee.total_rate > -50 else -50)) / 100
     text, reward_list = referee.calc_rank()
 
-    text += f'\n通关速度：{time_rec.total()}' \
-            f'\n难度倍率：{level_rate * 100}%' \
-            f'\n进度倍率：{finish_rate * 100}%' \
-            f'\n结算倍率：{rewards_rate * 100}%\n\n'
+    text += (
+        f'\n通关速度：{time_rec.total()}'
+        f'\n难度倍率：{level_rate * 100}%'
+        f'\n进度倍率：{finish_rate * 100}%'
+        f'\n结算倍率：{rewards_rate * 100}%\n\n'
+    )
 
     for r, l in reward_list.items():
         if r == 0:

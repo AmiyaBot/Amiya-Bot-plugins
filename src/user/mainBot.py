@@ -60,29 +60,20 @@ def sign_in(data: Message, sign_type=0):
             user_feeling=UserInfo.user_feeling + feeling,
             user_mood=15,
             sign_times=UserInfo.sign_times + 1,
-            jade_point_max=0
+            jade_point_max=0,
         ).where(UserInfo.user_id == data.user_id).execute()
 
         UserGachaInfo.get_or_create(user_id=data.user_id)
-        UserGachaInfo.update(
-            coupon=UserGachaInfo.coupon + coupon
-        ).where(UserGachaInfo.user_id == data.user_id).execute()
+        UserGachaInfo.update(coupon=UserGachaInfo.coupon + coupon).where(
+            UserGachaInfo.user_id == data.user_id
+        ).execute()
 
-        return {
-            'text': f'{"签到成功，" if sign_type else ""}{coupon}张寻访凭证已经送到博士的办公室啦，请博士注意查收哦',
-            'status': True
-        }
+        return {'text': f'{"签到成功，" if sign_type else ""}{coupon}张寻访凭证已经送到博士的办公室啦，请博士注意查收哦', 'status': True}
 
     if sign_type and info.sign_date == today:
-        return {
-            'text': '博士今天已经签到了哦',
-            'status': False
-        }
+        return {'text': '博士今天已经签到了哦', 'status': False}
 
-    return {
-        'text': '',
-        'status': False
-    }
+    return {'text': '', 'status': False}
 
 
 def talk_time():
@@ -114,11 +105,7 @@ async def user_info(data: Message):
         if avatar:
             image = 'data:image/jpg;base64,' + base64.b64encode(avatar).decode('ascii')
 
-    info = {
-        'avatar': image,
-        'nickname': data.nickname,
-        **UserInfo.get_user_info(data.user_id)
-    }
+    info = {'avatar': image, 'nickname': data.nickname, **UserInfo.get_user_info(data.user_id)}
 
     return Chain(data).html(f'{curr_dir}/template/userInfo.html', info, width=700, height=300)
 

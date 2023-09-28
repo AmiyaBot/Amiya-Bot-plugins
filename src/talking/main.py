@@ -20,7 +20,7 @@ bot = TalkPluginInstance(
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
-    global_config_default=f'{curr_dir}/config_default.yaml'
+    global_config_default=f'{curr_dir}/config_default.yaml',
 )
 
 
