@@ -40,7 +40,6 @@ try:
     paddle_enabled = True
     log.info('PaddleOCR初始化完成')
 except ModuleNotFoundError:
-    log.info('未安装PaddleOCR')
     paddle_enabled = False
 
 class Recruit:
