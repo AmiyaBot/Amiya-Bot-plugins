@@ -57,12 +57,15 @@ bot = ReplacePluginInstance(
 
 @bot.message_created
 async def _(data: Message, _):
-    user_replace: List[TextReplace] = TextReplace.select() \
-        .where(TextReplace.user_id == data.user_id, TextReplace.is_user_only == 1, TextReplace.is_active == 1)
+    user_replace: List[TextReplace] = TextReplace.select().where(
+        TextReplace.user_id == data.user_id, TextReplace.is_user_only == 1, TextReplace.is_active == 1
+    )
 
-    replace: List[TextReplace] = TextReplace.select() \
-        .where(TextReplace.group_id == data.guild_id, TextReplace.is_active == 1) \
+    replace: List[TextReplace] = (
+        TextReplace.select()
+        .where(TextReplace.group_id == data.guild_id, TextReplace.is_active == 1)
         .orwhere(TextReplace.is_global == 1)
+    )
 
     if replace:
         text = data.text
@@ -98,8 +101,7 @@ async def _(data: Message):
             return show_replace_by_replace(data, replace)
 
         if origin == '删除':
-            TextReplace.delete().where(TextReplace.group_id == data.guild_id,
-                                       TextReplace.replace == replace).execute()
+            TextReplace.delete().where(TextReplace.group_id == data.guild_id, TextReplace.replace == replace).execute()
             return Chain(data).text(f'已在本频道删除别名 [{replace}]')
 
         # 检查全局别名是否存在
@@ -167,8 +169,9 @@ async def _(data: Message):
 
 
 def show_replace_by_replace(data: Message, replace):
-    replace_list: List[TextReplace] = TextReplace.select().where(TextReplace.group_id == data.guild_id,
-                                                                 TextReplace.origin == replace)
+    replace_list: List[TextReplace] = TextReplace.select().where(
+        TextReplace.group_id == data.guild_id, TextReplace.origin == replace
+    )
     if replace_list:
         text = f'找到 [{replace}] 在本频道生效的别名:\n'
         for item in replace_list:
@@ -204,7 +207,6 @@ def save_replace(data: Message, origin, replace, is_global=0):
         origin=origin,
         replace=replace,
         in_time=int(time.time()),
-        is_global=is_global
+        is_global=is_global,
     )
-    return Chain(data).text(
-        f'审核通过！%s将使用 [{replace}] 作为 [{origin}] 的别名' % ('本频道' if not is_global else '全局'))
+    return Chain(data).text(f'审核通过！%s将使用 [{replace}] 作为 [{origin}] 的别名' % ('本频道' if not is_global else '全局'))

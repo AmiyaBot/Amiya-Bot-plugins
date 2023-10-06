@@ -12,11 +12,7 @@ max_rewards = 30000
 
 
 async def guess_filter(data: Message):
-    return data.text in ArknightsGameData.operators or data.text in [
-        *['不玩了', '结束'],
-        *['下一个', '跳过'],
-        *['线索', '提示']
-    ]
+    return data.text in ArknightsGameData.operators or data.text in [*['不玩了', '结束'], *['下一个', '跳过'], *['线索', '提示']]
 
 
 async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode: bool):
@@ -36,11 +32,7 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
             ask = Chain(data, at=False).html(f'{curr_dir}/template/hardcode.html', process.view_data)
             process.display = False
 
-        event = await data.wait_channel(ask,
-                                        force=True,
-                                        clean=True,
-                                        max_time=5,
-                                        data_filter=guess_filter)
+        event = await data.wait_channel(ask, force=True, clean=True, max_time=5, data_filter=guess_filter)
         if process.count != count_rec:
             time_rec = time.time()
             count_rec = process.count

@@ -15,13 +15,7 @@ class OperatorPool:
         return not len(self.operators.keys())
 
     def pick_one(self):
-        operator = self.operators.pop(
-            random.choice(
-                list(
-                    self.operators.keys()
-                )
-            )
-        )
+        operator = self.operators.pop(random.choice(list(self.operators.keys())))
         if '预备干员' in operator.name:
             return self.pick_one()
         return operator
@@ -109,7 +103,7 @@ class GuessProcess:
         return {
             'tags': {field: asdict(item) for field, item in self.tags.items()},
             'wrongs': self.wrongs,
-            'hardcode': self.hardcode
+            'hardcode': self.hardcode,
         }
 
     def get_tips(self):

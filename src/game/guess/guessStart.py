@@ -21,16 +21,13 @@ async def guess_filter(data: Message):
     return data.text in ArknightsGameData.operators or data.text in [
         *guess_keyword.skip,
         *guess_keyword.tips,
-        *guess_keyword.over
+        *guess_keyword.over,
     ]
 
 
-async def guess_start(referee: GuessReferee,
-                      data: Message,
-                      operator: Operator,
-                      title: str,
-                      level: str,
-                      level_rate: int):
+async def guess_start(
+    referee: GuessReferee, data: Message, operator: Operator, title: str, level: str, level_rate: int
+):
     ask = Chain(data, at=False)
 
     if referee.round == 0:
@@ -86,15 +83,7 @@ async def guess_start(referee: GuessReferee,
 
         voice_type = random.choice(list(operator.cv.keys()))
         type_v = ''
-        type_d = {
-            '中文-普通话': '_cn',
-            '中文-方言': '_custom',
-            '意大利语': '_ita',
-            '英文': '_en',
-            '韩文': '_kr',
-            '日文': '',
-            '联动': ''
-        }
+        type_d = {'中文-普通话': '_cn', '中文-方言': '_custom', '意大利语': '_ita', '英文': '_en', '韩文': '_kr', '日文': '', '联动': ''}
         if voice_type in type_d:
             type_v = type_d[voice_type]
 
@@ -114,28 +103,19 @@ async def guess_start(referee: GuessReferee,
         if not stories:
             return GuessResult(answer=data)
 
-        stories = [n for n in stories if
-                   n['story_title'] not in ['基础档案', '综合体检测试', '综合性能检测结果', '临床诊断分析']]
+        stories = [n for n in stories if n['story_title'] not in ['基础档案', '综合体检测试', '综合性能检测结果', '临床诊断分析']]
         story = random.choice(stories)['story_text'].replace(operator.name, 'XXX')
         section = story.split('。')
 
         if len(section) >= 5:
             start = random.randint(0, len(section) - 5)
-            story = '。'.join(section[start:start + 5])
+            story = '。'.join(section[start : start + 5])
 
         ask.text(story, auto_convert=False)
 
-    tips = [
-        f'TA是{operator.rarity}星干员',
-        f'TA的职业是{operator.classes}',
-        f'TA的分支职业是{operator.classes_sub}'
-    ]
+    tips = [f'TA是{operator.rarity}星干员', f'TA的职业是{operator.classes}', f'TA的分支职业是{operator.classes_sub}']
 
-    for t, v in {
-        '队伍': operator.team,
-        '阵营': operator.group,
-        '势力': operator.nation
-    }.items():
+    for t, v in {'队伍': operator.team, '阵营': operator.group, '势力': operator.nation}.items():
         if v != '未知':
             tips.append(f'TA的所属{t}是{v}')
 
@@ -154,11 +134,7 @@ async def guess_start(referee: GuessReferee,
 
     # 开始竞猜
     while True:
-        event = await data.wait_channel(ask,
-                                        force=True,
-                                        clean=bool(ask),
-                                        max_time=60,
-                                        data_filter=guess_filter)
+        event = await data.wait_channel(ask, force=True, clean=bool(ask), max_time=60, data_filter=guess_filter)
 
         ask = None
         result.event = event

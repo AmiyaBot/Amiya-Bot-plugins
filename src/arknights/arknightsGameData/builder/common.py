@@ -16,27 +16,14 @@ config = {
         'SPECIAL': '特种',
         'SUPPORT': '辅助',
         'TANK': '重装',
-        'WARRIOR': '近卫'
+        'WARRIOR': '近卫',
     },
-    'token_classes': {
-        'TOKEN': '召唤物',
-        'TRAP': '装置'
-    },
-    'high_star': {
-        '5': '资深干员',
-        '6': '高级资深干员'
-    },
-    'types': {
-        'ALL': '不限部署位',
-        'MELEE': '近战位',
-        'RANGED': '远程位'
-    }
+    'token_classes': {'TOKEN': '召唤物', 'TRAP': '装置'},
+    'high_star': {'5': '资深干员', '6': '高级资深干员'},
+    'types': {'ALL': '不限部署位', 'MELEE': '近战位', 'RANGED': '远程位'},
 }
 
-html_symbol = {
-    '<替身>': '&lt;替身&gt;',
-    '<支援装置>': '&lt;支援装置&gt;'
-}
+html_symbol = {'<替身>': '&lt;替身&gt;', '<支援装置>': '&lt;支援装置&gt;'}
 
 gamedata_path = 'resource/gamedata'
 

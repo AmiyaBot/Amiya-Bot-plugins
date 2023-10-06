@@ -68,12 +68,9 @@ class GuessReferee(RateCalculator):
 
         if user_id not in self.user_ranking:
             self.user_num += 1
-            self.user_ranking[user_id] = GuessUser(**{
-                'user_id': user_id,
-                'nickname': answer.nickname,
-                'index': self.user_num,
-                'point': point
-            })
+            self.user_ranking[user_id] = GuessUser(
+                **{'user_id': user_id, 'nickname': answer.nickname, 'index': self.user_num, 'point': point}
+            )
         else:
             self.user_ranking[user_id].point += point
 
@@ -81,16 +78,8 @@ class GuessReferee(RateCalculator):
         sorted_list = sorted(list(self.user_ranking.values()), key=lambda n: n.point, reverse=True)
         group = groupby(sorted_list, itemgetter('point'))
         group_index = 0
-        group_index_map = {
-            0: '第一名',
-            1: '第二名',
-            2: '第三名'
-        }
-        reward_list = {
-            0: [],
-            1: [],
-            2: []
-        }
+        group_index_map = {0: '第一名', 1: '第二名', 2: '第三名'}
+        reward_list = {0: [], 1: [], 2: []}
 
         text = '排行榜：\n'
         no_rank = True

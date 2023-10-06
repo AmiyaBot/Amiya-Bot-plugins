@@ -37,9 +37,9 @@
         <template v-if="data.levelData.enemiesCount">
             <div class="section-title" style="color: #ff6900">敌方单位列表</div>
             <div class="enemy-info">
-                <div class="enemy-item" v-for="(item, enemyId) in enemies">
+                <div class="enemy-item" v-for="item in enemies">
                     <div class="enemy-avatar">
-                        <img style="width: 100%" :src="enemyIconPath(enemyId)" alt="" onerror="hideImage(this)">
+                        <img style="width: 100%" :src="enemyIconPath(item.enemyId)" alt="" onerror="hideImage(this)">
                         <span class="tag" :class="item.enemyLevel">{{ level[item.enemyLevel] }}</span>
                     </div>
                     <div style="padding: 10px 5px">
@@ -80,6 +80,7 @@
     }
 
     function enemyIconPath(enemyIcon) {
+        console.log(enemyIcon)
         return gamedataPath + 'resource/gamedata/enemy/' + enemyIcon + '.png'
     }
 

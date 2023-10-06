@@ -54,6 +54,7 @@ body {
 .enemy-item {
     width: 25%;
     padding-right: 15px;
+    margin-top: 10px;
     display: flex;
 }
 

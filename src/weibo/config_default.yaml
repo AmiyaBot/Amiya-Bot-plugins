@@ -9,4 +9,4 @@ sendAsync: false
 listen:
     - 6279793937
 
-block: []
+block: [ ]

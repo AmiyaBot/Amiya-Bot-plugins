@@ -30,7 +30,7 @@ bot = WeiboPluginInstance(
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
-    global_config_default=f'{curr_dir}/config_default.yaml'
+    global_config_default=f'{curr_dir}/config_default.yaml',
 )
 
 
@@ -47,10 +47,12 @@ async def send_by_index(index: int, weibo: WeiboUser, data: MessageStructure):
     if not result:
         return Chain(data).text('博士…暂时无法获取微博呢…请稍后再试吧')
     else:
-        chain = Chain(data) \
-            .text(result.user_name + '\n') \
-            .text(html.unescape(result.html_text) + '\n') \
+        chain = (
+            Chain(data)
+            .text(result.user_name + '\n')
+            .text(html.unescape(result.html_text) + '\n')
             .image(result.pics_list)
+        )
 
         if type(data.instance) is not TencentBotInstance:
             chain.text(f'\n\n{result.detail_url}')
@@ -63,9 +65,7 @@ async def _(data: Message):
     if not data.is_admin:
         return Chain(data).text('抱歉，微博推送只能由管理员设置')
 
-    channel: GroupSetting = GroupSetting.get_or_none(
-        group_id=data.channel_id, bot_id=data.instance.appid
-    )
+    channel: GroupSetting = GroupSetting.get_or_none(group_id=data.channel_id, bot_id=data.instance.appid)
     if channel:
         GroupSetting.update(send_weibo=1).where(
             GroupSetting.group_id == data.channel_id,
@@ -77,9 +77,7 @@ async def _(data: Message):
                 GroupSetting.group_id == data.channel_id
             ).execute()
         else:
-            GroupSetting.create(
-                group_id=data.channel_id, bot_id=data.instance.appid, send_weibo=1
-            )
+            GroupSetting.create(group_id=data.channel_id, bot_id=data.instance.appid, send_weibo=1)
 
     return Chain(data).text('已在本群开启微博推送')
 
@@ -89,8 +87,9 @@ async def _(data: Message):
     if not data.is_admin:
         return Chain(data).text('抱歉，微博推送只能由管理员设置')
 
-    GroupSetting.update(send_weibo=0).where(GroupSetting.group_id == data.channel_id,
-                                            GroupSetting.bot_id == data.instance.appid).execute()
+    GroupSetting.update(send_weibo=0).where(
+        GroupSetting.group_id == data.channel_id, GroupSetting.bot_id == data.instance.appid
+    ).execute()
 
     return Chain(data).text('已在本群关闭微博推送')
 
@@ -117,10 +116,7 @@ async def _(data: Message):
         if not result:
             return Chain(data).text('博士…暂时无法获取微博列表呢…请稍后再试吧')
 
-        reply = Chain(data) \
-            .text(f'这是 {user_name} 的微博列表') \
-            .text_image(result) \
-            .text('回复【序号】或和我说「阿米娅第 N 条微博」来获取详情吧')
+        reply = Chain(data).text(f'这是 {user_name} 的微博列表').text_image(result).text('回复【序号】或和我说「阿米娅第 N 条微博」来获取详情吧')
 
         wait = await data.wait(reply)
         if wait:
@@ -144,9 +140,7 @@ async def _(_):
 
         WeiboRecord.create(user_id=user, blog_id=new_id, record_time=int(time.time()))
 
-        target: List[GroupSetting] = GroupSetting.select().where(
-            GroupSetting.send_weibo == 1
-        )
+        target: List[GroupSetting] = GroupSetting.select().where(GroupSetting.send_weibo == 1)
 
         if not target:
             continue
@@ -159,18 +153,18 @@ async def _(_):
         if not result:
             await send_to_console_channel(Chain().text(f'微博获取失败\nUSER: {user}\nID: {new_id}'))
             return
-        
+
         send = True
         for regex in bot.get_config("block"):
-            if re.match(regex,html.unescape(result.html_text)):
+            if re.match(regex, html.unescape(result.html_text)):
                 await send_to_console_channel(Chain().text(f'微博正文触发正则屏蔽，跳过推送\nUSER: {user}\nID: {new_id}'))
                 send = False
                 break
-            if re.search(regex,html.unescape(result.html_text)):
+            if re.search(regex, html.unescape(result.html_text)):
                 await send_to_console_channel(Chain().text(f'微博正文触发搜索屏蔽，跳过推送\nUSER: {user}\nID: {new_id}'))
                 send = False
                 break
-        
+
         if not send:
             continue
 
@@ -198,9 +192,7 @@ async def _(_):
                 data.image(result.pics_list).text(f'\n\n{result.detail_url}')
 
             if bot.get_config('sendAsync'):
-                async_send_tasks.append(
-                    instance.send_message(data, channel_id=item.group_id)
-                )
+                async_send_tasks.append(instance.send_message(data, channel_id=item.group_id))
             else:
                 await instance.send_message(data, channel_id=item.group_id)
                 await asyncio.sleep(bot.get_config('sendInterval'))

@@ -14,7 +14,7 @@ bot = PluginInstance(
     plugin_id='amiyabot-admin',
     plugin_type='official',
     description='可使用 BOT 的开关功能以及获取频道信息',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
 )
 
 
@@ -61,8 +61,9 @@ async def _(data: Message):
     group_active: GroupActive = GroupActive.get_or_create(group_id=data.channel_id)[0]
 
     if group_active.active == 1:
-        GroupActive.update(active=0,
-                           sleep_time=int(time.time())).where(GroupActive.group_id == data.channel_id).execute()
+        GroupActive.update(active=0, sleep_time=int(time.time())).where(
+            GroupActive.group_id == data.channel_id
+        ).execute()
 
         return Chain(data).text('打卡下班啦！博士需要的时候再让阿米娅工作吧。^_^')
     else:
@@ -79,11 +80,7 @@ async def _(data: Message):
 
 @bot.on_message(keywords=Equal('频道信息'))
 async def _(data: Message):
-    rep = Chain(data, at=False).text(
-        f'用户ID：{data.user_id}\n'
-        f'频道ID：{data.guild_id}\n'
-        f'子频道ID：{data.channel_id}'
-    )
+    rep = Chain(data, at=False).text(f'用户ID：{data.user_id}\n' f'频道ID：{data.guild_id}\n' f'子频道ID：{data.channel_id}')
 
     if data.at_target:
         rep.text('\nAt用户ID：' + ' | '.join(data.at_target))

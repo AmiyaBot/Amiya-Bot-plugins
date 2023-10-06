@@ -25,7 +25,6 @@ class Intellect(UserBaseModel):
 class IntellectPluginInstance(AmiyaBotPluginInstance):
     @staticmethod
     def set_record(data: Message, cur_num: int, full_num: int, full_time: int = None):
-
         full_time = full_time or (full_num - cur_num) * 6 * 60 + int(time.time())
 
         update = {
@@ -36,14 +35,11 @@ class IntellectPluginInstance(AmiyaBotPluginInstance):
             'message_type': data.message_type or 'channel',
             'group_id': data.channel_id,
             'in_time': int(time.time()),
-            'status': 0
+            'status': 0,
         }
 
         if not Intellect.get_or_none(user_id=data.user_id):
-            Intellect.create(**{
-                'user_id': data.user_id,
-                **update
-            })
+            Intellect.create(**{'user_id': data.user_id, **update})
         else:
             Intellect.update(**update).where(Intellect.user_id == data.user_id).execute()
 
@@ -83,10 +79,7 @@ async def _(data: Message):
 
         return bot.set_record(data, cur_num, full_num)
 
-    r_list = [
-        '多少理智',
-        '理智.*多少'
-    ]
+    r_list = ['多少理智', '理智.*多少']
     for item in r_list:
         r = re.search(re.compile(item), message)
         if r:
@@ -96,8 +89,7 @@ async def _(data: Message):
                 through = int(time.time()) - info.in_time
                 restored = int(through / 360) + info.cur_num
 
-                text = f'博士，根据上一次记录，您的 {info.full_num} 理智会在 {full_time} 左右回复满\n' \
-                       f'不计算上限的话，现在已经回复到 {restored} 理智了'
+                text = f'博士，根据上一次记录，您的 {info.full_num} 理智会在 {full_time} 左右回复满\n' f'不计算上限的话，现在已经回复到 {restored} 理智了'
 
                 return Chain(data).text(text)
             else:
@@ -140,7 +132,5 @@ async def _(_):
             text = f'博士！博士！您的理智已经满 {item.full_num} 了，快点上线查看吧～'
 
             await main_bot[item.belong_id].send_message(
-                Chain().at(item.user_id).text(text),
-                user_id=item.user_id,
-                channel_id=item.group_id
+                Chain().at(item.user_id).text(text), user_id=item.user_id, channel_id=item.group_id
             )

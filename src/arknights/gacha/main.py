@@ -57,16 +57,7 @@ bot = GachaPluginInstance(
     global_config_schema=f'{curr_dir}/config/global_config_schema.json',
 )
 
-re_list = [
-    r'抽卡\d+次',
-    r'寻访\d+次',
-    r'抽\d+次',
-    r'\d+次寻访',
-    r'\d+连寻访',
-    r'\d+连抽',
-    r'\d+连',
-    r'\d+抽'
-]
+re_list = [r'抽卡\d+次', r'寻访\d+次', r'抽\d+次', r'\d+次寻访', r'\d+连寻访', r'\d+连抽', r'\d+连', r'\d+抽']
 
 bot.set_group_config(GroupConfig('gacha', allow_direct=True))
 
@@ -80,9 +71,7 @@ def find_once(reg, text):
 
 
 def change_pool(item: Pool, user_id=None):
-    task = UserGachaInfo.update(gacha_pool=item.id).where(
-        (UserGachaInfo.user_id == user_id) if user_id else None
-    )
+    task = UserGachaInfo.update(gacha_pool=item.id).where((UserGachaInfo.user_id == user_id) if user_id else None)
     task.execute()
 
     pic = []
@@ -91,9 +80,7 @@ def change_pool(item: Pool, user_id=None):
             if item.pool_name in file:
                 pic.append(os.path.join(root, file))
 
-    text = [
-        f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{item.pool_name}】\n'
-    ]
+    text = [f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{item.pool_name}】\n']
     if item.pickup_6:
         text.append('[[cl ★★★★★★@#FF4343 cle]] %s' % item.pickup_6.replace(',', '、'))
     if item.pickup_5:
@@ -120,7 +107,6 @@ async def _(data: Message):
     times = 0
 
     for item in re_list:
-
         r = re.search(item, message)
         if r:
             times = int(find_once(r'\d+', find_once(item, message)))
@@ -166,9 +152,7 @@ async def _(data: Message):
     if user.gacha_break_even > 50:
         break_even_rate -= (user.gacha_break_even - 50) * 2
 
-    return Chain(data).text(
-        f'当前已经抽取了 {user.gacha_break_even} 次而未获得六星干员\n下次抽出六星干员的概率为 {100 - break_even_rate}%'
-    )
+    return Chain(data).text(f'当前已经抽取了 {user.gacha_break_even} 次而未获得六星干员\n下次抽出六星干员的概率为 {100 - break_even_rate}%')
 
 
 @bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
@@ -211,9 +195,7 @@ async def _(data: Message):
 
     text += '\n\n> 如需切换卡池，请回复【<span style="color: red">序号</span>】或和阿米娅说「阿米娅切换卡池 "卡池名称" 」\n或「阿米娅切换第 N 个卡池」'
 
-    wait = await data.wait(
-        Chain(data).markdown(text)
-    )
+    wait = await data.wait(Chain(data).markdown(text))
     if wait:
         r = re.search(r'(\d+)', wait.text_digits)
         if r:

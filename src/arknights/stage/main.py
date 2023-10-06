@@ -10,9 +10,7 @@ from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
 
-multiple_zone_stage = {
-    'CF-9': 2
-}
+multiple_zone_stage = {'CF-9': 2}
 
 
 class Stage:
@@ -38,11 +36,11 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.1',
+    version='2.2',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
 )
 
 
@@ -58,9 +56,7 @@ def update(_):
 
 @bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
 async def _(data: Message):
-    words = jieba.lcut(
-        remove_punctuation(data.text, ['-']).upper().replace(' ', '')
-    )
+    words = jieba.lcut(remove_punctuation(data.text, ['-']).upper().replace(' ', ''))
 
     level = ''
     level_str = ''
@@ -107,7 +103,7 @@ async def _(data: Message):
         res = {
             **stage_data,
             'name': stage_data['name'] + level_str,
-            'zones': multiple_zone_stage[stage_data['code']] if stage_data['code'] in multiple_zone_stage else 0
+            'zones': multiple_zone_stage[stage_data['code']] if stage_data['code'] in multiple_zone_stage else 0,
         }
 
         if level == '_easy':
@@ -129,17 +125,14 @@ async def _(data: Message):
                     text += '|%s|%s%s' % (
                         item['code'] + ('**突袭**' if item['difficulty'] == 'FOUR_STAR' else ''),
                         item['name'] + ('**（突袭）**' if item['difficulty'] == 'FOUR_STAR' else ''),
-                        '|\n' if (index + 1) % 2 == 0 else ''
+                        '|\n' if (index + 1) % 2 == 0 else '',
                     )
                 return Chain(data).markdown(text)
 
         if '活动' in data.text:
             text = f'博士，以下是活动列表。\n发送“兔兔地图 + 活动名”查看详情。\n|活动名|活动名|活动名|活动名|\n|----|----|----|----|\n'
             for index, act_name in enumerate(reversed(ArknightsGameData.side_story_map.keys())):
-                text += '|%s%s' % (
-                    act_name,
-                    '|\n' if (index + 1) % 4 == 0 else ''
-                )
+                text += '|%s%s' % (act_name, '|\n' if (index + 1) % 4 == 0 else '')
             return Chain(data).markdown(text)
 
         return Chain(data).text('抱歉博士，没有查询到相关地图信息')

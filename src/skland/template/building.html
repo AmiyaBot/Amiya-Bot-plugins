@@ -189,17 +189,17 @@
     const charMap = {}
     const roomMap = {}
 
-    function avatar (charId) {
+    function avatar(charId) {
         if (charId) {
             return getSkinAvatarUrl(charMap[charId].skinId)
         }
     }
 
-    function skill (skillId) {
+    function skill(skillId) {
         return getSkillIconUrl(skillId)
     }
 
-    function convertSeconds (seconds) {
+    function convertSeconds(seconds) {
         if (seconds === -1) {
             return '无训练'
         }
@@ -284,7 +284,7 @@
             </room>
         `,
         computed: {
-            count () {
+            count() {
                 let count = 0
                 for (const item of this.data.stock) {
                     count += item.gain.count
@@ -315,15 +315,15 @@
             </room>
         `,
         computed: {
-            power () {
+            power() {
                 return 2 ** (this.data.level - 1) * 60 + (2 ** (this.data.level - 1) - 1) * 10
             },
-            labor () {
+            labor() {
                 return this.restoreCalc(this.data.labor.value, this.data.labor.maxValue, this.data.labor.lastUpdateTime)
             }
         },
         methods: {
-            restoreCalc (value, max, lastDate) {
+            restoreCalc(value, max, lastDate) {
                 return Math.min(Math.round((Date.now() / 1000 - lastDate) / 360 + value), max)
             }
         }
@@ -383,7 +383,7 @@
             </div>
         `,
         computed: {
-            charIndexes () {
+            charIndexes() {
                 const indexes = new Array(this.maxChars).fill(null)
                 for (const item of this.chars) {
                     if (item) {
@@ -394,11 +394,11 @@
             }
         },
         methods: {
-            charAp (char) {
+            charAp(char) {
                 const value = char.ap <= 0 && char.index !== -1 ? 100 : char.ap / 86400
                 return value <= 3 ? 3 : value
             },
-            charApClass (char) {
+            charApClass(char) {
                 if (char.ap <= 0) return 'red'
                 if (char.ap === 8640000) return 'green'
             }
@@ -408,12 +408,12 @@
     const template = new Vue({
         el: '#template',
         computed: {
-            trainee () {
+            trainee() {
                 return this.data.building ? this.data.building.training.trainee : null
             }
         },
         methods: {
-            init (data) {
+            init(data) {
                 for (const item of data.chars) {
                     charMap[item.charId] = item
                 }
@@ -437,17 +437,17 @@
                 this.$set(this, 'data', data)
                 this.$set(this, 'building', data.building)
             },
-            slot (slotId) {
+            slot(slotId) {
                 return roomMap[slotId]
             }
         },
-        data () {
+        data() {
             return {
                 data: {},
                 building: {},
             }
         },
-        mounted () {
+        mounted() {
             window.init = this.init
         }
     })

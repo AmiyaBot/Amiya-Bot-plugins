@@ -99,15 +99,14 @@ async def _(data: Message):
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
     character_info['backgroundImage'] = await ArknightsGameDataResource.get_skin_file(
-        {
-            'skin_id': character_info['status']['secretary']['charId'] + '#1'
-        },
-        encode_url=True
+        {'skin_id': character_info['status']['secretary']['charId'] + '#1'}, encode_url=True
     )
 
-    return Chain(data, chain_builder=WaitALLRequestsDone()) \
-        .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400, render_time=1000) \
+    return (
+        Chain(data, chain_builder=WaitALLRequestsDone())
+        .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400, render_time=1000)
         .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。')
+    )
 
 
 @bot.on_message(keywords=['我的干员', '练度'], level=5)
@@ -124,7 +123,8 @@ async def _(data: Message):
     if char_name:
         char_list = {
             character_info['charInfoMap'][item['charId']]['name']
-            if item['charId'] != 'char_1001_amiya2' else '阿米娅近卫': item
+            if item['charId'] != 'char_1001_amiya2'
+            else '阿米娅近卫': item
             for item in character_info['chars']
         }
         if char_name in char_list:
@@ -132,17 +132,11 @@ async def _(data: Message):
             char_info = ArknightsGameData.operators[char_name]
             skins = {
                 item['id']: character_info['skinInfoMap'][item['id']]
-                for item in character_info['skins'] if item['id'].startswith(char['charId'])
+                for item in character_info['skins']
+                if item['id'].startswith(char['charId'])
             }
-            equips = {
-                item['id']: {**character_info['equipmentInfoMap'][item['id']], **item}
-                for item in char['equip']
-            }
-            skin_file = await ArknightsGameDataResource.get_skin_file(
-                {
-                    'skin_id': char['skinId']
-                }
-            )
+            equips = {item['id']: {**character_info['equipmentInfoMap'][item['id']], **item} for item in char['equip']}
+            skin_file = await ArknightsGameDataResource.get_skin_file({'skin_id': char['skinId']})
             result = {
                 'user': character_info['status'],
                 'char': char,
@@ -152,7 +146,7 @@ async def _(data: Message):
                 'charSkins': char_info.skins(),
                 'charModules': {},
                 'charSkinFacePos': face_detect(os.path.abspath(skin_file)),
-                'backgroundImage': skin_file.replace('#', '%23')
+                'backgroundImage': skin_file.replace('#', '%23'),
             }
 
             for module in char_info.modules() or []:
@@ -167,13 +161,15 @@ async def _(data: Message):
 
                         result['charModules'][module['uniEquipId']][lv] = module_attr
 
-            return Chain(data, chain_builder=WaitALLRequestsDone()) \
-                .html(f'{curr_dir}/template/charInfo.html', result, width=1200, height=600)
+            return Chain(data, chain_builder=WaitALLRequestsDone()).html(
+                f'{curr_dir}/template/charInfo.html', result, width=1200, height=600
+            )
         else:
             return Chain(data).text(f'博士，您尚未招募干员【{char_name}】')
 
-    return Chain(data, chain_builder=WaitALLRequestsDone()) \
-        .html(f'{curr_dir}/template/chars.html', character_info, width=1640, render_time=1000)
+    return Chain(data, chain_builder=WaitALLRequestsDone()).html(
+        f'{curr_dir}/template/chars.html', character_info, width=1640, render_time=1000
+    )
 
 
 @bot.on_message(keywords=['我的基建'], level=5)
@@ -186,8 +182,9 @@ async def _(data: Message):
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
 
-    return Chain(data, chain_builder=WaitALLRequestsDone()) \
-        .html(f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000)
+    return Chain(data, chain_builder=WaitALLRequestsDone()).html(
+        f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000
+    )
 
 
 @bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
@@ -200,8 +197,9 @@ async def _(data: Message):
 
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
 
-    return Chain(data, chain_builder=WaitALLRequestsDone()) \
-        .html(f'{curr_dir}/template/progress.html', character_info, width=1200, render_time=1000)
+    return Chain(data, chain_builder=WaitALLRequestsDone()).html(
+        f'{curr_dir}/template/progress.html', character_info, width=1200, render_time=1000
+    )
 
 
 @bot.on_message(keywords='绑定', allow_direct=True)
@@ -224,10 +222,7 @@ async def _(data: Message):
         await data.send(Chain(data).text('博士，请注意保护您的敏感信息！>.<'))
 
     UserToken.delete().where(UserToken.user_id == data.user_id).execute()
-    UserToken.create(
-        user_id=data.user_id,
-        token=data.verify.keypoint
-    )
+    UserToken.create(user_id=data.user_id, token=data.verify.keypoint)
 
     return Chain(data).text('Token 绑定成功！')
 

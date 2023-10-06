@@ -87,7 +87,7 @@ class OperatorImpl(Operator):
             'classes': self.classes,
             'classes_sub': self.classes_sub,
             'classes_code': self.classes_code,
-            'type': self.type
+            'type': self.type,
         }
 
     def detail(self):
@@ -111,7 +111,7 @@ class OperatorImpl(Operator):
             'operator_usage': self.data['itemUsage'] or '',
             'operator_quote': self.data['itemDesc'] or '',
             'operator_token': token['description'] if token else '',
-            'max_level': '%s - %s' % (len(self.data['phases']) - 1, max_phases['maxLevel'])
+            'max_level': '%s - %s' % (len(self.data['phases']) - 1, max_phases['maxLevel']),
         }
         detail.update(max_attr)
 
@@ -135,8 +135,9 @@ class OperatorImpl(Operator):
                 'name': item.name,
                 'en_name': item.en_name,
                 'description': item.description,
-                'attr': item.attr
-            } for item in token_list
+                'attr': item.attr,
+            }
+            for item in token_list
         ]
 
     def talents(self):
@@ -144,10 +145,9 @@ class OperatorImpl(Operator):
         if self.data['talents']:
             for item in self.data['talents']:
                 max_item = item['candidates'][-1]
-                talents.append({
-                    'talents_name': max_item['name'],
-                    'talents_desc': html_tag_format(max_item['description'])
-                })
+                talents.append(
+                    {'talents_name': max_item['name'], 'talents_desc': html_tag_format(max_item['description'])}
+                )
 
         return talents
 
@@ -155,10 +155,7 @@ class OperatorImpl(Operator):
         potential = []
         if self.data['potentialRanks']:
             for index, item in enumerate(self.data['potentialRanks']):
-                potential.append({
-                    'potential_desc': item['description'],
-                    'potential_rank': index + 1
-                })
+                potential.append({'potential_desc': item['description'], 'potential_rank': index + 1})
 
         return potential
 
@@ -167,11 +164,9 @@ class OperatorImpl(Operator):
         for index, phases in enumerate(self.data['phases']):
             if phases['evolveCost']:
                 for item in phases['evolveCost']:
-                    evolve_cost.append({
-                        'evolve_level': index,
-                        'use_material_id': item['id'],
-                        'use_number': item['count']
-                    })
+                    evolve_cost.append(
+                        {'evolve_level': index, 'use_material_id': item['id'], 'use_number': item['count']}
+                    )
 
         return evolve_cost
 
@@ -190,13 +185,15 @@ class OperatorImpl(Operator):
             for index, item in enumerate(skill_level_up_data):
                 if item['lvlUpCost']:
                     for cost in item['lvlUpCost']:
-                        skills_cost.append({
-                            'skill_no': None,
-                            'level': index + 2,
-                            'mastery_level': 0,
-                            'use_material_id': cost['id'],
-                            'use_number': cost['count']
-                        })
+                        skills_cost.append(
+                            {
+                                'skill_no': None,
+                                'level': index + 2,
+                                'mastery_level': 0,
+                                'use_material_id': cost['id'],
+                                'use_number': cost['count'],
+                            }
+                        )
 
         for index, item in enumerate(self.data['skills']):
             code = item['skillId']
@@ -222,17 +219,19 @@ class OperatorImpl(Operator):
                 if desc['rangeId'] in range_data:
                     skill_range = build_range(range_data[desc['rangeId']]['grids'])
 
-                skills_desc[code].append({
-                    'skill_level': lev + 1,
-                    'skill_type': desc['skillType'],
-                    'sp_type': desc['spData']['spType'],
-                    'sp_init': desc['spData']['initSp'],
-                    'sp_cost': desc['spData']['spCost'],
-                    'duration': integer(desc['duration']),
-                    'description': description.replace('\\n', '\n'),
-                    'max_charge': desc['spData']['maxChargeTime'],
-                    'range': skill_range
-                })
+                skills_desc[code].append(
+                    {
+                        'skill_level': lev + 1,
+                        'skill_type': desc['skillType'],
+                        'sp_type': desc['spData']['spType'],
+                        'sp_init': desc['spData']['initSp'],
+                        'sp_cost': desc['spData']['spCost'],
+                        'duration': integer(desc['duration']),
+                        'description': description.replace('\\n', '\n'),
+                        'max_charge': desc['spData']['maxChargeTime'],
+                        'range': skill_range,
+                    }
+                )
 
             level_up_cost_data = ''
             if 'specializeLevelUpData' in item:
@@ -245,20 +244,24 @@ class OperatorImpl(Operator):
                     continue
 
                 for idx, cost in enumerate(cond['levelUpCost']):
-                    skills_cost.append({
-                        'skill_no': code,
-                        'level': lev + 8,
-                        'mastery_level': lev + 1,
-                        'use_material_id': cost['id'],
-                        'use_number': cost['count']
-                    })
+                    skills_cost.append(
+                        {
+                            'skill_no': code,
+                            'level': lev + 8,
+                            'mastery_level': lev + 1,
+                            'use_material_id': cost['id'],
+                            'use_number': cost['count'],
+                        }
+                    )
 
-            skills.append({
-                'skill_no': code,
-                'skill_index': index + 1,
-                'skill_name': detail['levels'][0]['name'],
-                'skill_icon': icon
-            })
+            skills.append(
+                {
+                    'skill_no': code,
+                    'skill_index': index + 1,
+                    'skill_name': detail['levels'][0]['name'],
+                    'skill_icon': icon,
+                }
+            )
 
         return skills, skills_id, skills_cost, skills_desc
 
@@ -274,23 +277,23 @@ class OperatorImpl(Operator):
                     buff_id = item['buffId']
                     if buff_id in building_skills:
                         skill = building_skills[buff_id]
-                        skills.append({
-                            'bs_unlocked': item['cond']['phase'],
-                            'bs_icon': skill['skillIcon'],
-                            'bs_name': skill['buffName'],
-                            'bs_desc': html_tag_format(skill['description'])
-                        })
+                        skills.append(
+                            {
+                                'bs_unlocked': item['cond']['phase'],
+                                'bs_icon': skill['skillIcon'],
+                                'bs_name': skill['buffName'],
+                                'bs_desc': html_tag_format(skill['description']),
+                            }
+                        )
 
         return skills
 
     def voices(self):
         voices = []
         for item in self.__voice_list:
-            voices.append({
-                'voice_title': item['voiceTitle'],
-                'voice_text': item['voiceText'],
-                'voice_no': item['voiceAsset']
-            })
+            voices.append(
+                {'voice_title': item['voiceTitle'], 'voice_text': item['voiceText'], 'voice_no': item['voiceAsset']}
+            )
 
         return voices
 
@@ -299,10 +302,7 @@ class OperatorImpl(Operator):
         stories = []
         if self.id in stories_data:
             for item in stories_data[self.id]['storyTextAudio']:
-                stories.append({
-                    'story_title': item['storyTitle'],
-                    'story_text': item['stories'][0]['storyText']
-                })
+                stories.append({'story_title': item['storyTitle'], 'story_text': item['stories'][0]['storyText']})
         return stories
 
     def skins(self):
@@ -329,17 +329,19 @@ class OperatorImpl(Operator):
                 skin_sort += 1
                 skin_key = f'skin{skin_sort}'
 
-            skins.append({
-                'skin_id': skin_id,
-                'skin_key': skin_key,
-                'skin_name': skin_data['skinName'] or skin_name,
-                'skin_drawer': skin_data['drawerList'][-1] if skin_data['drawerList'] else '',
-                'skin_group': skin_data['skinGroupName'] or '',
-                'skin_content': skin_data['dialog'] or '',
-                'skin_usage': skin_data['usage'] or skin_name + '立绘',
-                'skin_desc': skin_data['description'] or '',
-                'skin_source': skin_data['obtainApproach'] or ''
-            })
+            skins.append(
+                {
+                    'skin_id': skin_id,
+                    'skin_key': skin_key,
+                    'skin_name': skin_data['skinName'] or skin_name,
+                    'skin_drawer': skin_data['drawerList'][-1] if skin_data['drawerList'] else '',
+                    'skin_group': skin_data['skinGroupName'] or '',
+                    'skin_content': skin_data['dialog'] or '',
+                    'skin_usage': skin_data['usage'] or skin_name + '立绘',
+                    'skin_desc': skin_data['description'] or '',
+                    'skin_source': skin_data['obtainApproach'] or '',
+                }
+            )
 
         return skins
 
@@ -439,13 +441,7 @@ class TokenImpl(Token):
                 if range_id in range_data:
                     range_map = build_range(range_data[range_id]['grids'])
 
-                self.attr.append(
-                    {
-                        'evolve': evolve,
-                        'range': range_map,
-                        'attr': item['attributesKeyFrames']
-                    }
-                )
+                self.attr.append({'evolve': evolve, 'range': range_map, 'attr': item['attributesKeyFrames']})
 
     def __str__(self):
         return f'{self.id}_{self.name}'
@@ -482,9 +478,7 @@ def html_tag_format(text: str):
 
 
 def parse_template(blackboard: list, description: str):
-    formatter = {
-        '0%': lambda v: f'{round(v * 100)}%'
-    }
+    formatter = {'0%': lambda v: f'{round(v * 100)}%'}
     data_dict = {item['key']: item['value'] for index, item in enumerate(blackboard)}
 
     desc = html_tag_format(description.replace('>-{', '>{'))
