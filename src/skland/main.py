@@ -3,7 +3,7 @@ import json
 from typing import Iterable
 from amiyabot import TencentBotInstance, ChainBuilder
 from amiyabot.database import *
-from core import AmiyaBotPluginInstance, Message, Chain
+from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import snake_case_to_pascal_case, integer
 from core.database.user import UserBaseModel
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
@@ -53,13 +53,14 @@ class WaitALLRequestsDone(ChainBuilder):
 
 
 bot = SKLandPluginInstance(
-    name='森空岛',
-    version='3.3',
+    name='森空岛（已失效）',
+    version='3.4',
     plugin_id='amiyabot-skland',
     plugin_type='official',
-    description='通过森空岛 API 查询玩家信息展示游戏数据',
+    description='通过森空岛 API 查询玩家信息展示游戏数据（API 已失效，插件已暂停维护）',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata')],
 )
 
 

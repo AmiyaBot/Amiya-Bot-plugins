@@ -13,7 +13,7 @@ from amiyabot import event_bus
 from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
-from core import log, Message, Chain, AmiyaBotPluginInstance
+from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import all_match, read_yaml, create_dir
 from core.lib.baiduCloud import BaiduCloud
 from core.resource.arknightsGameData import ArknightsGameData
@@ -105,11 +105,7 @@ class Recruit:
                                 break
                     else:
                         if lst:
-                            groups.append({
-                                'tags': comb,
-                                'max_rarity': max_r,
-                                'operators': lst
-                            })
+                            groups.append({'tags': comb, 'max_rarity': max_r, 'operators': lst})
 
                 if groups:
                     groups = sorted(groups, key=lambda n: (-len(n['tags']), -n['max_rarity']))
@@ -133,12 +129,13 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
     document=f'{curr_dir}/README.md',
-    instruction=f'{curr_dir}/README_USE.md'
+    instruction=f'{curr_dir}/README_USE.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata')],
 )
 
 
@@ -164,7 +161,7 @@ def find_operator_tags_by_tags(tags, max_rarity):
                         'operator_id': item.id,
                         'operator_name': name,
                         'operator_rarity': item.rarity,
-                        'operator_tags': tag
+                        'operator_tags': tag,
                     }
                 )
 

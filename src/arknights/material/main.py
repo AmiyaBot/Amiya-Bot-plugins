@@ -3,10 +3,10 @@ import json
 import asyncio
 
 from typing import Dict
-from amiyabot import PluginInstance, event_bus
+from amiyabot import event_bus
 from amiyabot.network.httpRequests import http_requests
 
-from core import log, Message, Chain
+from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import any_match, find_most_similar, remove_punctuation
 from core.database.bot import *
 from core.resource.arknightsGameData import ArknightsGameData
@@ -52,26 +52,30 @@ class MaterialData:
                 if material_id == '30012':
                     material_id = '30013'
                 for j in i:
-                    yituliu_data.append({
-                        'materialId': material_id,
-                        'stageId': j['stageCode'],
-                        'sampleConfidence': j['sampleConfidence'],
-                        'stageEfficiency': j['stageEfficiency'],
-                        'apExpect': j['apExpect'],
-                        'knockRating': j['knockRating'],
-                    })
+                    yituliu_data.append(
+                        {
+                            'materialId': material_id,
+                            'stageId': j['stageCode'],
+                            'sampleConfidence': j['sampleConfidence'],
+                            'stageEfficiency': j['stageEfficiency'],
+                            'apExpect': j['apExpect'],
+                            'knockRating': j['knockRating'],
+                        }
+                    )
 
             for i in t2['data']:
                 material_id = i[0]['itemId']
                 for j in i:
-                    yituliu_data.append({
-                        'materialId': material_id,
-                        'stageId': j['stageCode'],
-                        'sampleConfidence': j['sampleConfidence'],
-                        'stageEfficiency': j['stageEfficiency'],
-                        'apExpect': j['apExpect'],
-                        'knockRating': j['knockRating'],
-                    })
+                    yituliu_data.append(
+                        {
+                            'materialId': material_id,
+                            'stageId': j['stageCode'],
+                            'sampleConfidence': j['sampleConfidence'],
+                            'stageEfficiency': j['stageEfficiency'],
+                            'apExpect': j['apExpect'],
+                            'knockRating': j['knockRating'],
+                        }
+                    )
 
             YituliuData.truncate_table()
             YituliuData.batch_insert(yituliu_data)
@@ -92,12 +96,15 @@ class MaterialData:
 
         if material_id in game_data.materials_made:
             for item in game_data.materials_made[material_id]:
-                children.append({
-                    **item,
-                    **game_data.materials[item['use_material_id']],
-                    'children': cls.find_material_children(item['use_material_id'], material_id)
-                    if item['use_material_id'] != parent_id else []
-                })
+                children.append(
+                    {
+                        **item,
+                        **game_data.materials[item['use_material_id']],
+                        'children': cls.find_material_children(item['use_material_id'], material_id)
+                        if item['use_material_id'] != parent_id
+                        else [],
+                    }
+                )
 
         return children
 
@@ -115,21 +122,14 @@ class MaterialData:
             'name': name,
             'info': material,
             'children': cls.find_material_children(material_id),
-            'source': {
-                'main': [],
-                'act': []
-            },
-            'recommend': []
+            'source': {'main': [], 'act': []},
+            'recommend': [],
         }
 
         yituliu_data = cls.find_yituliu_data([material, *cls.find_material_children(material_id)])
         if yituliu_data:
             for material_name, items in yituliu_data.items():
-                sorted_list = sorted(
-                    list(items),
-                    key=cmp_to_key(cls.compare_efficiency),
-                    reverse=True
-                )
+                sorted_list = sorted(list(items), key=cmp_to_key(cls.compare_efficiency), reverse=True)
                 result['recommend'].append(
                     {
                         'name': material_name,
@@ -154,11 +154,7 @@ class MaterialData:
                     continue
 
                 stage = game_data.stages[code]
-                info = {
-                    'code': stage['code'],
-                    'name': stage['name'],
-                    'rate': source[code]['source_rate']
-                }
+                info = {'code': stage['code'], 'name': stage['name'], 'rate': source[code]['source_rate']}
 
                 if 'main' in code:
                     result['source']['main'].append(info)
@@ -175,9 +171,7 @@ class MaterialData:
             if stages:
                 data[item['material_name']] = stages
             if 'children' in item:
-                data.update(
-                    cls.find_yituliu_data(item['children'])
-                )
+                data.update(cls.find_yituliu_data(item['children']))
 
         return data
 
@@ -206,7 +200,7 @@ class MaterialData:
             return -cls.compare_efficiency(b, a)
 
 
-class MaterialPluginInstance(PluginInstance):
+class MaterialPluginInstance(AmiyaBotPluginInstance):
     def install(self):
         asyncio.create_task(MaterialData.save_yituliu_data())
         asyncio.create_task(MaterialData.init_materials())
@@ -217,11 +211,12 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
-    document=f'{curr_dir}/README.md'
+    document=f'{curr_dir}/README.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata')],
 )
 
 
