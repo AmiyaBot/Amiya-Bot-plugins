@@ -45,7 +45,7 @@ bot = ArknightsGameDataPluginInstance(
     document=f'{curr_dir}/../README.md',
     global_config_schema=f'{curr_dir}/../config_schema.json',
     global_config_default=f'{curr_dir}/../config_default.yaml',
-    priority=999
+    priority=999,
 )
 
 
@@ -89,9 +89,7 @@ def gamedata_initialize(cls: ArknightsGameData):
     cls.materials, cls.materials_map, cls.materials_made, cls.materials_source = init_materials()
 
     OperatorIndex.truncate_table()
-    OperatorIndex.batch_insert([
-        item.dict() for _, item in cls.operators.items()
-    ])
+    OperatorIndex.batch_insert([item.dict() for _, item in cls.operators.items()])
     JsonData.clear_cache()
 
     log.info(f'ArknightsGameData initialize completed.')
@@ -145,11 +143,7 @@ def init_operators():
             Collection.tokens_map[token.en_name] = token
             continue
 
-        operator = OperatorImpl(
-            code=code,
-            data=item,
-            is_recruit=item['name'] in recruit_operators
-        )
+        operator = OperatorImpl(code=code, data=item, is_recruit=item['name'] in recruit_operators)
         operators.append(operator)
 
     for item in operators:
@@ -185,10 +179,7 @@ def init_operators():
 def init_materials():
     building_data = JsonData.get_json_data('building_data')
     item_data = JsonData.get_json_data('item_table')
-    formulas = {
-        'WORKSHOP': building_data['workshopFormulas'],
-        'MANUFACTURE': building_data['manufactFormulas']
-    }
+    formulas = {'WORKSHOP': building_data['workshopFormulas'], 'MANUFACTURE': building_data['manufactFormulas']}
 
     materials = {}
     materials_map = {}
@@ -205,7 +196,7 @@ def init_materials():
             'material_id': item_id,
             'material_name': material_name,
             'material_icon': icon_name,
-            'material_desc': item['usage']
+            'material_desc': item['usage'],
         }
         materials_map[material_name] = item_id
 
@@ -215,7 +206,7 @@ def init_materials():
             materials_source[item_id][drop['stageId']] = {
                 'material_id': item_id,
                 'source_place': drop['stageId'],
-                'source_rate': drop['occPer']
+                'source_rate': drop['occPer'],
             }
 
         for build in item['buildingProductList']:
@@ -224,12 +215,14 @@ def init_materials():
                 for build_item in build_cost:
                     if item_id not in materials_made:
                         materials_made[item_id] = []
-                    materials_made[item_id].append({
-                        'material_id': item_id,
-                        'use_material_id': build_item['id'],
-                        'use_number': build_item['count'],
-                        'made_type': build['roomType']
-                    })
+                    materials_made[item_id].append(
+                        {
+                            'material_id': item_id,
+                            'use_material_id': build_item['id'],
+                            'use_number': build_item['count'],
+                            'made_type': build['roomType'],
+                        }
+                    )
 
     return materials, materials_map, materials_made, materials_source
 
@@ -238,10 +231,7 @@ def init_enemies():
     enemies_info = JsonData.get_json_data('enemy_handbook_table')
     enemies_data = JsonData.get_json_data('enemy_database', folder='levels/enemydata')
 
-    enemies_data_map = {
-        item['Key']: item['Value']
-        for item in enemies_data['enemies']
-    }
+    enemies_data_map = {item['Key']: item['Value'] for item in enemies_data['enemies']}
 
     data = {}
     for e_id, info in enemies_info['enemyData'].items():
@@ -254,10 +244,7 @@ def init_enemies():
         if name in counter:
             name += f'（{counter[name]}）'
 
-        item = {
-            'info': info,
-            'data': enemies_data_map.get(e_id)
-        }
+        item = {'info': info, 'data': enemies_data_map.get(e_id)}
         data[name] = data[info['enemyId']] = item
 
     return data
@@ -277,16 +264,12 @@ def init_stages():
             return True
         return item['type'].endswith('SIDE') or ('displayType' in item and item['displayType'] == 'SIDESTORY')
 
-    side_story = [
-        item for key, item in activity_table.items() if is_ss(key, item)
-    ]
+    side_story = [item for key, item in activity_table.items() if is_ss(key, item)]
     side_story.sort(key=lambda n: n['startTime'], reverse=True)
 
     stage_list: STR_DICT_MAP = {}
     stage_map: STR_DICT_LIST = {}
-    side_story_map: STR_DICT_MAP = {
-        n['name']: {} for n in side_story
-    }
+    side_story_map: STR_DICT_MAP = {n['name']: {} for n in side_story}
 
     for stage_id, item in stage_data.items():
         if not item['name']:
@@ -314,10 +297,7 @@ def init_stages():
                             continue
 
                         if action['key'] not in enemies:
-                            enemies[action['key']] = {
-                                **enemies_info['enemyData'][action['key']],
-                                'count': 0
-                            }
+                            enemies[action['key']] = {**enemies_info['enemyData'][action['key']], 'count': 0}
 
                         enemies[action['key']]['count'] += action['count']
 
@@ -332,11 +312,7 @@ def init_stages():
                         if info['id'] in item_data:
                             info['detail'] = item_data[info['id']]
 
-        stage_list[stage_id] = {
-            **item,
-            'levelData': level_data,
-            'activity': ''
-        }
+        stage_list[stage_id] = {**item, 'levelData': level_data, 'activity': ''}
 
         if item['code'].startswith('GT'):
             side_story_map['骑兵与猎人'][stage_id] = stage_list[stage_id]

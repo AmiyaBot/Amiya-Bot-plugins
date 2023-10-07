@@ -14,10 +14,7 @@ class ScriptModulesFinder:
     @contextmanager
     def __temp_sys_path(self, include: list = None):
         local_path = copy.deepcopy(sys.path)
-        sys.path = [
-            *[os.path.abspath(lib) for lib in self.libs],
-            *(include or [])
-        ]
+        sys.path = [*[os.path.abspath(lib) for lib in self.libs], *(include or [])]
 
         yield copy.deepcopy(local_path)
 
@@ -60,8 +57,4 @@ class ScriptModulesFinder:
 
 
 if __name__ == '__main__':
-    finder = ScriptModulesFinder(
-        'resource/env/python-standard-lib.zip',
-        'resource/env/python-dlls',
-        'resource/../'
-    )
+    finder = ScriptModulesFinder('resource/env/python-standard-lib.zip', 'resource/env/python-dlls', 'resource/../')

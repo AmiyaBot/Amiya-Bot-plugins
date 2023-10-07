@@ -14,18 +14,18 @@ curr_dir = os.path.dirname(__file__)
 line_height = 16
 side_padding = 10
 avatar_resource = 'resource/gamedata/avatar'
-color = {
-    6: 'FF4343',
-    5: 'FEA63A',
-    4: 'A288B5',
-    3: '7F7F7F',
-    2: '7F7F7F',
-    1: '7F7F7F'
-}
+color = {6: 'FF4343', 5: 'FEA63A', 4: 'A288B5', 3: '7F7F7F', 2: '7F7F7F', 1: '7F7F7F'}
 
-bot_caller = {
-    'plugin_instance': None
-}
+bot_caller = {'plugin_instance': None}
+
+
+@table
+class PoolSpOperator(BotBaseModel):
+    pool_id: Union[ForeignKeyField, int] = ForeignKeyField(Pool, db_column='pool_id', on_delete='CASCADE')
+    operator_name: str = CharField()
+    rarity: int = IntegerField()
+    classes: str = CharField()
+    image: str = CharField()
 
 
 class GachaBuilder:
@@ -41,10 +41,7 @@ class GachaBuilder:
             item = item.split('|')
             weight[item[0]] = int(item[1])
 
-        operators = self.__get_gacha_operator(
-            extra=list(weight.keys()),
-            classic_only=pool.limit_pool == 4
-        )
+        operators = self.__get_gacha_operator(extra=list(weight.keys()), classic_only=pool.limit_pool == 4)
         class_group = {}
 
         for item in operators:
@@ -55,7 +52,7 @@ class GachaBuilder:
             class_group[rarity][name] = {
                 'name': name,
                 'rarity': rarity,
-                'weight': weight[name] if name in weight else 1
+                'weight': weight[name] if name in weight else 1,
             }
 
         self.operator = class_group
@@ -66,14 +63,9 @@ class GachaBuilder:
         self.pick_up = {
             6: [i for i in pool.pickup_6.split(',') if i != ''],
             5: [i for i in pool.pickup_5.split(',') if i != ''],
-            4: [i for i in pool.pickup_4.split(',') if i != '']
+            4: [i for i in pool.pickup_4.split(',') if i != ''],
         }
-        self.rarity_range = {
-            1: 3,
-            41: 4,
-            91: 5,
-            99: 6
-        }
+        self.rarity_range = {1: 3, 41: 4, 91: 5, 99: 6}
         '''
         概率：
         3 星 40% 区间为 1 ~ 40
@@ -106,7 +98,7 @@ class GachaBuilder:
                 'portraits': '',
                 'temp_portraits': f'{curr_dir}/temp/{item.image}' if item.image else None,
                 'rarity': item.rarity,
-                'class': item.classes
+                'class': item.classes,
             }
         return operators
 
@@ -114,10 +106,7 @@ class GachaBuilder:
         operators = self.start_gacha(times, coupon, point)
 
         rarity_sum = [0, 0, 0, 0]
-        high_star = {
-            5: {},
-            6: {}
-        }
+        high_star = {5: {}, 6: {}}
 
         ten_gacha = []
         purple_pack = 0
@@ -141,7 +130,6 @@ class GachaBuilder:
             # 记录每十连的情况
             ten_gacha.append(rarity)
             if len(ten_gacha) >= 10:
-
                 five = ten_gacha.count(5)
                 six = ten_gacha.count(6)
 
@@ -173,7 +161,8 @@ class GachaBuilder:
             insert_empty(rarity_sum[0], 4),
             rarity_sum[1],
             insert_empty(rarity_sum[2], 4),
-            rarity_sum[3])
+            rarity_sum[3],
+        )
 
         enter = True
         if purple_pack > 0:
@@ -217,17 +206,19 @@ class GachaBuilder:
                 avatar_path = f'resource/gamedata/avatar/{opt.id}.png'
 
                 if os.path.exists(avatar_path):
-                    icons.append({
-                        'path': avatar_path,
-                        'size': icon_size,
-                        'pos': (side_padding, top + offset + icon_size * index)
-                    })
+                    icons.append(
+                        {
+                            'path': avatar_path,
+                            'size': icon_size,
+                            'pos': (side_padding, top + offset + icon_size * index),
+                        }
+                    )
 
                 operators_info[name] = {
                     'portraits': opt.id,
                     'temp_portraits': f'{curr_dir}/temp/{opt.name}',
                     'rarity': opt.rarity,
-                    'class': opt.classes_code.lower()
+                    'class': opt.classes_code.lower(),
                 }
 
         if ten_times:
@@ -269,15 +260,16 @@ class GachaBuilder:
 
         gacha_info: UserGachaInfo = UserGachaInfo.get_or_none(user_id=self.data.user_id)
 
-        return f'当前已经抽取了 {self.break_even} 次而未获得六星干员\n' \
-               f'下次抽出六星干员的概率为 {100 - break_even_rate}%\n' \
-               f'剩余寻访凭证 {gacha_info.coupon}'
+        return (
+            f'当前已经抽取了 {self.break_even} 次而未获得六星干员\n'
+            f'下次抽出六星干员的概率为 {100 - break_even_rate}%\n'
+            f'剩余寻访凭证 {gacha_info.coupon}'
+        )
 
     def start_gacha(self, times, coupon, point):
         operators = []
 
         for i in range(0, times):
-
             random_num = random.randint(1, 100)
             rarity = 0
             break_even_rate = 98
@@ -299,14 +291,11 @@ class GachaBuilder:
 
             operator = self.get_operator(rarity)
 
-            operators.append({
-                'rarity': rarity,
-                'name': operator
-            })
+            operators.append({'rarity': rarity, 'name': operator})
 
-        UserGachaInfo.update(gacha_break_even=self.break_even, coupon=UserGachaInfo.coupon - coupon) \
-            .where(UserGachaInfo.user_id == self.data.user_id) \
-            .execute()
+        UserGachaInfo.update(gacha_break_even=self.break_even, coupon=UserGachaInfo.coupon - coupon).where(
+            UserGachaInfo.user_id == self.data.user_id
+        ).execute()
 
         UserInfo.update(jade_point=UserInfo.jade_point - point).where(UserInfo.user_id == self.data.user_id).execute()
 
@@ -336,14 +325,8 @@ class GachaBuilder:
                 4: 中坚寻访
             '''
             special = {
-                6: {
-                    1: lambda g: g[int((random.randint(1, 100) + 1) / 70)],
-                    2: lambda g: g[0],
-                    3: lambda g: g[0]
-                },
-                5: {
-                    2: lambda g: g[0]
-                }
+                6: {1: lambda g: g[int((random.randint(1, 100) + 1) / 70)], 2: lambda g: g[0], 3: lambda g: g[0]},
+                5: {2: lambda g: g[0]},
             }
 
             if rarity in special and self.limit_pool in special[rarity]:
@@ -362,11 +345,7 @@ class GachaBuilder:
         if user_box.operator:
             for n in user_box.operator.split('|'):
                 n = n.split(':')
-                box_map[n[0]] = [
-                    n[0],
-                    int(n[1]),
-                    int(n[2])
-                ]
+                box_map[n[0]] = [n[0], int(n[1]), int(n[2])]
 
         for item in result:
             name = item['name']

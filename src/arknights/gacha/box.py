@@ -15,12 +15,7 @@ def get_user_box(user_id):
 
     operators = ArknightsGameData.operators
 
-    collect = {
-        6: [],
-        5: [],
-        4: [],
-        3: []
-    }
+    collect = {6: [], 5: [], 4: [], 3: []}
     images = []
 
     for item in box.operator.split('|'):
@@ -33,7 +28,7 @@ def get_user_box(user_id):
                 collect[operator.rarity].append(
                     {
                         'avatar': f'resource/gamedata/avatar/{operator.id}#1.png',
-                        'rank': f'{curr_dir}/rank/{count if int(count) <= 6 else 6}.png'
+                        'rank': f'{curr_dir}/rank/{count if int(count) <= 6 else 6}.png',
                     }
                 )
 
@@ -49,16 +44,8 @@ def get_user_box(user_id):
 
         for index, item in enumerate(items):
             if os.path.exists(item['avatar']):
-                images.append(ImageElem(
-                    path=item['avatar'],
-                    pos=(x_pos, y_pos),
-                    size=size
-                ))
-                images.append(ImageElem(
-                    path=item['rank'],
-                    pos=(x_pos + size - rank, y_pos + size - rank),
-                    size=rank
-                ))
+                images.append(ImageElem(path=item['avatar'], pos=(x_pos, y_pos), size=size))
+                images.append(ImageElem(path=item['rank'], pos=(x_pos + size - rank, y_pos + size - rank), size=rank))
 
             if (index + 1) % max_length == 0:
                 x_pos = padding
@@ -72,7 +59,7 @@ def get_user_box(user_id):
         height=y_pos + padding + size,
         images=images,
         padding=padding,
-        bgcolor='#F5F5F5'
+        bgcolor='#F5F5F5',
     )
 
 
@@ -83,12 +70,7 @@ def get_user_gacha_detail(user_id):
         return None
 
     count = 0
-    rarity = {
-        3: [0, 0],
-        4: [0, 0],
-        5: [0, 0],
-        6: [0, 0]
-    }
+    rarity = {3: [0, 0], 4: [0, 0], 5: [0, 0], 6: [0, 0]}
     operators = box.operator.split('|')
     box_num = len(operators)
 
@@ -109,5 +91,5 @@ def get_user_gacha_detail(user_id):
         'rarity_6': (rarity[6][0], rate(6)),
         'rarity_5': (rarity[5][0], rate(5)),
         'rarity_4': (rarity[4][0], rate(4)),
-        'rarity_3': (rarity[3][0], rate(3))
+        'rarity_3': (rarity[3][0], rate(3)),
     }

@@ -21,13 +21,41 @@ class OperatorInfo:
     operator_group_map: Dict[str, List[Operator]] = {}
 
     voice_keywords = [
-        '任命助理', '任命队长', '编入队伍', '问候', '闲置',
-        '交谈1', '交谈2', '交谈3', '晋升后交谈1', '晋升后交谈2',
-        '信赖提升后交谈1', '信赖提升后交谈2', '信赖提升后交谈3',
-        '精英化晋升1', '精英化晋升2',
-        '行动出发', '行动失败', '行动开始', '3星结束行动', '4星结束行动', '非3星结束行动',
-        '选中干员1', '选中干员2', '部署1', '部署2', '作战中1', '作战中2', '作战中3', '作战中4',
-        '戳一下', '信赖触摸', '干员报到', '进驻设施', '观看作战记录', '标题'
+        '任命助理',
+        '任命队长',
+        '编入队伍',
+        '问候',
+        '闲置',
+        '交谈1',
+        '交谈2',
+        '交谈3',
+        '晋升后交谈1',
+        '晋升后交谈2',
+        '信赖提升后交谈1',
+        '信赖提升后交谈2',
+        '信赖提升后交谈3',
+        '精英化晋升1',
+        '精英化晋升2',
+        '行动出发',
+        '行动失败',
+        '行动开始',
+        '3星结束行动',
+        '4星结束行动',
+        '非3星结束行动',
+        '选中干员1',
+        '选中干员2',
+        '部署1',
+        '部署2',
+        '作战中1',
+        '作战中2',
+        '作战中3',
+        '作战中4',
+        '戳一下',
+        '信赖触摸',
+        '干员报到',
+        '进驻设施',
+        '观看作战记录',
+        '标题',
     ]
 
     @classmethod
@@ -85,9 +113,7 @@ class OperatorInfo:
 
         for name, item in ArknightsGameData.operators.items():
             stories = item.stories()
-            stories_title.update(
-                {chinese_to_digits(item['story_title']): item['story_title'] for item in stories}
-            )
+            stories_title.update({chinese_to_digits(item['story_title']): item['story_title'] for item in stories})
 
         for index, item in stories_title.items():
             item = re.compile(r'？+', re.S).sub('', item)

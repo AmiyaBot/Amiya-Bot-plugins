@@ -30,28 +30,44 @@ class OperatorData:
                     for attr in attrs:
                         module_attr[snake_case_to_pascal_case(attr['key'])] = integer(attr['value'])
 
-                module_attrs.append({
-                    **module,
-                    'attrs': module_attr
-                })
+                module_attrs.append({**module, 'attrs': module_attr})
 
         skills, skills_id, skills_cost, skills_desc = operator.skills()
         skins = operator.skins()
 
         infos = [
-            'id', 'cv', 'type', 'tags', 'range', 'rarity', 'number', 'name', 'en_name', 'wiki_name', 'index_name',
-            'origin_name', 'classes', 'classes_sub', 'classes_code', 'race', 'drawer', 'team', 'group', 'nation',
-            'birthday', 'profile', 'impression', 'limit', 'unavailable', 'potential_item', 'is_recruit', 'is_sp'
+            'id',
+            'cv',
+            'type',
+            'tags',
+            'range',
+            'rarity',
+            'number',
+            'name',
+            'en_name',
+            'wiki_name',
+            'index_name',
+            'origin_name',
+            'classes',
+            'classes_sub',
+            'classes_code',
+            'race',
+            'drawer',
+            'team',
+            'group',
+            'nation',
+            'birthday',
+            'profile',
+            'impression',
+            'limit',
+            'unavailable',
+            'potential_item',
+            'is_recruit',
+            'is_sp',
         ]
 
         operator_info = {
-            'info': {
-                'real_name': real_name,
-                **{
-                    n: getattr(operator, n)
-                    for n in infos
-                }
-            },
+            'info': {'real_name': real_name, **{n: getattr(operator, n) for n in infos}},
             'skin': (await ArknightsGameDataResource.get_skin_file(skins[0], encode_url=True)) if skins else '',
             'trust': trust,
             'detail': detail,
@@ -61,13 +77,9 @@ class OperatorData:
             'building_skills': operator.building_skills(),
             'skill_list': skills,
             'skills_cost': skills_cost,
-            'skills_desc': skills_desc
+            'skills_desc': skills_desc,
         }
-        tokens = {
-            'id': operator.id,
-            'name': operator.name,
-            'tokens': operator.tokens()
-        }
+        tokens = {'id': operator.id, 'name': operator.name, 'tokens': operator.tokens()}
 
         return operator_info, tokens
 
@@ -89,11 +101,13 @@ class OperatorData:
             if item['evolve_level'] not in evolve_costs_list:
                 evolve_costs_list[item['evolve_level']] = []
 
-            evolve_costs_list[item['evolve_level']].append({
-                'material_name': material['material_name'],
-                'material_icon': material['material_icon'],
-                'use_number': item['use_number']
-            })
+            evolve_costs_list[item['evolve_level']].append(
+                {
+                    'material_name': material['material_name'],
+                    'material_icon': material['material_icon'],
+                    'use_number': item['use_number'],
+                }
+            )
 
         skills, skills_id, skills_cost, skills_desc = operator.skills()
 
@@ -108,26 +122,22 @@ class OperatorData:
             if item['level'] not in skills_cost_list[skill_no]:
                 skills_cost_list[skill_no][item['level']] = []
 
-            skills_cost_list[skill_no][item['level']].append({
-                'material_name': material['material_name'],
-                'material_icon': material['material_icon'],
-                'use_number': item['use_number']
-            })
+            skills_cost_list[skill_no][item['level']].append(
+                {
+                    'material_name': material['material_name'],
+                    'material_icon': material['material_icon'],
+                    'use_number': item['use_number'],
+                }
+            )
 
         skins = operator.skins()
         skin = ''
         if skins:
             skin = await ArknightsGameDataResource.get_skin_file(
-                skins[1] if len(skins) > 1 else skins[0],
-                encode_url=True
+                skins[1] if len(skins) > 1 else skins[0], encode_url=True
             )
 
-        return {
-            'skin': skin,
-            'evolve_costs': evolve_costs_list,
-            'skills': skills,
-            'skills_cost': skills_cost_list
-        }
+        return {'skin': skin, 'evolve_costs': evolve_costs_list, 'skills': skills, 'skills_cost': skills_cost_list}
 
     @classmethod
     async def get_skills_detail(cls, info: OperatorSearchInfo):
@@ -139,10 +149,7 @@ class OperatorData:
         operator = operators[info.name]
         skills, skills_id, skills_cost, skills_desc = operator.skills()
 
-        return {
-            'skills': skills,
-            'skills_desc': skills_desc
-        }
+        return {'skills': skills, 'skills_desc': skills_desc}
 
     @classmethod
     def find_operator_module(cls, info: OperatorSearchInfo, is_story: bool):
@@ -165,13 +172,11 @@ class OperatorData:
                 blackboard = candidate['blackboard']
                 if candidate['additionalDescription']:
                     candidate['additionalDescription'] = ArknightsGameDataResource.parse_template(
-                        blackboard,
-                        candidate['additionalDescription']
+                        blackboard, candidate['additionalDescription']
                     )
                 if candidate['overrideDescripton']:
                     candidate['overrideDescripton'] = ArknightsGameDataResource.parse_template(
-                        blackboard,
-                        candidate['overrideDescripton']
+                        blackboard, candidate['overrideDescripton']
                     )
 
         def parse_talent_data(data):
@@ -181,8 +186,7 @@ class OperatorData:
                 blackboard = candidate['blackboard']
                 if candidate['upgradeDescription']:
                     candidate['upgradeDescription'] = ArknightsGameDataResource.parse_template(
-                        blackboard,
-                        candidate['upgradeDescription']
+                        blackboard, candidate['upgradeDescription']
                     )
 
         for item in modules:
@@ -190,10 +194,7 @@ class OperatorData:
                 for lvl, item_cost in item['itemCost'].items():
                     for i, cost in enumerate(item_cost):
                         material = materials[cost['id']]
-                        item_cost[i] = {
-                            **cost,
-                            'info': material
-                        }
+                        item_cost[i] = {**cost, 'info': material}
 
             if item['detail']:
                 for stage in item['detail']['phases']:

@@ -16,8 +16,8 @@ class SKLandAPI:
         'Accept': '*/*',
         'Accept-Language': 'zh-CN,zh;q=0.9,eo;q=0.8,en;q=0.7',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                      'AppleWebKit/537.36 (KHTML, like Gecko) '
-                      'Chrome/105.0.0.0 Safari/537.36'
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/105.0.0.0 Safari/537.36',
     }
 
     def __init__(self):
@@ -25,10 +25,7 @@ class SKLandAPI:
 
     @property
     def user_id_map(self):
-        return {
-            item.user_id: token
-            for token, item in self.users.items()
-        }
+        return {item.user_id: token for token, item in self.users.items()}
 
     async def user(self, token: str):
         if token in self.users:
@@ -54,14 +51,8 @@ class SKLandAPI:
 
         code = ''
         user_id = ''
-        payload = {
-            'appCode': '4ca99fa6b56cc2ba',
-            'token': token,
-            'type': type_value
-        }
-        res = await http_requests.post('https://as.hypergryph.com/user/oauth2/v2/grant',
-                                       payload,
-                                       headers=self.headers)
+        payload = {'appCode': '4ca99fa6b56cc2ba', 'token': token, 'type': type_value}
+        res = await http_requests.post('https://as.hypergryph.com/user/oauth2/v2/grant', payload, headers=self.headers)
         if res:
             data = json.loads(res)
             if data['status'] == 0:
@@ -72,17 +63,11 @@ class SKLandAPI:
 
     async def __get_cred(self, code: str):
         cred = ''
-        payload = {
-            'code': code,
-            'kind': 1
-        }
-        headers = {
-            **self.headers,
-            'Host': 'zonai.skland.com'
-        }
-        res = await http_requests.post('https://zonai.skland.com/api/v1/user/auth/generate_cred_by_code',
-                                       payload,
-                                       headers=headers)
+        payload = {'code': code, 'kind': 1}
+        headers = {**self.headers, 'Host': 'zonai.skland.com'}
+        res = await http_requests.post(
+            'https://zonai.skland.com/api/v1/user/auth/generate_cred_by_code', payload, headers=headers
+        )
         if res:
             data = json.loads(res)
             if data['code'] == 0:
@@ -99,26 +84,16 @@ class SKLandUser:
     user_id: str
 
     async def user_info(self) -> Optional[dict]:
-        headers = {
-            **SKLandAPI.headers,
-            'Host': 'zonai.skland.com',
-            'Cred': self.cred
-        }
-        res = await http_requests.get('https://zonai.skland.com/api/v1/user/me',
-                                      headers=headers)
+        headers = {**SKLandAPI.headers, 'Host': 'zonai.skland.com', 'Cred': self.cred}
+        res = await http_requests.get('https://zonai.skland.com/api/v1/user/me', headers=headers)
         if res:
             data = json.loads(res)
             if data['code'] == 0:
                 return data['data']
 
     async def character_info(self, uid: str) -> Optional[dict]:
-        headers = {
-            **SKLandAPI.headers,
-            'Host': 'zonai.skland.com',
-            'Cred': self.cred
-        }
-        res = await http_requests.get(f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}',
-                                      headers=headers)
+        headers = {**SKLandAPI.headers, 'Host': 'zonai.skland.com', 'Cred': self.cred}
+        res = await http_requests.get(f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}', headers=headers)
         if res:
             data = json.loads(res)
             if data['code'] == 0:

@@ -9,9 +9,7 @@ import importlib
 from amiyabot import PluginInstance
 from amiyabot.util import temp_sys_path
 
-sys.path += [
-    os.path.dirname(os.path.abspath(__file__)) + '/../'
-]
+sys.path += [os.path.dirname(os.path.abspath(__file__)) + '/../']
 remote = 'plugins/official'
 
 
@@ -56,7 +54,7 @@ def build(dist, upload=False):
                 'plugin_type': instance.plugin_type,
                 'description': instance.description,
                 'document': instance.description,
-                'logo': ''
+                'logo': '',
             }
 
             doc = instance.document
