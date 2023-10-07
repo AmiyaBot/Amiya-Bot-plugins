@@ -13,7 +13,7 @@ bot = AmiyaBotPluginInstance(
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
     document=f'{curr_dir}/README.md',
-    requirements=[Requirement('amiyabot-arknights-gamedata')],
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

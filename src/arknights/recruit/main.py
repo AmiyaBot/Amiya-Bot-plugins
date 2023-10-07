@@ -135,7 +135,7 @@ bot = RecruitPluginInstance(
     description='可通过指令或图像识别规划公招标签组合',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
-    requirements=[Requirement('amiyabot-arknights-gamedata')],
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

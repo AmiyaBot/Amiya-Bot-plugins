@@ -89,7 +89,7 @@ bot = EnemiesPluginInstance(
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
     document=f'{curr_dir}/README.md',
-    requirements=[Requirement('amiyabot-arknights-gamedata')],
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

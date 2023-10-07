@@ -41,7 +41,7 @@ bot = OperatorPluginInstance(
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
     global_config_default=f'{curr_dir}/config_default.yaml',
-    requirements=[Requirement('amiyabot-arknights-gamedata')],
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 bot.set_group_config(GroupConfig('operator', allow_direct=True))
 

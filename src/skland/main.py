@@ -60,7 +60,7 @@ bot = SKLandPluginInstance(
     description='通过森空岛 API 查询玩家信息展示游戏数据（API 已失效，插件已暂停维护）',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
-    requirements=[Requirement('amiyabot-arknights-gamedata')],
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

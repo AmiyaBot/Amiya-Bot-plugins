@@ -216,7 +216,7 @@ bot = MaterialPluginInstance(
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
     document=f'{curr_dir}/README.md',
-    requirements=[Requirement('amiyabot-arknights-gamedata')],
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 
