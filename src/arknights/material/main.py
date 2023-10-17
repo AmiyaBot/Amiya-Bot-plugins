@@ -3,10 +3,10 @@ import json
 import asyncio
 
 from typing import Dict
-from amiyabot import PluginInstance, event_bus
+from amiyabot import event_bus
 from amiyabot.network.httpRequests import http_requests
 
-from core import log, Message, Chain
+from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import any_match, find_most_similar, remove_punctuation
 from core.database.bot import *
 from core.resource.arknightsGameData import ArknightsGameData
@@ -200,7 +200,7 @@ class MaterialData:
             return -cls.compare_efficiency(b, a)
 
 
-class MaterialPluginInstance(PluginInstance):
+class MaterialPluginInstance(AmiyaBotPluginInstance):
     def install(self):
         asyncio.create_task(MaterialData.save_yituliu_data())
         asyncio.create_task(MaterialData.init_materials())
@@ -211,11 +211,12 @@ class MaterialPluginInstance(PluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
     document=f'{curr_dir}/README.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

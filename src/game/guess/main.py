@@ -1,19 +1,20 @@
 import copy
 import asyncio
 
+from core import AmiyaBotPluginInstance, Requirement
 from core.util import TimeRecorder
 from core.database.user import UserInfo
-from amiyabot import PluginInstance
 
 from .guessStart import *
 
-bot = PluginInstance(
+bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
     document=f'{curr_dir}/README.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

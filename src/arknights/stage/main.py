@@ -2,9 +2,9 @@ import os
 import jieba
 import asyncio
 
-from amiyabot import PluginInstance, event_bus
+from amiyabot import event_bus
 
-from core import log, Message, Chain
+from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import any_match, remove_punctuation, get_index_from_text
 from core.resource.arknightsGameData import ArknightsGameData
 
@@ -26,7 +26,7 @@ class Stage:
         jieba.load_userdict(f'{curr_dir}/stages.txt')
 
 
-class StagePluginInstance(PluginInstance):
+class StagePluginInstance(AmiyaBotPluginInstance):
     def install(self):
         asyncio.create_task(Stage.init_stages())
 
@@ -36,11 +36,12 @@ class StagePluginInstance(PluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
     document=f'{curr_dir}/README.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 
