@@ -19,7 +19,7 @@ class PokeLock(UserBaseModel):
 async def echo(data: Message = None):
     actions = [
         lambda dt: Chain(dt).text(random.choice(talking.touch)),
-        lambda dt: Chain(dt, at=False).image(random.choice(get_face()))
+        lambda dt: Chain(dt, at=False).image(random.choice(get_face())),
     ]
 
     return random.choice(actions)(data)
@@ -127,32 +127,18 @@ async def _(data: Message):
 async def _(event: Event, instance: MiraiBotInstance):
     if str(event.data['target']) == instance.appid and PokeLock.get_or_none(group_id=event.data['target']):
         if random.randint(0, 10) >= 6:
-            await instance.api.send_nudge(
-                event.data['fromId'],
-                event.data['subject']['id']
-            )
+            await instance.api.send_nudge(event.data['fromId'], event.data['subject']['id'])
         else:
-            await instance.send_message(
-                await echo(),
-                event.data['fromId'],
-                event.data['subject']['id']
-            )
+            await instance.send_message(await echo(), event.data['fromId'], event.data['subject']['id'])
 
 
 @bot.on_event('notice.notify.poke')
 async def _(event: Event, instance: CQHttpBotInstance):
     if str(event.data['target_id']) == instance.appid and PokeLock.get_or_none(group_id=event.data['target_id']):
         if random.randint(0, 10) >= 6:
-            await instance.api.send_nudge(
-                event.data['user_id'],
-                event.data['group_id']
-            )
+            await instance.api.send_nudge(event.data['user_id'], event.data['group_id'])
         else:
-            await instance.send_message(
-                await echo(),
-                event.data['user_id'],
-                event.data['group_id']
-            )
+            await instance.send_message(await echo(), event.data['user_id'], event.data['group_id'])
 
 
 @bot.message_before_handle
@@ -194,10 +180,7 @@ async def _(data: Chain, factory_name: str, _):
     if user_mood >= 15:
         user_mood = 15
 
-    User.update(
-        nickname=data.data.nickname,
-        message_num=User.message_num + 1
-    ).where(User.user_id == user_id).execute()
+    User.update(nickname=data.data.nickname, message_num=User.message_num + 1).where(User.user_id == user_id).execute()
 
     UserInfo.update(
         user_mood=user_mood,

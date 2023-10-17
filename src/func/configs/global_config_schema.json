@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "newChannelDisableAll": {
+            "title": "默认关闭所有功能",
+            "description": "加入新群/频道时，关闭全部功能",
+            "type": "boolean",
+            "default": false
+        },
+        "disabledRemindRate": {
+            "title": "功能关闭提醒频率",
+            "description": "在功能关闭后，试图使用这个功能数次时，发送一个提醒",
+            "type": "integer",
+            "default": 3
+        }
+    }
+}

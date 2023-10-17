@@ -110,4 +110,4 @@ class JsonData:
             cls.cache = {}
 
 
-ArknightsConfig.initialize_methods.append(config_initialize)
+ArknightsConfig.initialize_methods = [config_initialize]

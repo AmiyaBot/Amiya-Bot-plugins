@@ -179,7 +179,7 @@ class GachaBuilder:
 
         return Chain(self.data).text_image(result)
 
-    def detailed_mode(self, times, coupon, point, ten_times=False):
+    def detailed_mode(self, times, coupon, point, *args, **kwargs):
         operators = self.start_gacha(times, coupon, point)
         operators_info = {}
 
@@ -203,7 +203,7 @@ class GachaBuilder:
 
             if name in game_data.operators:
                 opt = game_data.operators[name]
-                avatar_path = f'resource/gamedata/avatar/{opt.id}.png'
+                avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
 
                 if os.path.exists(avatar_path):
                     icons.append(
@@ -221,10 +221,10 @@ class GachaBuilder:
                     'class': opt.classes_code.lower(),
                 }
 
-        if ten_times:
+        if times == 10:
             result_list = []
 
-            operator_name_list = ""
+            operator_name_list = ''
 
             for item in operators:
                 name = item['name']

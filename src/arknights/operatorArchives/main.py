@@ -85,8 +85,10 @@ async def _(data: Message):
         text += '|标题|标题|标题|\n|----|----|----|\n'
 
         for i, item in enumerate(voices):
-            text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>' \
-                    + item['voice_title']
+            text += (
+                f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>'
+                + item['voice_title']
+            )
             if (i + 1) % 3 == 0:
                 text += '|\n'
 
@@ -101,8 +103,7 @@ async def _(data: Message):
         return None
 
     if info.voice_key in voices_map:
-        text = f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n' \
-               + voices_map[info.voice_key]['voice_text']
+        text = f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n' + voices_map[info.voice_key]['voice_text']
         text = text.replace('{@nickname}', data.nickname)
 
         reply = Chain(data).text(text)
@@ -143,8 +144,10 @@ async def _(data: Message):
         text += '|标题|标题|标题|\n|----|----|----|\n'
 
         for i, item in enumerate(stories):
-            text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>' \
-                    + item['story_title']
+            text += (
+                f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>'
+                + item['story_title']
+            )
             if (i + 1) % 3 == 0:
                 text += '|\n'
 
@@ -159,9 +162,11 @@ async def _(data: Message):
         return None
 
     if info.story_key in stories_map:
-        return Chain(data) \
-            .text(f'博士，这是干员{info.name}《{info.story_key}》的档案') \
+        return (
+            Chain(data)
+            .text(f'博士，这是干员{info.name}《{info.story_key}》的档案')
             .markdown(stories_map[info.story_key].replace('\n', '<br>'))
+        )
     else:
         return Chain(data).text(f'博士，没有找到干员{info.name}《{info.story_key}》的档案')
 
@@ -207,7 +212,7 @@ async def _(data: Message):
         skin_data = {
             'name': info.name,
             'data': skin_item,
-            'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)
+            'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True),
         }
 
         reply = Chain(data).html(f'{curr_dir}/template/operatorSkin.html', skin_data)
@@ -293,9 +298,9 @@ async def _(data: Message):
         reply = MiraiForwardMessage(data)
 
     await data.send(Chain(data).text('正在查询，博士请稍等...'))
-    await reply.add_message(Chain().text(f'查询到【{info.group_key}】拥有以下干员'),
-                            user_id=data.instance.appid,
-                            nickname='AmiyaBot')
+    await reply.add_message(
+        Chain().text(f'查询到【{info.group_key}】拥有以下干员'), user_id=data.instance.appid, nickname='AmiyaBot'
+    )
 
     for item in operator_group:
         result, tokens = await OperatorData.get_operator_detail(OperatorSearchInfo(name=item.name))
