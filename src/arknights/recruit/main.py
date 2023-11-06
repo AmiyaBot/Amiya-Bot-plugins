@@ -26,7 +26,6 @@ if not os.path.exists(config_path):
     create_dir(config_path, is_file=True)
     shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
 
-baidu = BaiduCloud(read_yaml(config_path))
 
 recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
@@ -141,18 +140,6 @@ bot = RecruitPluginInstance(
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
-if bot.get_config('enable'):
-    appId = bot.get_config('appid')
-    apiKey = bot.get_config('apiKey')
-    secretKey = bot.get_config('secretKey')
-    
-    conf = {
-        'enable':True,
-        'appId': appId if appId else '',
-        'apiKey': apiKey if apiKey else '',
-        'secretKey': secretKey if secretKey else '',
-    }
-    baidu = BaiduCloud(AttrDict(conf))
 
 @event_bus.subscribe('gameDataInitialized')
 def update(_):
@@ -162,6 +149,21 @@ def update(_):
         pass
     else:
         bot.install()
+
+
+def get_baidu():
+    if bot.get_config('enable'):
+        conf = {
+            'enable': True,
+            'appId': bot.get_config('appid') or '',
+            'apiKey': bot.get_config('apiKey') or '',
+            'secretKey': bot.get_config('secretKey') or '',
+        }
+        baidu = BaiduCloud(AttrDict(conf))
+    else:
+        baidu = BaiduCloud(read_yaml(config_path))
+
+    return baidu
 
 
 def find_operator_tags_by_tags(tags, max_rarity):
@@ -212,6 +214,7 @@ async def auto_discern(data: Message):
 
 async def get_ocr_result(data: Message):
     result = ''
+    baidu = get_baidu()
 
     if baidu.enable:
         res = await baidu.basic_accurate(data.image[0])
@@ -244,6 +247,8 @@ async def _(data: Message):
         if recruit:
             return recruit
         else:
+            baidu = get_baidu()
+
             # 文本内容验证不出则询问截图
             if not baidu.enable and type(data.instance) is not CQHttpBotInstance:
                 return None
