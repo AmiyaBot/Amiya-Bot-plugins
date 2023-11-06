@@ -129,7 +129,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.1',
+    version='2.3',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -212,8 +212,8 @@ async def get_ocr_result(data: Message):
         async with log.catch():
             images_id = [item['data']['file'] for item in data.message['message'] if item['type'] == 'image']
             if images_id:
-                cq_res = await instance.api.post('ocr_image', {'image': images_id[0]})
-                result = ''.join([item['text'] for item in cq_res.data['data']['texts']])
+                cq_res = await instance.api.post('/ocr_image', {'image': images_id[0]})
+                result = ''.join([item['text'] for item in cq_res.json['data']['texts']])
 
     return result
 
