@@ -15,7 +15,7 @@ from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
 from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
-from core.util import all_match, read_yaml, create_dir
+from core.util import all_match, read_yaml, create_dir, run_in_thread_pool
 from core.lib.baiduCloud import BaiduCloud
 from core.resource.arknightsGameData import ArknightsGameData
 
@@ -29,6 +29,17 @@ if not os.path.exists(config_path):
 
 recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
+
+paddle_enabled = False
+try:
+    from paddleocr import PaddleOCR
+
+    # paddleocr.logging.disable()
+    paddle_ocr = PaddleOCR(lang='ch')
+    paddle_enabled = True
+    log.info('PaddleOCR初始化完成')
+except ModuleNotFoundError:
+    paddle_enabled = False
 
 
 class Recruit:
@@ -129,7 +140,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -232,6 +243,15 @@ async def get_ocr_result(data: Message):
             if images_id:
                 cq_res = await instance.api.post('/ocr_image', {'image': images_id[0]})
                 result = ''.join([item['text'] for item in cq_res.json['data']['texts']])
+
+    # 如果都没有结果调用paddle OCR
+    if paddle_enabled and not result:
+        try:
+            res = await run_in_thread_pool(paddle_ocr.ocr, data.image[0])
+            str_ret = [text[1][0] for text in res[0]]
+            result = ''.join(str_ret)
+        except Exception as e:
+            log.error(e, desc='ocr error:')
 
     return result
 
