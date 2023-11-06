@@ -1,18 +1,19 @@
 import asyncio
 
-from amiyabot import PluginInstance, Message, Chain
+from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import any_match
 
 from .gameBuilder import OperatorPool
 from .gameStart import game_begin, curr_dir
 
-bot = PluginInstance(
+bot = AmiyaBotPluginInstance(
     name='大帝的CYPHER挑战',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
     document=f'{curr_dir}/README.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

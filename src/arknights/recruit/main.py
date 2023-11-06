@@ -8,11 +8,14 @@ from io import BytesIO
 from PIL import Image
 from jieba import posseg
 from typing import List
+from attrdict import AttrDict
 from itertools import combinations
 from amiyabot import event_bus
 from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
+from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
+from core.util import all_match, read_yaml, create_dir
 from core import log, Message, Chain, AmiyaBotPluginInstance
 from core.util import all_match, read_yaml, create_dir, run_in_thread_pool
 from core.lib.baiduCloud import BaiduCloud
@@ -25,7 +28,6 @@ if not os.path.exists(config_path):
     create_dir(config_path, is_file=True)
     shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
 
-baidu = BaiduCloud(read_yaml(config_path))
 
 recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
@@ -41,6 +43,7 @@ try:
     log.info('PaddleOCR初始化完成')
 except ModuleNotFoundError:
     paddle_enabled = False
+
 
 class Recruit:
     tags_list: List[str] = []
@@ -140,12 +143,15 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.0',
+    version='2.4',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 
@@ -157,6 +163,21 @@ def update(_):
         pass
     else:
         bot.install()
+
+
+def get_baidu():
+    if bot.get_config('enable'):
+        conf = {
+            'enable': True,
+            'appId': bot.get_config('appid') or '',
+            'apiKey': bot.get_config('apiKey') or '',
+            'secretKey': bot.get_config('secretKey') or '',
+        }
+        baidu = BaiduCloud(AttrDict(conf))
+    else:
+        baidu = BaiduCloud(read_yaml(config_path))
+
+    return baidu
 
 
 def find_operator_tags_by_tags(tags, max_rarity):
@@ -207,6 +228,7 @@ async def auto_discern(data: Message):
 
 async def get_ocr_result(data: Message):
     result = ''
+    baidu = get_baidu()
 
     if baidu.enable:
         res = await baidu.basic_accurate(data.image[0])
@@ -222,8 +244,8 @@ async def get_ocr_result(data: Message):
         async with log.catch():
             images_id = [item['data']['file'] for item in data.message['message'] if item['type'] == 'image']
             if images_id:
-                cq_res = await instance.api.post('ocr_image', {'image': images_id[0]})
-                result = ''.join([item['text'] for item in cq_res.data['data']['texts']])
+                cq_res = await instance.api.post('/ocr_image', {'image': images_id[0]})
+                result = ''.join([item['text'] for item in cq_res.json['data']['texts']])
 
     # 如果都没有结果调用paddle OCR
     if paddle_enabled and not result:
@@ -248,6 +270,8 @@ async def _(data: Message):
         if recruit:
             return recruit
         else:
+            baidu = get_baidu()
+
             # 文本内容验证不出则询问截图
             if not baidu.enable and type(data.instance) is not CQHttpBotInstance:
                 return None

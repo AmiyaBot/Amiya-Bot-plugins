@@ -3,7 +3,7 @@ import asyncio
 from dataclasses import dataclass
 from amiyabot import GroupConfig, event_bus
 
-from core import Message, AmiyaBotPluginInstance
+from core import Message, AmiyaBotPluginInstance, Requirement
 from core.util import any_match, find_most_similar, get_index_from_text, remove_punctuation
 
 from .operatorInfo import OperatorInfo, curr_dir
@@ -33,7 +33,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='3.9',
+    version='4.0',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -41,6 +41,7 @@ bot = OperatorPluginInstance(
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
     global_config_default=f'{curr_dir}/config_default.yaml',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 bot.set_group_config(GroupConfig('operator', allow_direct=True))
 

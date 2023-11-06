@@ -1,8 +1,7 @@
 import os
 import re
 
-from amiyabot import PluginInstance
-from core import Message, Chain
+from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import integer, any_match, find_most_similar, get_index_from_text, remove_punctuation
 from core.resource.arknightsGameData import ArknightsGameData
 
@@ -79,17 +78,18 @@ class Enemy:
         return source['m_defined'], integer(source['m_value'])
 
 
-class EnemiesPluginInstance(PluginInstance):
+class EnemiesPluginInstance(AmiyaBotPluginInstance):
     ...
 
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
     document=f'{curr_dir}/README.md',
+    requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
 

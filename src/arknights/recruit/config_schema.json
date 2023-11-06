@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "enable": {
+            "title": "从此处读取百度OCR配置",
+            "description": "关闭后, 将从默认配置文件中读取配置",
+            "type": "boolean"
+        },
+        "appId": {
+            "title": "appId",
+            "description": "修改后重载插件生效, 开启后请勿留空",
+            "type": "string"
+        },
+        "apiKey": {
+            "title": "apiKey",
+            "description": "修改后重载插件生效, 开启后请勿留空",
+            "type": "string"
+        },
+        "secretKey": {
+            "title": "secretKey",
+            "description": "修改后重载插件生效, 开启后请勿留空",
+            "type": "string"
+        }
+    }
+}
