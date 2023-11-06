@@ -15,8 +15,6 @@ from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
 from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
-from core.util import all_match, read_yaml, create_dir
-from core import log, Message, Chain, AmiyaBotPluginInstance
 from core.util import all_match, read_yaml, create_dir, run_in_thread_pool
 from core.lib.baiduCloud import BaiduCloud
 from core.resource.arknightsGameData import ArknightsGameData
@@ -33,7 +31,6 @@ recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
 
 paddle_enabled = False
-
 try:
     from paddleocr import PaddleOCR
 
@@ -143,7 +140,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
