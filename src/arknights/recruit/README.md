@@ -20,3 +20,7 @@ secretKey: XR*********************U7UM
 ```
 
 使用 CQ-Http 适配器也可以同时开启 `百度智能云`，会优先使用百度 OCR。
+
+> PaddleOCR
+
+如果以上两者没有结果且 python 环境安装了 PaddleOCR，则调用 PaddleOCR 继续尝试识别。
