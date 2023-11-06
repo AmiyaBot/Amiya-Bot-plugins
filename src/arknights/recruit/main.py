@@ -8,6 +8,7 @@ from io import BytesIO
 from PIL import Image
 from jieba import posseg
 from typing import List
+from attrdict import AttrDict
 from itertools import combinations
 from amiyabot import event_bus
 from amiyabot.network.download import download_async
@@ -135,9 +136,23 @@ bot = RecruitPluginInstance(
     description='可通过指令或图像识别规划公招标签组合',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
+if bot.get_config('enable'):
+    appId = bot.get_config('appid')
+    apiKey = bot.get_config('apiKey')
+    secretKey = bot.get_config('secretKey')
+    
+    conf = {
+        'enable':True,
+        'appId': appId if appId else '',
+        'apiKey': apiKey if apiKey else '',
+        'secretKey': secretKey if secretKey else '',
+    }
+    baidu = BaiduCloud(AttrDict(conf))
 
 @event_bus.subscribe('gameDataInitialized')
 def update(_):
