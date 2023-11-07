@@ -7,6 +7,14 @@ sendInterval: 0.2
 sendAsync: false
 
 listen:
-    - 6279793937
+    -   uid: '6279793937'
+        name: '明日方舟'
+    -   uid: '6441489862'
+        name: '明日方舟朝陇山'
+    -   uid: '7745672941'
+        name: '明日方舟终末地'
+    -   uid: '7697896274'
+        name: '来自星尘'
+
 
 block: [ ]

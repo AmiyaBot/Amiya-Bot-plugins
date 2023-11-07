@@ -45,9 +45,20 @@
             "title": "监听列表",
             "description": "监听的微博ID的列表",
             "type": "array",
-            "default": [
-                6279793937
-            ]
+            "items": {
+                "type": "object",
+                "properties": {
+                    "uid": {
+                        "title": "微博 ID",
+                        "description": "一般在微博首页的 url 可以得到：https://weibo.com/u/xxxxxxxxx",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "备注",
+                        "type": "string"
+                    }
+                }
+            }
         },
         "block": {
             "title": "规则屏蔽",

@@ -17,12 +17,6 @@ except:
     pass
 
 
-async def get_result(url, headers):
-    res = await http_requests.get(url, headers=headers)
-    if res:
-        return json.loads(res)
-
-
 @dataclass
 class WeiboContent:
     user_name: str
@@ -33,7 +27,7 @@ class WeiboContent:
 
 
 class WeiboUser:
-    def __init__(self, weibo_id: int, setting):
+    def __init__(self, weibo_id, setting):
         self.headers = {
             'User-Agent': ua.random
             if ua
@@ -47,6 +41,11 @@ class WeiboUser:
         self.setting = setting
         self.user_name = ''
 
+    async def get_result(self, url):
+        res = await http_requests.get(url, headers=self.headers)
+        if res:
+            return res.json
+
     def __url(self, container_id=None):
         c_id = f'&containerid={container_id}' if container_id else ''
         return f'{self.url}?type=uid&uid={self.weibo_id}&value={self.weibo_id}{c_id}'
@@ -56,7 +55,7 @@ class WeiboUser:
             return self.user_name
 
         if not result:
-            result = await get_result(self.__url(), self.headers)
+            result = await self.get_result(self.__url())
             if not result:
                 return self.user_name
 
@@ -71,7 +70,7 @@ class WeiboUser:
         cards = []
 
         # 获取微博 container id
-        result = await get_result(self.__url(), self.headers)
+        result = await self.get_result(self.__url())
         if not result:
             return cards
 
@@ -87,7 +86,7 @@ class WeiboUser:
                 container_id = tab['containerid']
 
         # 获取正文列表
-        result = await get_result(self.__url(container_id), self.headers)
+        result = await self.get_result(self.__url(container_id))
         if not result:
             return cards
 
@@ -100,7 +99,7 @@ class WeiboUser:
     async def get_blog_list(self):
         cards = await self.get_cards_list()
 
-        text = ''
+        blog_list = []
         for index, item in enumerate(cards):
             detail = remove_xml_tag(item['mblog']['text']).replace('\n', ' ').strip()
             length = 0
@@ -116,9 +115,9 @@ class WeiboUser:
             date = time.strptime(date, '%a %b %d %H:%M:%S +0800 %Y')
             date = time.strftime('%Y-%m-%d %H:%M:%S', date)
 
-            text += f'\n[{index + 1}] {date}\n{content}\n'
+            blog_list.append({'index': index + 1, 'date': date, 'content': content})
 
-        return text
+        return blog_list
 
     async def get_weibo_id(self, index: int):
         cards = await self.get_cards_list()
@@ -135,7 +134,7 @@ class WeiboUser:
         blog = target_blog['mblog']
 
         # 获取完整正文
-        result = await get_result('https://m.weibo.cn/statuses/extend?id=' + blog['id'], self.headers)
+        result = await self.get_result('https://m.weibo.cn/statuses/extend?id=' + blog['id'])
         if not result:
             return None
 

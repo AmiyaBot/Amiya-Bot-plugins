@@ -2,7 +2,6 @@ import os
 import html
 import time
 import asyncio
-import re
 
 from amiyabot import TencentBotInstance
 from amiyabot.builtin.message import MessageStructure
@@ -22,11 +21,11 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 
 bot = WeiboPluginInstance(
-    name='微博推送',
-    version='2.6',
+    name='明日方舟微博推送',
+    version='2.7',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
-    description='可在微博更新时自动推送到群',
+    description='在明日方舟相关官微更新时自动推送到群',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=f'{curr_dir}/config_schema.json',
@@ -45,7 +44,7 @@ async def send_by_index(index: int, weibo: WeiboUser, data: MessageStructure):
     result = await weibo.get_weibo_content(index - 1)
 
     if not result:
-        return Chain(data).text('博士…暂时无法获取微博呢…请稍后再试吧')
+        return Chain(data).text('博士...暂时无法获取微博呢...请稍后再试吧~')
     else:
         chain = (
             Chain(data)
@@ -58,6 +57,16 @@ async def send_by_index(index: int, weibo: WeiboUser, data: MessageStructure):
             chain.text(f'\n\n{result.detail_url}')
 
         return chain
+
+
+def get_index_from_text(text: str, array: list):
+    r = re.search(r'(\d+)', text)
+    if r:
+        index = abs(int(r.group(1))) - 1
+        if index >= len(array):
+            index = len(array) - 1
+
+        return index
 
 
 @bot.on_message(group_id='weibo', keywords=['开启微博推送'])
@@ -96,6 +105,26 @@ async def _(data: Message):
 
 @bot.on_message(group_id='weibo', keywords=['微博'])
 async def _(data: Message):
+    listens: list = bot.get_config('listen')
+    setting = AttrDict(bot.get_config('setting'))
+
+    if len(listens) == 1:
+        weibo = WeiboUser(listens[0]['uid'], setting)
+    else:
+        md = '回复序号选择已关注的微博：\n\n|序号|微博ID|备注|\n|----|----|----|\n'
+        for index, item in enumerate(listens):
+            md += '|{index}|{uid}|{name}|\n'.format(index=index + 1, **item)
+
+        wait = await data.wait(Chain(data).markdown(md))
+        if not wait:
+            return None
+
+        index = get_index_from_text(wait.text_digits, listens)
+        if index is None:
+            return None
+
+        weibo = WeiboUser(listens[index]['uid'], setting)
+
     message = data.text_digits
     index = 0
 
@@ -106,17 +135,20 @@ async def _(data: Message):
     if '最新' in message:
         index = 1
 
-    weibo = WeiboUser(bot.get_config('listen')[0], AttrDict(bot.get_config('setting')))
-
     if index:
         return await send_by_index(index, weibo, data)
     else:
-        result = await weibo.get_blog_list()
+        blog_list = await weibo.get_blog_list()
         user_name = await weibo.get_user_name()
-        if not result:
-            return Chain(data).text('博士…暂时无法获取微博列表呢…请稍后再试吧')
 
-        reply = Chain(data).text(f'这是 {user_name} 的微博列表').text_image(result).text('回复【序号】或和我说「阿米娅第 N 条微博」来获取详情吧')
+        if not blog_list:
+            return Chain(data).text('博士...暂时无法获取微博列表呢...请稍后再试吧~')
+
+        md = f'博士，这是【{user_name}】的微博列表，回复【序号】来获取详情吧\n\n|序号|日期|内容|\n|----|----|----|\n'
+        for item in blog_list:
+            md += '|{index}|{date}|{content}|\n'.format(**item)
+
+        reply = Chain(data).markdown(md)
 
         wait = await data.wait(reply)
         if wait:
@@ -128,7 +160,9 @@ async def _(data: Message):
 
 @bot.timed_task(each=30)
 async def _(_):
-    for user in bot.get_config('listen'):
+    listens: list = bot.get_config('listen')
+    for listen in listens:
+        user = listen['uid']
         weibo = WeiboUser(user, AttrDict(bot.get_config('setting')))
         new_id = await weibo.get_weibo_id(0)
         if not new_id:
