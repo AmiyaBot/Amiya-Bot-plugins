@@ -1,7 +1,8 @@
 import json
 
 from typing import Iterable
-from amiyabot import TencentBotInstance, ChainBuilder
+from amiyabot import ChainBuilder
+from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.database import *
 from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import snake_case_to_pascal_case, integer
@@ -210,7 +211,7 @@ async def _(data: Message):
 
     chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
 
-    if not isinstance(data.instance, TencentBotInstance):
+    if not isinstance(data.instance, QQGuildBotInstance):
         chain.text('https://www.skland.com/\nhttps://web-api.skland.com/account/info/hg')
 
     return chain

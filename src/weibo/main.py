@@ -3,7 +3,7 @@ import html
 import time
 import asyncio
 
-from amiyabot import TencentBotInstance
+from amiyabot import QQGuildBotInstance
 from amiyabot.builtin.message import MessageStructure
 
 from core.database.group import GroupSetting
@@ -22,7 +22,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='2.7',
+    version='2.8',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
@@ -53,7 +53,7 @@ async def send_by_index(index: int, weibo: WeiboUser, data: MessageStructure):
             .image(result.pics_list)
         )
 
-        if type(data.instance) is not TencentBotInstance:
+        if not isinstance(data.instance, QQGuildBotInstance):
             chain.text(f'\n\n{result.detail_url}')
 
         return chain
@@ -216,7 +216,7 @@ async def _(_):
 
             data.text(f'来自 {result.user_name} 的最新微博\n\n{html.unescape(result.html_text)}')
 
-            if type(instance.instance) is TencentBotInstance:
+            if isinstance(instance.instance, QQGuildBotInstance):
                 if not instance.private:
                     for url in result.pics_urls:
                         data.image(url=url)

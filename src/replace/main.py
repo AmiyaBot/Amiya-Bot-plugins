@@ -5,7 +5,7 @@ import shutil
 import asyncio
 
 from amiyabot.adapters.common import text_convert
-from amiyabot.adapters.tencent import TencentBotInstance
+from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.network.httpRequests import http_requests
 from core.database.bot import *
 from core.lib.baiduCloud import BaiduCloud
@@ -79,7 +79,7 @@ async def _(data: Message, _):
 
 @bot.on_message(keywords=['别名'], level=5)
 async def _(data: Message):
-    if type(data.instance) is TencentBotInstance:
+    if type(data.instance) is QQGuildBotInstance:
         if not data.is_admin:
             return Chain(data).text('抱歉博士，别名功能只能由管理员使用')
 

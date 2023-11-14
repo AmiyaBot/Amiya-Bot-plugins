@@ -2,7 +2,7 @@ from amiyabot import ChainBuilder
 from amiyabot.adapters.kook import KOOKBotInstance
 from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
-from amiyabot.adapters.tencent import TencentBotInstance
+from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 
 from core import Chain, Message
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
@@ -284,7 +284,7 @@ async def _(data: Message):
     source = type(data.instance)
     operator_group = OperatorInfo.operator_group_map[info.group_key]
 
-    if source in [TencentBotInstance, KOOKBotInstance]:
+    if source in [QQGuildBotInstance, KOOKBotInstance]:
         text = f'## {info.group_key}\n'
         for item in operator_group:
             text += f'- {item.name}\n'

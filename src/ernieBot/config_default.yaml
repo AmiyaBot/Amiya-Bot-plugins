@@ -1,0 +1,12 @@
+client_id: ''
+client_secret: ''
+model_name: ERNIE-Bot 4.0
+model_api: ''
+need_admin: true
+
+setting:
+    temperature: 0.95
+    top_p: 0.8
+    penalty_score: 1.0
+    system: '阿米娅.txt'
+    user_id: ''

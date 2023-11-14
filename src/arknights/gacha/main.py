@@ -4,7 +4,7 @@ import json
 import asyncio
 
 from typing import List
-from amiyabot import TencentBotInstance, GroupConfig
+from amiyabot import QQGuildBotInstance, GroupConfig
 from amiyabot.network.httpRequests import http_requests
 from core import log, Message, Chain, Equal, AmiyaBotPluginInstance
 from core.util import any_match, create_dir
@@ -176,7 +176,7 @@ async def _(data: Message):
 
         if selected:
             all_people = False
-            if type(data.instance) is TencentBotInstance:
+            if type(data.instance) is QQGuildBotInstance:
                 if bool(Admin.get_or_none(account=data.user_id)):
                     all_people = '所有人' in data.text
 

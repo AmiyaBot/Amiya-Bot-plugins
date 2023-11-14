@@ -1,7 +1,6 @@
 import re
 import os
 import time
-import json
 
 from dataclasses import dataclass, field
 from amiyabot.network.download import download_async
@@ -43,7 +42,7 @@ class WeiboUser:
 
     async def get_result(self, url):
         res = await http_requests.get(url, headers=self.headers)
-        if res:
+        if res and res.response.status == 200:
             return res.json
 
     def __url(self, container_id=None):
