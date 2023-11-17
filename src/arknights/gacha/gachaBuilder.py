@@ -47,8 +47,10 @@ class GachaBuilder:
         for item in operators:
             rarity = item.rarity
             name = item.name
+
             if rarity not in class_group:
                 class_group[rarity] = {}
+
             class_group[rarity][name] = {
                 'name': name,
                 'rarity': rarity,
@@ -75,7 +77,7 @@ class GachaBuilder:
         '''
 
     @staticmethod
-    def __get_gacha_operator(extra, classic_only=False):
+    def __get_gacha_operator(extra, classic_only: bool = False):
         opts = []
         for name, item in ArknightsGameData.operators.items():
             if classic_only:
@@ -325,8 +327,14 @@ class GachaBuilder:
                 4: 中坚寻访
             '''
             special = {
-                6: {1: lambda g: g[int((random.randint(1, 100) + 1) / 70)], 2: lambda g: g[0], 3: lambda g: g[0]},
-                5: {2: lambda g: g[0]},
+                6: {
+                    1: lambda g: g[int((random.randint(1, 100) + 1) / 70)],
+                    2: lambda g: g[0],
+                    3: lambda g: g[0],
+                },
+                5: {
+                    2: lambda g: g[0],
+                },
             }
 
             if rarity in special and self.limit_pool in special[rarity]:
