@@ -9,3 +9,4 @@
 *.pyc
 
 build_individual_plugin.sh
+script_for_individual_plugin.py
