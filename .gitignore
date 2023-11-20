@@ -7,3 +7,5 @@
 .DS_Store
 
 *.pyc
+
+build_individual_plugin.sh
