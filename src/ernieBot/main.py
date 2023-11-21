@@ -12,9 +12,8 @@ from amiyabot.util import create_dir
 from amiyabot.log import LoggerManager
 from amiyabot import Message, Chain
 
-from core import AmiyaBotPluginInstance
+from core import AmiyaBotPluginInstance,Requirement
 from core import bot as main_bot
-
 
 log = LoggerManager('ERNIEBot')
 curr_dir = os.path.dirname(__file__)
@@ -59,7 +58,7 @@ class ERNIEBotPluginInstance(AmiyaBotPluginInstance):
         
         system_file = f'{resource_dir}/template/' + setting['system']
         template = None
-        
+
         if setting['system'] and os.path.exists(system_file):
             with open(system_file, mode='r', encoding='utf-8') as file:
                 template = file.read()
@@ -79,6 +78,9 @@ bot = ERNIEBotPluginInstance(
     plugin_type='official',
     description='一个简易的使用BLM库进行聊天的插件',
     document=f'{curr_dir}/README.md',
+    requirements=[
+        Requirement("amiyabot-blm-library")
+    ],
     instruction=f'{curr_dir}/README_USE.md',
     global_config_schema=generate_schema,
     global_config_default=f'{curr_dir}/config_default.yaml',
