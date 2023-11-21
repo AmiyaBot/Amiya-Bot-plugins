@@ -69,12 +69,12 @@
         },
         "api_key": {
           "title": "API Key",
-          "description": "由Baidu提供给您的ApiKey，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
+          "description": "应用的API Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
           "type": "string"
         },
         "secret_key": {
           "title": "Secret Key",
-          "description": "由OpenAI提供给您的Secret Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
+          "description": "应用的Secret Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
           "type": "string"
         },
         "disable_high_cost": {
