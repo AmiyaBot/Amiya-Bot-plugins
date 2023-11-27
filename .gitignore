@@ -7,3 +7,8 @@
 .DS_Store
 
 *.pyc
+
+amiyabot-*-*.zip
+
+build_individual_plugin.sh
+script_for_individual_plugin.py

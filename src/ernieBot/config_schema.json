@@ -3,30 +3,13 @@
     "type": "object",
     "required": [],
     "properties": {
-        "client_id": {
-            "title": "API Key",
-            "description": "应用的 API Key",
-            "type": "string"
-        },
-        "client_secret": {
-            "title": "Secret Key",
-            "description": "应用的 Secret Key",
-            "type": "string"
-        },
         "model_name": {
             "title": "模型",
-            "description": "不同模型的收费规则和效果不同，请查看百度智能云控制台，需先为模型开启按量付费",
+            "description": "不同模型的收费规则和效果不同，请参阅对应的模型提供商的文档。",
             "type": "string",
             "enum": [
-                "ERNIE-Bot 4.0",
-                "ERNIE-Bot",
-                "ERNIE-Bot-turbo"
+                "..."
             ]
-        },
-        "model_api": {
-            "title": "自定义模型 API",
-            "description": "填写改选项将会使用自定义的API替换模型的API",
-            "type": "string"
         },
         "need_admin": {
             "title": "管理员开启",
@@ -37,21 +20,6 @@
             "title": "参数设置",
             "type": "object",
             "properties": {
-                "temperature": {
-                    "title": "温度",
-                    "description": "较高的数值会使输出更加随机，而较低的数值会使其更加集中和确定",
-                    "type": "number"
-                },
-                "top_p": {
-                    "title": "多样性",
-                    "description": "影响输出文本的多样性，取值越大，生成文本的多样性越强",
-                    "type": "number"
-                },
-                "penalty_score": {
-                    "title": "重复惩罚",
-                    "description": "通过对已生成的token增加惩罚，减少重复生成的现象，值越大表示惩罚越大",
-                    "type": "number"
-                },
                 "system": {
                     "title": "模型人设",
                     "description": "主要用于人设设定，指定人设文件。不指定将使用模型默认人设",

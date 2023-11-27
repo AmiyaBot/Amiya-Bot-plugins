@@ -11,7 +11,7 @@ curr_dir = os.path.dirname(__file__)
 
 bot = PluginInstance(
     name='明日方舟计算器',
-    version='1.0',
+    version='1.1',
     plugin_id='amiyabot-arknights-calculator',
     plugin_type='official',
     description='计算合成玉获得数量或龙门币花费数量等',
