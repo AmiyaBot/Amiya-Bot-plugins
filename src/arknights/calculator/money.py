@@ -65,6 +65,9 @@ class Recruit:
 
 
 def calc_money(money: int):
+    if money > 10000:
+        return f'博士，花费这个数额的计划比较长，请分开计算吧'
+
     mutable_list: List[Recruit] = []
     minute = 60
     # 把每个不同时间的招聘单价都丢进去
