@@ -1,0 +1,19 @@
+{
+    "ChatGPT": {
+        "enable": false,
+        "api_key": "12345",
+        "base_url": "https://api.openai.com/v1",
+        "proxy": "",
+        "disable_high_cost_quota": false,
+        "high_cost_quota": 5
+    },
+    "ERNIE": {
+        "enable": false,
+        "app_id": "12345",
+        "api_key": "12345",
+        "secret_key": "12345",
+        "disable_high_cost_quota": true,
+        "high_cost_quota": 5
+    },
+    "show_log": false
+}

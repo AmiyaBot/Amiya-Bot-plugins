@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "model_name": {
+            "title": "模型",
+            "description": "不同模型的收费规则和效果不同，请参阅对应的模型提供商的文档。",
+            "type": "string",
+            "enum": [
+                "..."
+            ]
+        },
+        "need_admin": {
+            "title": "管理员开启",
+            "description": "只能由管理员开启对话",
+            "type": "boolean"
+        },
+        "setting": {
+            "title": "参数设置",
+            "type": "object",
+            "properties": {
+                "system": {
+                    "title": "模型人设",
+                    "description": "主要用于人设设定，指定人设文件。不指定将使用模型默认人设",
+                    "type": "string"
+                },
+                "user_id": {
+                    "title": "用户 ID",
+                    "description": "表示最终用户的唯一标识符，可以监视和检测滥用行为，防止接口恶意调用",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
