@@ -41,7 +41,7 @@ def generate_schema():
         blm_library = main_bot.plugins['amiyabot-blm-library']
         model_list = blm_library.model_list()
 
-        model_list_str = [model['model_name'] for model in model_list]
+        model_list_str = model_list_str + [model['model_name'] for model in model_list]
 
     try:
         data['properties']['model_name']['enum'] = model_list_str
