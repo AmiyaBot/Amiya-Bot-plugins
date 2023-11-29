@@ -29,7 +29,7 @@ def generate_schema():
     filepath = f'{curr_dir}/config_schema.json'
 
     try:
-        with open(filepath, 'r') as file:
+        with open(filepath, 'r', encoding='utf-8') as file:
             data = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         log.info(f'Failed to load JSON from {filepath}.')
@@ -74,7 +74,7 @@ class ERNIEBotPluginInstance(AmiyaBotPluginInstance):
 bot = ERNIEBotPluginInstance(
     name='简易兔兔聊天',
     version='0.2',
-    plugin_id='amiyabot-ernie-bot',
+    plugin_id='amiyabot-chat-bot',
     plugin_type='official',
     description='一个简易的使用BLM库进行聊天的插件',
     document=f'{curr_dir}/README.md',

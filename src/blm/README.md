@@ -37,7 +37,8 @@ pip install --upgrade openai
 接下来前往插件配置页面填写插件配置：
 
 * `api_key` :由OpenAI提供给您，必须要给出API_KEY才能使用该插件。
-* `url` :如果你使用反向代理，那么这里可以通过给出base_url来指定openai调用时的基础Url，该url应该以http开头，结尾不包含斜杠，例如（https://api.openai.com/v1），该参数默认值为空。
+* `url` :
+  如果你使用反向代理，那么这里可以通过给出base_url来指定openai调用时的基础Url，该url应该以http开头，结尾不包含斜杠，例如（https://api.openai.com/v1），该参数默认值为空。
 * `proxy` :如果你没有全局代理，那么你可以指定proxy参数来给他配置一个http或https代理，socks代理不支持。
 * `禁用GPT-4` 开启该开关后，不再向其他插件提供ERNIE-4模型，如果其他插件尝试调用该模型，则会报错。
 * `GPT-4限额` 使用GPT-4模型时的平均每小时调用次数，设为0表示不限。
@@ -132,27 +133,30 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 参数列表：
 
-| 参数名     | 类型  | 释义   | 默认值 |
-|---------|-----|------|-----|
-| prompt | Union[str, list] | 要提交给模型的Prompt | 无(不可为空) |
-| model |  Union[str,dict] | 选择的模型，既可以是模型的名字，也可以是model_list或get_model返回的dict | None |
-| context_id | Optional[str] | 如果你需要保持一个对话，请每次都传递相同的context_id，传递None则表示不保存本次Context。 | None |
-| channel_id | Optional[str] | 该次Prompt的ChannelId | None |
-| functions | Optional[list[BLMFunctionCall]] | FunctionCall功能，需要模型支持才能生效 | None |
+| 参数名        | 类型                              | 释义                                                     | 默认值     |
+|------------|---------------------------------|--------------------------------------------------------|---------|
+| prompt     | Union[str, list]                | 要提交给模型的Prompt                                          | 无(不可为空) |
+| model      | Union[str,dict]                 | 选择的模型，既可以是模型的名字，也可以是model_list或get_model返回的dict        | None    |
+| context_id | Optional[str]                   | 如果你需要保持一个对话，请每次都传递相同的context_id，传递None则表示不保存本次Context。 | None    |
+| channel_id | Optional[str]                   | 该次Prompt的ChannelId                                     | None    |
+| functions  | Optional[list[BLMFunctionCall]] | FunctionCall功能，需要模型支持才能生效                              | None    |
 
 > model可以是字符串，也可以是model_list或get_model返回的dict。在dict的情况下，会访问dict的“model_name”属性来获取模型名称。
 
 > 如果model不存在，会直接返回None。如果传入的model为空，会访问配置项中的‘默认模型’并选择那个模型。
 
-> 关于channel_id，其实本插件并不需要一个channel id，该参数的唯一目的是为了保存token调用量。我建议插件调用时，能传递channel_id的场景尽量传递，无法获取ChannelId的时候也最好传递自己插件的名字等，用于在计费的时候区分。
+> 关于channel_id，其实本插件并不需要一个channel
+> id，该参数的唯一目的是为了保存token调用量。我建议插件调用时，能传递channel_id的场景尽量传递，无法获取ChannelId的时候也最好传递自己插件的名字等，用于在计费的时候区分。
 
-> functions函数是用于FunctionCall功能，需要模型支持。在model_list中，supported_feature带有"function_call"的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)。（该功能本版本未实现对接，下个版本会实现对接。）
+> functions函数是用于FunctionCall功能，需要模型支持。在model_list中，supported_feature带有"function_call"
+> 的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)
+> 。（该功能本版本未实现对接，下个版本会实现对接。）
 
 返回值说明:
 
-| 类型         | 释义                  |
-|------------|---------------------|
-| Optional[str] | 返回模型生成的文本结果。如果模型不存在或prompt为空，则返回None。|
+| 类型            | 释义                                    |
+|---------------|---------------------------------------|
+| Optional[str] | 返回模型生成的文本结果。如果模型不存在或prompt为空，则返回None。 |
 
 ### model_list
 
@@ -164,9 +168,9 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 返回值说明:
 
-| 类型          | 释义                      |
-|-------------|-------------------------|
-| List[dict]  | 返回可用模型的列表，每个模型以字典形式表示。 |
+| 类型         | 释义                     |
+|------------|------------------------|
+| List[dict] | 返回可用模型的列表，每个模型以字典形式表示。 |
 
 返回值为一个字典数组，范例如下：
 
@@ -185,14 +189,16 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 返回字典格式说明：
 
-| 参数名             | 类型     | 释义                                |
-|-----------------|--------|-----------------------------------|
-| model_name      | str    | 模型的名称                            |
-| type            | str    | 模型的类型，如"low-cost"或"high-cost"     |
-| max-token       | int    | 模型单次请求支持的最大token数，注意诸如function call等功能也会消耗token    |
-| supported_feature | list   | 模型支持的特性列表 |
+| 参数名               | 类型   | 释义                                              |
+|-------------------|------|-------------------------------------------------|
+| model_name        | str  | 模型的名称                                           |
+| type              | str  | 模型的类型，如"low-cost"或"high-cost"                   |
+| max-token         | int  | 模型单次请求支持的最大token数，注意诸如function call等功能也会消耗token |
+| supported_feature | list | 模型支持的特性列表                                       |
 
-**请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(UserDefinedName)”这样的结果。你的HardCode就会失效。**
+*
+*请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(
+UserDefinedName)”这样的结果。你的HardCode就会失效。**
 
 ### get_model
 
@@ -200,15 +206,15 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 参数说明：
 
-| 参数名       | 类型   | 释义                 | 默认值 |
-|-----------|------|--------------------|-----|
-| model_name| str  | 模型的字符串名称         | 无   |
+| 参数名        | 类型  | 释义       | 默认值 |
+|------------|-----|----------|-----|
+| model_name | str | 模型的字符串名称 | 无   |
 
 返回值说明：
 
-| 类型    | 释义                    |
-|-------|-----------------------|
-| dict  | 返回对应模型名称的info字典。 |
+| 类型   | 释义               |
+|------|------------------|
+| dict | 返回对应模型名称的info字典。 |
 
 ### get_model_quota_left
 
@@ -216,15 +222,15 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 参数说明：
 
-| 参数名       | 类型   | 释义             | 默认值 |
-|-----------|------|----------------|-----|
-| model_name| str  | 模型的字符串名称     | 无   |
+| 参数名        | 类型  | 释义       | 默认值 |
+|------------|-----|----------|-----|
+| model_name | str | 模型的字符串名称 | 无   |
 
 返回值说明：
 
-| 类型  | 释义                            |
-|-----|-------------------------------|
-| int | 返回模型的剩余配额数量。 对于无限配额的模型，会返回100000    |
+| 类型  | 释义                               |
+|-----|----------------------------------|
+| int | 返回模型的剩余配额数量。 对于无限配额的模型，会返回100000 |
 
 ### get_default_model
 
@@ -236,9 +242,9 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 返回值说明：
 
-| 类型    | 释义                      |
-|-------|-------------------------|
-| dict  | 返回用户配置的默认模型的info字典。 |
+| 类型   | 释义                  |
+|------|---------------------|
+| dict | 返回用户配置的默认模型的info字典。 |
 
 ### extract_json
 
@@ -257,14 +263,14 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 参数说明：
 
-| 参数名     | 类型   | 释义                 | 默认值 |
-|---------|------|--------------------|-----|
+| 参数名     | 类型  | 释义              | 默认值 |
+|---------|-----|-----------------|-----|
 | content | str | 需要转换为json的字符串内容 | 无   |
 
 返回值说明：
 
-| 类型                    | 释义                              |
-|-----------------------|---------------------------------|
+| 类型                      | 释义                             |
+|-------------------------|--------------------------------|
 | Union[dict, list, None] | 从字符串中提取的json对象、数组或在无法提取时为None。 |
 
 ## Typing
@@ -297,19 +303,19 @@ SELECT
 	sum( `consume`.`total_tokens` ) AS `sum(total_tokens)`,
 	sum((
 		CASE
-				
+
 				WHEN ( `consume`.`model_name` = 'gpt-3.5-turbo' ) THEN
-				(( `consume`.`total_tokens` * 0.002 ) / 1000 ) 
+				(( `consume`.`total_tokens` * 0.002 ) / 1000 )
 				WHEN ( `consume`.`model_name` = 'gpt-4' ) THEN
-				((( `consume`.`prompt_tokens` * 0.03 ) + ( `consume`.`completion_tokens` * 0.06 )) / 1000 ) ELSE 0 
-			END 
-			)) AS `token_cost` 
+				((( `consume`.`prompt_tokens` * 0.03 ) + ( `consume`.`completion_tokens` * 0.06 )) / 1000 ) ELSE 0
+			END
+			)) AS `token_cost`
 	FROM
-		`amiyabot-blm-library-token-consume` `consume` 
+		`amiyabot-blm-library-token-consume` `consume`
 	GROUP BY
 		`consume`.`model_name`,
 		`consume`.`channel_id`,
-		cast( `consume`.`exec_time` AS date ) 
+		cast( `consume`.`exec_time` AS date )
 	ORDER BY
 	`exec_date`,
 	`consume`.`channel_id`
@@ -325,6 +331,6 @@ Logo是用StableDiffusion插件跑出来的。
 
 # 版本信息
 
-|  版本   | 变更  |
-|  ----  | ----  |
-| 1.0  | 初版登录商店 |
+| 版本  | 变更     |
+|-----|--------|
+| 1.0 | 初版登录商店 |

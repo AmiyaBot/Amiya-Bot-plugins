@@ -1,4 +1,3 @@
-
 import time
 import traceback
 import httpx
@@ -7,7 +6,7 @@ from datetime import datetime
 
 from typing import List, Optional, Union
 
-from core import AmiyaBotPluginInstance,log
+from core import AmiyaBotPluginInstance, log
 
 from amiyabot.log import LoggerManager
 
@@ -16,7 +15,7 @@ from ..common.blm_types import BLMAdapter, BLMFunctionCall
 
 enabled = False
 try:
-    from openai import AsyncOpenAI,BadRequestError,RateLimitError
+    from openai import AsyncOpenAI, BadRequestError, RateLimitError
 
     enabled = True
     log.info('OpenAI初始化完成')
@@ -26,10 +25,11 @@ except ModuleNotFoundError as e:
 
 logger = LoggerManager('BLM-ChatGPT')
 
+
 class ChatGPTAdapter(BLMAdapter):
     def __init__(self, plugin):
         super().__init__()
-        self.plugin:AmiyaBotPluginInstance = plugin
+        self.plugin: AmiyaBotPluginInstance = plugin
         self.context_holder = {}
         self.query_times = []
 
@@ -44,7 +44,7 @@ class ChatGPTAdapter(BLMAdapter):
             return chatgpt_config[key]
         return None
 
-    def __quota_check(self,peek:bool = False) -> int:
+    def __quota_check(self, peek: bool = False) -> int:
         query_per_hour = self.get_config('high_cost_quota')
 
         if query_per_hour is None or query_per_hour <= 0:
@@ -69,7 +69,7 @@ class ChatGPTAdapter(BLMAdapter):
             self.debug_log(f"quota check failed, query times: {current_query_times} >= {query_per_hour}")
             return 0
 
-    def get_model_quota_left(self,model_name:str) -> int:
+    def get_model_quota_left(self, model_name: str) -> int:
         model_info = self.get_model(model_name)
         if model_info is None:
             return 0
@@ -82,27 +82,42 @@ class ChatGPTAdapter(BLMAdapter):
 
     def model_list(self) -> List[dict]:
         model_list_response = [
-            {"model_name": "gpt-3.5-turbo", "type": "low-cost", "max-token":2000, "supported_feature": [
-                "completion_flow", "chat_flow", "assistant_flow", "function_call"]},
+            {
+                "model_name": "gpt-3.5-turbo",
+                "type": "low-cost",
+                "max-token": 2000,
+                "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
+            },
         ]
         disable_high_cost = self.get_config("disable_high_cost")
         # self.debug_log(f"disable_high_cost: {disable_high_cost}")
         if disable_high_cost != True:
-            model_list_response.append({"model_name": "gpt-4", "type": "high-cost", "max-token":4000, "supported_feature": [
-                "completion_flow", "chat_flow", "assistant_flow", "function_call"]})
-            model_list_response.append({"model_name": "gpt-4-1106-preview", "type": "high-cost", "max-token":128000, "supported_feature": [
-                "completion_flow", "chat_flow", "assistant_flow", "function_call"]})
+            model_list_response.append(
+                {
+                    "model_name": "gpt-4",
+                    "type": "high-cost",
+                    "max-token": 4000,
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
+                }
+            )
+            model_list_response.append(
+                {
+                    "model_name": "gpt-4-1106-preview",
+                    "type": "high-cost",
+                    "max-token": 128000,
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
+                }
+            )
         return model_list_response
-    
-    async def chat_flow(  
-        self,  
-        prompt: Union[str, List[str]],  
-         model: Optional[Union[str, dict]] = None,
-        context_id: Optional[str] = None,  
+
+    async def chat_flow(
+        self,
+        prompt: Union[str, List[str]],
+        model: Optional[Union[str, dict]] = None,
+        context_id: Optional[str] = None,
         channel_id: Optional[str] = None,
-        functions: Optional[List[BLMFunctionCall]] = None,  
-    ) -> Optional[str]:  
-        
+        functions: Optional[List[BLMFunctionCall]] = None,
+    ) -> Optional[str]:
         if not enabled:
             return None
 
@@ -112,7 +127,7 @@ class ChatGPTAdapter(BLMAdapter):
         if model_info is None:
             self.debug_log('model not found')
             return None
-        
+
         self.debug_log(f'model info: {model_info}')
 
         if not model_info["supported_feature"].__contains__("chat_flow"):
@@ -128,33 +143,24 @@ class ChatGPTAdapter(BLMAdapter):
         async_httpx_client = None
         if proxy is not None and proxy != "":
             if proxy.startswith("https://"):
-                proxies = {
-                    "http://": proxy,
-                    "https://": proxy
-                }
-                async_httpx_client=httpx.AsyncClient(proxies=proxies)
+                proxies = {"http://": proxy, "https://": proxy}
+                async_httpx_client = httpx.AsyncClient(proxies=proxies)
             elif proxy.startswith("http://"):
-                proxies = {
-                    "http://": proxy
-                }
-                async_httpx_client=httpx.AsyncClient(proxies=proxies)
+                proxies = {"http://": proxy}
+                async_httpx_client = httpx.AsyncClient(proxies=proxies)
             else:
                 raise ValueError("无效的代理URL")
 
         base_url = self.get_config('url')
-        client = AsyncOpenAI(
-            api_key=self.get_config('api_key'),
-            base_url=base_url,
-            http_client = async_httpx_client
-        )
+        client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url=base_url, http_client=async_httpx_client)
 
         self.debug_log(f"url: {base_url} proxy: {proxy} model: {model_info}")
-        
+
         if isinstance(prompt, str):
             prompt = [prompt]
-        
+
         prompt = [{"role": "user", "content": command} for command in prompt]
-        
+
         if context_id is not None:
             if context_id not in self.context_holder:
                 self.context_holder[context_id] = []
@@ -163,8 +169,8 @@ class ChatGPTAdapter(BLMAdapter):
         combined_message = ''.join(obj['content'] for obj in prompt)
 
         try:
-            completions = await client.chat.completions.create(model=model_info["model_name"],messages=prompt)
-                        
+            completions = await client.chat.completions.create(model=model_info["model_name"], messages=prompt)
+
         except RateLimitError as e:
             self.debug_log(f"RateLimitError: {e}")
             self.debug_log(f'Chatgpt Raw: \n{combined_message}')
@@ -180,22 +186,22 @@ class ChatGPTAdapter(BLMAdapter):
 
         text: str = completions.choices[0].message.content
         # role: str = completions.choices[0].message.role
-        
+
         self.debug_log(f'{model_info["model_name"]} Raw: \n{combined_message}\n------------------------\n{text}')
 
         # 出于调试目的，写入请求数据
         formatted_file_timestamp = time.strftime('%Y%m%d', time.localtime(time.time()))
         sent_file = f'{self.cache_dir}/CHATGPT.{channel_id}.{formatted_file_timestamp}.txt'
         with open(sent_file, 'a', encoding='utf-8') as file:
-            file.write('-'*20)
+            file.write('-' * 20)
             formatted_timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
             file.write(f'{formatted_timestamp} {model_info["model_name"]}')
-            file.write('-'*20)
+            file.write('-' * 20)
             file.write('\n')
             all_contents = "\n".join([item["content"] for item in prompt])
             file.write(f'{all_contents}')
             file.write('\n')
-            file.write('-'*20)
+            file.write('-' * 20)
             file.write('\n')
             file.write(f'{text}')
             file.write('\n')
@@ -207,10 +213,14 @@ class ChatGPTAdapter(BLMAdapter):
             channel_id = "-"
 
         AmiyaBotBLMLibraryTokenConsumeModel.create(
-            channel_id=channel_id, model_name=model_info["model_name"], exec_id=id,
+            channel_id=channel_id,
+            model_name=model_info["model_name"],
+            exec_id=id,
             prompt_tokens=int(usage.prompt_tokens),
             completion_tokens=int(usage.completion_tokens),
-            total_tokens=int(usage.total_tokens), exec_time=datetime.now())
+            total_tokens=int(usage.total_tokens),
+            exec_time=datetime.now(),
+        )
 
         if context_id is not None:
             prompt.append({"role": "assistant", "content": text})

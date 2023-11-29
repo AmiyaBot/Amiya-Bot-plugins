@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from peewee import AutoField,CharField,IntegerField,DateTimeField,TextField
+from peewee import AutoField, CharField, IntegerField, DateTimeField, TextField
 
 from amiyabot.database import ModelClass
 
 from core.database.plugin import db
+
 
 class AmiyaBotBLMLibraryTokenConsumeModel(ModelClass):
     id: int = AutoField()
@@ -19,6 +20,7 @@ class AmiyaBotBLMLibraryTokenConsumeModel(ModelClass):
     class Meta:
         database = db
         table_name = "amiyabot-blm-library-token-consume"
+
 
 class AmiyaBotBLMLibraryMetaStorageModel(ModelClass):
     id: int = AutoField()

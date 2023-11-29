@@ -1,116 +1,116 @@
 {
-  "title": "GlobalConfig",
-  "type": "object",
-  "properties": {    
-    "default_model": {
-      "title":"默认模型",
-      "description":"对于那些没有提供模型的调用，你默认选择的模型。如果你在这里看不到你添加的模型，请先保存你的修改，然后刷新控制台。",
-      "type": "string",
-      "enum":[
-        "..."
-      ]
-    },
-    "ChatGPT": {
-      "title": "ChatGPT",
-      "description": "ChatGPT大模型相关的配置",
-      "type": "object",
-      "properties": {
-        "enable": {
-          "title": "启用",
-          "description": "启用后，将向其他插件提供ChatGPT模型列表。",
-          "type": "boolean"
+    "title": "GlobalConfig",
+    "type": "object",
+    "properties": {
+        "default_model": {
+            "title": "默认模型",
+            "description": "对于那些没有提供模型的调用，你默认选择的模型。如果你在这里看不到你添加的模型，请先保存你的修改，然后刷新控制台。",
+            "type": "string",
+            "enum": [
+                "..."
+            ]
         },
-        "api_key": {
-          "title": "API Key",
-          "description": "由OpenAI提供给您的ApiKey，没有的话请到https://platform.openai.com/account/api-keys申请。",
-          "type": "string"
+        "ChatGPT": {
+            "title": "ChatGPT",
+            "description": "ChatGPT大模型相关的配置",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供ChatGPT模型列表。",
+                    "type": "boolean"
+                },
+                "api_key": {
+                    "title": "API Key",
+                    "description": "由OpenAI提供给您的ApiKey，没有的话请到https://platform.openai.com/account/api-keys申请。",
+                    "type": "string"
+                },
+                "base_url": {
+                    "title": "Url",
+                    "description": "可以填写一个Url作为API的基础路径。该url应该以http开头，结尾不包含斜杠，使用时将会拼接为{base_url}/completion",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "proxy": {
+                    "title": "http代理",
+                    "description": "可选的一个http或https代理，socks代理不支持",
+                    "type": "string"
+                },
+                "disable_high_cost": {
+                    "title": "禁用GPT-4",
+                    "description": "设置后，将不会在列表中给其他插件返回GPT-4模型。",
+                    "type": "boolean"
+                },
+                "high_cost_quota": {
+                    "title": "GPT-4限额",
+                    "description": "使用GPT-4模型时的平均每小时调用次数，设为0表示不限。",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "api_key",
+                "base_url",
+                "disable_high_cost_quota",
+                "high_cost_quota"
+            ]
         },
-        "base_url": {
-          "title": "Url",
-          "description": "可以填写一个Url作为API的基础路径。该url应该以http开头，结尾不包含斜杠，使用时将会拼接为{base_url}/completion",
-          "type": "string",
-          "format": "uri"
+        "ERNIE": {
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供文心一言模型列表。",
+                    "type": "boolean"
+                },
+                "app_id": {
+                    "title": "APP Id",
+                    "description": "由Baidu提供给您的AppId，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
+                    "type": "string"
+                },
+                "api_key": {
+                    "title": "API Key",
+                    "description": "应用的API Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
+                    "type": "string"
+                },
+                "secret_key": {
+                    "title": "Secret Key",
+                    "description": "应用的Secret Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
+                    "type": "string"
+                },
+                "disable_high_cost": {
+                    "title": "禁用ERNIE-4",
+                    "description": "设置后，将不会在列表中给其他插件返回ERNIE-4模型。",
+                    "type": "boolean"
+                },
+                "use_4_as_low_cost": {
+                    "title": "ERNIE-4视为经济型模型",
+                    "description": "设置后，将会把ERNIE-4视为low-cost模型。",
+                    "type": "boolean"
+                },
+                "high_cost_quota": {
+                    "title": "ERNIE-4限额",
+                    "description": "使用ERNIE-4模型时的平均每小时调用次数，设为0表示不限。",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "app_id",
+                "api_key",
+                "secret_key",
+                "disable_high_cost_quota",
+                "high_cost_quota"
+            ]
         },
-        "proxy": {
-          "title": "http代理",
-          "description": "可选的一个http或https代理，socks代理不支持",
-          "type": "string"
-        },
-        "disable_high_cost": {
-          "title": "禁用GPT-4",
-          "description": "设置后，将不会在列表中给其他插件返回GPT-4模型。",
-          "type": "boolean"
-        },
-        "high_cost_quota": {
-          "title":"GPT-4限额",
-          "description":"使用GPT-4模型时的平均每小时调用次数，设为0表示不限。",
-          "type": "number"
+        "show_log": {
+            "title": "调试日志",
+            "description": "开启后将写入用于调试的大量日志。",
+            "type": "boolean",
+            "default": false
         }
-      },
-      "required": [
-        "api_key",
-        "base_url",
-        "disable_high_cost_quota",
-        "high_cost_quota"
-      ]
     },
-    "ERNIE": {
-      "type": "object",
-      "properties": {
-        "enable": {
-          "title": "启用",
-          "description": "启用后，将向其他插件提供文心一言模型列表。",
-          "type": "boolean"
-        },
-        "app_id": {
-          "title": "APP Id",
-          "description": "由Baidu提供给您的AppId，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
-          "type": "string"
-        },
-        "api_key": {
-          "title": "API Key",
-          "description": "应用的API Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
-          "type": "string"
-        },
-        "secret_key": {
-          "title": "Secret Key",
-          "description": "应用的Secret Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
-          "type": "string"
-        },
-        "disable_high_cost": {
-          "title": "禁用ERNIE-4",
-          "description": "设置后，将不会在列表中给其他插件返回ERNIE-4模型。",
-          "type": "boolean"
-        },
-        "use_4_as_low_cost": {
-          "title": "ERNIE-4视为经济型模型",
-          "description": "设置后，将会把ERNIE-4视为low-cost模型。",
-          "type": "boolean"
-        },
-        "high_cost_quota": {
-          "title": "ERNIE-4限额",
-          "description": "使用ERNIE-4模型时的平均每小时调用次数，设为0表示不限。",
-          "type": "number"
-        }
-      },
-      "required": [
-        "app_id",
-        "api_key",
-        "secret_key",
-        "disable_high_cost_quota",
-        "high_cost_quota"
-      ]
-    },
-    "show_log": {
-      "title": "调试日志",
-      "description": "开启后将写入用于调试的大量日志。",
-      "type": "boolean",
-      "default": false
-    }
-  },
-  "required": [
-    "ChatGPT",
-    "ERNIE",
-    "show_log"
-  ]
+    "required": [
+        "ChatGPT",
+        "ERNIE",
+        "show_log"
+    ]
 }

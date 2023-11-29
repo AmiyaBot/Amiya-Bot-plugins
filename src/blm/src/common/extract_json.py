@@ -1,4 +1,3 @@
-
 import json
 from typing import Any, Dict, List, Union
 
@@ -6,7 +5,7 @@ from typing import Any, Dict, List, Union
 def extract_json(string: str) -> List[Union[Dict[str, Any], List[Any]]]:
     json_strings = []
     json_objects = []
-    
+
     # We need additional variables to handle arrays
     open_curly_brackets = 0
     open_square_brackets = 0
@@ -25,12 +24,13 @@ def extract_json(string: str) -> List[Union[Dict[str, Any], List[Any]]]:
             continue
 
         # Check when to start capturing the string
-        if (open_curly_brackets == 1 and open_square_brackets == 0 and start_index is None) or \
-        (open_square_brackets == 1 and open_curly_brackets == 0 and start_index is None):
+        if (open_curly_brackets == 1 and open_square_brackets == 0 and start_index is None) or (
+            open_square_brackets == 1 and open_curly_brackets == 0 and start_index is None
+        ):
             start_index = index
 
         # Check when to stop capturing the string
-        if (open_curly_brackets == 0 and open_square_brackets == 0 and start_index is not None):
+        if open_curly_brackets == 0 and open_square_brackets == 0 and start_index is not None:
             json_strings.append(string[start_index : index + 1])
             start_index = None
 
@@ -40,14 +40,14 @@ def extract_json(string: str) -> List[Union[Dict[str, Any], List[Any]]]:
             json_objects.append(json_object)
         except json.JSONDecodeError as e:
             pass
-            
 
     # 如果是一个数组的数组,就拆出来
     if len(json_objects) == 1:
-        if isinstance(json_objects[0],list):
+        if isinstance(json_objects[0], list):
             return json_objects[0]
 
     return json_objects
+
 
 if __name__ == "__main__":
     # 直接调用ExtractJson
