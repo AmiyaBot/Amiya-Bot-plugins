@@ -330,8 +330,13 @@ Logo是用StableDiffusion插件跑出来的。
 
 反反复复改了几版以后，文档可能有错误，如果文档和代码不一致，请以代码为准。
 
+[插件项目地址:Github](https://github.com/AmiyaBot/Amiya-Bot-plugins/)
+
+[遇到问题可以在这里反馈(Github)](https://github.com/AmiyaBot/Amiya-Bot-plugins/issues/new/)
+
 # 版本信息
 
 | 版本  | 变更     |
 |-----|--------|
 | 1.0 | 初版登录商店 |
+| 1.1 | httpx库现在改为可选。 |
