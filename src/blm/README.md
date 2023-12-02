@@ -20,9 +20,10 @@
 
 ### 我是ChatGPT用户
 
-如果你是ChatGPT用户，那你首先需要科学上网，然后你还需要通过代码部署兔兔，并安装openai库，要求版本>=1.0.0
+如果你是ChatGPT用户，那你首先需要科学上网，然后你还需要通过代码部署兔兔，并安装必要的库
 
 ```
+pip install httpx
 pip install openai>=1.0.0
 ```
 

@@ -1,6 +1,5 @@
 import time
 import traceback
-import httpx
 
 from datetime import datetime
 
@@ -15,12 +14,13 @@ from ..common.blm_types import BLMAdapter, BLMFunctionCall
 
 enabled = False
 try:
+    import httpx
     from openai import AsyncOpenAI, BadRequestError, RateLimitError
 
     enabled = True
     log.info('OpenAI初始化完成')
 except ModuleNotFoundError as e:
-    log.info(f'未安装python库openai或版本低于1.0.0，无法使用ChatGPT模型，错误消息：{e.msg}\n{traceback.format_exc()}')
+    log.info(f'未安装python库openai或版本低于1.0.0或未安装httpx，无法使用ChatGPT模型，错误消息：{e.msg}\n{traceback.format_exc()}')
     enabled = False
 
 logger = LoggerManager('BLM-ChatGPT')
