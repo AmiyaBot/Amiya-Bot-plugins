@@ -4,7 +4,6 @@ import os
 import shutil
 import traceback
 
-
 from typing import List, Optional
 from dataclasses import dataclass, asdict
 from amiyabot.network.httpRequests import http_requests
