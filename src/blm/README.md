@@ -20,9 +20,10 @@
 
 ### 我是ChatGPT用户
 
-如果你是ChatGPT用户，那你首先需要科学上网，然后你还需要通过代码部署兔兔，并安装openai库，要求版本>=1.0.0
+如果你是ChatGPT用户，那你首先需要科学上网，然后你还需要通过代码部署兔兔，并安装必要的库
 
 ```
+pip install httpx
 pip install openai>=1.0.0
 ```
 
@@ -149,7 +150,8 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 > id，该参数的唯一目的是为了保存token调用量。我建议插件调用时，能传递channel_id的场景尽量传递，无法获取ChannelId的时候也最好传递自己插件的名字等，用于在计费的时候区分。
 
 > functions函数是用于FunctionCall功能，需要模型支持。在model_list中，supported_feature带有"function_call"
-> 的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)
+>
+的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)
 > 。（该功能本版本未实现对接，下个版本会实现对接。）
 
 返回值说明:
@@ -197,6 +199,7 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 | supported_feature | list | 模型支持的特性列表                                       |
 
 *
+
 *请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(
 UserDefinedName)”这样的结果。你的HardCode就会失效。**
 
@@ -329,8 +332,13 @@ Logo是用StableDiffusion插件跑出来的。
 
 反反复复改了几版以后，文档可能有错误，如果文档和代码不一致，请以代码为准。
 
+[插件项目地址:Github](https://github.com/AmiyaBot/Amiya-Bot-plugins/)
+
+[遇到问题可以在这里反馈(Github)](https://github.com/AmiyaBot/Amiya-Bot-plugins/issues/new/)
+
 # 版本信息
 
-| 版本  | 变更     |
-|-----|--------|
-| 1.0 | 初版登录商店 |
+| 版本  | 变更            |
+|-----|---------------|
+| 1.0 | 初版登录商店        |
+| 1.1 | httpx库现在改为可选。 |
