@@ -260,7 +260,9 @@ async def get_ocr_result(data: Message):
     if localOCR_enabled and not result:
         try:
             fname = f'{curr_dir}/{random.random()}.png'
-            img = await download_async(data.image[0])
+            img = data.image[0]
+            if type(img) == type('string'):
+                img = await download_async(data.image[0])
             PILImage = Image.open(BytesIO(img))
             PILImage.save(fname, 'PNG')
             with os.popen(f'"./resource/Windows.Media.Ocr.Cli.exe" {fname}','r') as pipe:
