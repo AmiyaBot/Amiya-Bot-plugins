@@ -3,6 +3,7 @@ import dhash
 import jieba
 import shutil
 import asyncio
+import random
 
 from io import BytesIO
 from PIL import Image
@@ -31,6 +32,9 @@ recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
 
 paddle_enabled = False
+
+localOCR_enabled = os.path.exists(f'resource/Windows.Media.Ocr.Cli.exe')
+
 try:
     from paddleocr import PaddleOCR
 
@@ -40,7 +44,6 @@ try:
     log.info('PaddleOCR初始化完成')
 except ModuleNotFoundError:
     paddle_enabled = False
-
 
 class Recruit:
     tags_list: List[str] = []
@@ -253,6 +256,20 @@ async def get_ocr_result(data: Message):
         except Exception as e:
             log.error(e, desc='ocr error:')
 
+    #如果存在本地OCR程序，调用
+    if localOCR_enabled and not result:
+        try:
+            fname = f'{curr_dir}/{random.random()}.png'
+            img = await download_async(data.image[0])
+            PILImage = Image.open(BytesIO(img))
+            PILImage.save(fname, 'PNG')
+            with os.popen(f'"./resource/Windows.Media.Ocr.Cli.exe" {fname}','r') as pipe:
+                result = await run_in_thread_pool(pipe.read)
+            result.replace('\n', '')
+            os.remove(fname)
+        except Exception as e:
+            log.error(e, desc='Windows.Media.Ocr error:')
+
     return result
 
 
@@ -270,7 +287,7 @@ async def _(data: Message):
             baidu = get_baidu()
 
             # 文本内容验证不出则询问截图
-            if not baidu.enable and type(data.instance) is not CQHttpBotInstance:
+            if not baidu.enable and type(data.instance) is not CQHttpBotInstance and not localOCR_enabled:
                 return None
 
             wait = await data.wait(Chain(data, at=True).text('博士，请发送您的公招界面截图~'), force=True)
