@@ -3,6 +3,10 @@ from typing import Any, Dict, List, Union
 
 
 def extract_json(string: str) -> List[Union[Dict[str, Any], List[Any]]]:
+
+    if string is None:
+        return None
+
     json_strings = []
     json_objects = []
 

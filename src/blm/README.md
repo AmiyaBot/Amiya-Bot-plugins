@@ -3,6 +3,18 @@
 为其他插件提供大语音模型（ChatGPT，文心一言等）调用库。
 如果您有什么使用上的问题，欢迎在最下方的链接处反馈。
 
+# 新功能
+
+提供了AI Vision（AI视觉）的支持，可以发送图片作为Prompt，该功能目前仅ChatGPT的'gpt-4-vision-preview'模型支持。 开发者可以在`supported_feature`里查找`vision`来确认这类模型。
+
+**max_token参数更名**
+model_info字典中的`max-token`更名为`max_token`，使用下划线替代连字符，从而和其他字段保持一致。
+当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来的1.5版本移除支持，请开发者及时调整代码。
+
+支持json_mode：现在支持了chatgpt的json_mode，并且用模拟方式支持了文心一言的json_mode。（具体方式是拼接prompt，要求文心一言返回json。）可以保证接口返回的字符串一定是合法的json字符串（或None）。
+
+因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
+
 # 使用方法
 
 ## 我是兔兔用户
@@ -84,11 +96,12 @@ class BLMFunctionCall:
     function:Callable[..., Any]
 
 async def chat_flow(
-    prompt: Union[str, list],
+    prompt: Union[Union[str, dict], List[Union[str, dict]]],
 	model : Optional[Union[str, dict]] = None,
     context_id: Optional[str] = None,
     channel_id: Optional[str] = None,
-    functions: Optional[list[BLMFunctionCall]] = None
+    functions: Optional[list[BLMFunctionCall]] = None,
+    json_mode: Optional[bool] = False,
     ) -> Optional[str]:
     ...
 
@@ -123,9 +136,6 @@ def get_model_quota_left(self,model_name:str) -> int:
 def get_default_model(self) -> dict:
     ...
 
-async def extract_json(content:str):
-    ...
-
 ```
 
 ### chat_flow
@@ -136,11 +146,12 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 | 参数名        | 类型                              | 释义                                                     | 默认值     |
 |------------|---------------------------------|--------------------------------------------------------|---------|
-| prompt     | Union[str, list]                | 要提交给模型的Prompt                                          | 无(不可为空) |
+| prompt     | Union[Union[str, dict], List[Union[str, dict]]],                | 要提交给模型的Prompt，具体格式见下述                                       | 无(不可为空) |
 | model      | Union[str,dict]                 | 选择的模型，既可以是模型的名字，也可以是model_list或get_model返回的dict        | None    |
 | context_id | Optional[str]                   | 如果你需要保持一个对话，请每次都传递相同的context_id，传递None则表示不保存本次Context。 | None    |
 | channel_id | Optional[str]                   | 该次Prompt的ChannelId                                     | None    |
 | functions  | Optional[list[BLMFunctionCall]] | FunctionCall功能，需要模型支持才能生效                              | None    |
+| json_mode  | Optional[bool] | 启用json_mode，要求模型返回的结果为json string  | None    |
 
 > model可以是字符串，也可以是model_list或get_model返回的dict。在dict的情况下，会访问dict的“model_name”属性来获取模型名称。
 
@@ -149,10 +160,33 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 > 关于channel_id，其实本插件并不需要一个channel
 > id，该参数的唯一目的是为了保存token调用量。我建议插件调用时，能传递channel_id的场景尽量传递，无法获取ChannelId的时候也最好传递自己插件的名字等，用于在计费的时候区分。
 
+> 单个Prompt可以是字符串，也可以是dict。如果他是dict，则他需要是下面这两种结构：
+```
+{"type":"text","text":"xxxx"}
+{"type":"image_url","url":"xxxx"}
+```
+其中，image_url用于支持vision（AI视觉）feature。对于不支持vision的模型，image_url类型的dict会被忽略。
+>Prompt参数也支持传递string和dict的任意组合的列表，用来一次性传输多个prompt。
+
+>字符串和dict可以混合提供，也就是说下面的代码是可以的：
+```python
+ret = await blm.chat_flow(
+    prompt = [
+        "今天天气如何?",
+        {"type":"text","text":"我希望是个晴天"},
+        {"type":"image_url","url":"http://img.gr/smile.png"}
+    ],
+    model = "xxxx",
+    ....
+)
+```
+
 > functions函数是用于FunctionCall功能，需要模型支持。在model_list中，supported_feature带有"function_call"
 >
 的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)
 > 。（该功能本版本未实现对接，下个版本会实现对接。）
+
+> json_mode为True的情况下，接口一定会返回一个json字符串。但是该字符串的格式是不确定的，并不是说prompt要求了什么格式，就会是什么格式，因为这本质上仍然是AIGC。因此使用的时候你需要判断输出Json是否有你想要的字段。
 
 返回值说明:
 
@@ -178,10 +212,10 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 
 ```python
 [
-    {"model_name":"gpt-3.5-turbo","type":"low-cost","max-token":2000,"supported_feature":["completion_flow","chat_flow","assistant_flow","function_call"]},
-    {"model_name":"gpt-4","type":"high-cost","max-token":4000,"supported_feature":["completion_flow","chat_flow","assistant_flow","function_call"]]},
-    {"model_name":"ernie-3.5","type":"low-cost","max-token":4000,"supported_feature":["completion_flow","chat_flow"]},
-    {"model_name":"ernie-4","type":"high-cost","max-token":4000,"supported_feature":["completion_flow","chat_flow"]},
+    {"model_name":"gpt-3.5-turbo","type":"low-cost","max_token":2000,"supported_feature":["completion_flow","chat_flow","assistant_flow","function_call"]},
+    {"model_name":"gpt-4","type":"high-cost","max_token":4000,"supported_feature":["completion_flow","chat_flow","assistant_flow","function_call"]]},
+    {"model_name":"ernie-3.5","type":"low-cost","max_token":4000,"supported_feature":["completion_flow","chat_flow"]},
+    {"model_name":"ernie-4","type":"high-cost","max_token":4000,"supported_feature":["completion_flow","chat_flow"]},
 ]
 ```
 
@@ -195,7 +229,7 @@ Chat工作流，以一问一答的形式，与AI进行交互。
 |-------------------|------|-------------------------------------------------|
 | model_name        | str  | 模型的名称                                           |
 | type              | str  | 模型的类型，如"low-cost"或"high-cost"                   |
-| max-token         | int  | 模型单次请求支持的最大token数，注意诸如function call等功能也会消耗token |
+| max_token         | int  | 模型单次请求支持的最大token数，注意诸如function call等功能也会消耗token |
 | supported_feature | list | 模型支持的特性列表                                       |
 
 *
@@ -248,33 +282,6 @@ UserDefinedName)”这样的结果。你的HardCode就会失效。**
 | 类型   | 释义                  |
 |------|---------------------|
 | dict | 返回用户配置的默认模型的info字典。 |
-
-### extract_json
-
-将字符串转为json的帮助函数。使用正则表达式，从一个字符串中提取出一个json数组或者json对象。
-和AI其实没什关系，但是是一个很好用的帮助函数。用于处理诸如：
-
-```
-好的，输出的json是：
-{
-    ...
-}
-
-```
-
-这样的返回。
-
-参数说明：
-
-| 参数名     | 类型  | 释义              | 默认值 |
-|---------|-----|-----------------|-----|
-| content | str | 需要转换为json的字符串内容 | 无   |
-
-返回值说明：
-
-| 类型                      | 释义                             |
-|-------------------------|--------------------------------|
-| Union[dict, list, None] | 从字符串中提取的json对象、数组或在无法提取时为None。 |
 
 ## Typing
 
