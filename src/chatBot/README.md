@@ -1,12 +1,10 @@
 ## 插件尚处于早期开发阶段，暂不建议使用
 
-请前往 [百度智能云千帆大模型平台](https://console.bce.baidu.com/qianfan/overview) 注册并为 `ERNIE-Bot 4.0`
-等模型 [开通按量付费](https://console.bce.baidu.com/qianfan/ais/console/onlineService)，需在平台充值以保证使用。
+该插件依赖另一个官方插件，大语言模型库，模型的配置，用户token的填写等都在那边进行。
 
-在 [应用接入](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application) 界面创建应用并在插件配置内填写
-API Key 和 Secret Key。
+使用前请先在配置文件中选择模型，如果选择的模型支持AI视觉，则可以发送图片。
 
-默认使用 ERNIE-Bot 4.0 （文心一言专业版）模型，如需使用其他模型请开通对应模型的按量付费。
+推荐使用 ERNIE-Bot 4.0 （文心一言专业版）模型、gpt-4-vision-preview模型或gpt-4-1106-preview模型。
 
 ## 人设
 
