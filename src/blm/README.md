@@ -361,4 +361,4 @@ Logo是用StableDiffusion插件跑出来的。
 |-----|---------------|
 | 1.0 | 初版登录商店        |
 | 1.1 | httpx库现在改为可选。 |
-| 1.2| 引入json_mode,移除extract_json,修改max-token标识符名 |
+| 1.2| 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
