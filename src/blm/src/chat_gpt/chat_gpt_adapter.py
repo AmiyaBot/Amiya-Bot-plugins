@@ -1,3 +1,4 @@
+import json
 import time
 import traceback
 
@@ -11,6 +12,7 @@ from amiyabot.log import LoggerManager
 
 from ..common.database import AmiyaBotBLMLibraryTokenConsumeModel
 from ..common.blm_types import BLMAdapter, BLMFunctionCall
+from ..common.extract_json import extract_json
 
 enabled = False
 try:
@@ -87,7 +89,7 @@ class ChatGPTAdapter(BLMAdapter):
                 "type": "low-cost",
                 "max_token": 2000,                    
                 "max-token": 2000,
-                "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
             },
         ]
         disable_high_cost = self.get_config("disable_high_cost")
@@ -99,7 +101,7 @@ class ChatGPTAdapter(BLMAdapter):
                     "type": "high-cost",
                     "max_token": 4000,                    
                     "max-token": 4000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","json_mode"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
                 }
             )
             model_list_response.append(
@@ -117,7 +119,7 @@ class ChatGPTAdapter(BLMAdapter):
                     "type": "high-cost",
                     "max_token": 4096,                    
                     "max-token": 4096,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","json_mode","vision"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
                 }
             )
         return model_list_response
@@ -209,9 +211,12 @@ class ChatGPTAdapter(BLMAdapter):
             # 扁平化prompt的content为str
             prompt = [{"role": item["role"], "content": item["content"][0]["text"]} for item in prompt if item["content"][0]["type"] == "text"]
 
+        if json_mode:
+            if not model_info["supported_feature"].__contains__("json_mode"):
+                # 非原生支持json_mode时需要拼接prompt
+                prompt.append({"role": "assistant", "content": "(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。"})
 
-        # combine text message
-        # combined_message = ''.join([item["content"]["text"] for item in prompt where item["content"]["type"] == "text"])
+        # combine text message for debuging
         combined_message = ""
         for item in prompt:
             if isinstance(item["content"] , str):
@@ -228,7 +233,8 @@ class ChatGPTAdapter(BLMAdapter):
             call_param["messages"]=prompt
 
             if json_mode:
-                call_param["response_format"] = {"type": "json_object"}
+                if model_info["supported_feature"].__contains__("json_mode"):
+                    call_param["response_format"] = {"type": "json_object"}
 
             if model_info["model_name"] == "gpt-4-vision-preview":
                 # 特别的，为vision指定一个4096的max_tokens
@@ -291,4 +297,21 @@ class ChatGPTAdapter(BLMAdapter):
             prompt.append({"role": "assistant", "content": text})
             self.context_holder[context_id] = prompt
 
-        return f"{text}".strip()
+        ret_str = f"{text}".strip()
+
+        # 确认模型是否支持json_mode
+        if json_mode:
+            self.debug_log(f"json_mode enabled in {model_info['model_name']}")
+
+            if model_info["supported_feature"].__contains__("json_mode"):
+                return ret_str
+            else:
+                self.debug_log(f"json_mode not supported in {model_info['model_name']}, extracting from:\n{text}")
+                json_obj = extract_json(ret_str)
+                if json_obj is not None:
+                    ret_str = json.dumps(json_obj)
+                else:
+                    ret_str = None
+                return ret_str
+        else:
+            return ret_str

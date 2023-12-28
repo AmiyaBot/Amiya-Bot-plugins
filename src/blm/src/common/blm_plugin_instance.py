@@ -112,14 +112,15 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         if not adapter:
             return None
         return await adapter.completion_flow(prompt, model, context_id, channel_id)
-
+    
     async def chat_flow(
         self,
-        prompt: Union[str, List[str]],
+        prompt: Union[Union[str, dict], List[Union[str, dict]]],
         model: Optional[Union[str, dict]] = None,
         context_id: Optional[str] = None,
         channel_id: Optional[str] = None,
         functions: Optional[List[BLMFunctionCall]] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         if model is None:
             model = self.get_default_model()
@@ -130,7 +131,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         adapter = self.model_map[model]
         if not adapter:
             return None
-        return await adapter.chat_flow(prompt, model, context_id, channel_id, functions)
+        return await adapter.chat_flow(prompt, model, context_id, channel_id, functions, json_mode)
 
     async def assistant_flow(
         self,

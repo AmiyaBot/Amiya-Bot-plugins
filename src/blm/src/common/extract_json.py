@@ -57,15 +57,18 @@ if __name__ == "__main__":
     # 直接调用ExtractJson
 
     str_to_test = """
+```json
 [
-{"prompt":"a character with pink hair and green eyes, magical atmosphere, fantasy setting, (flowing hair:1.3), (glowing eyes:1.2), (soft colors:1.5), dream-like, ethereal, (pastel colors:1.3)","style":"Anime"},
-
-{"prompt":"portrait of a person with pink hair and green eyes, vibrant atmosphere, urban setting, (long hair:1.3), (intense gaze:1.2), (neon lights:1.5), modern, neon aesthetic, (bold colors:1.3)","style":"Photographic"},
-
-{"prompt":"a girl with pink hair and green eyes, nature-inspired, tranquil atmosphere, forest setting, (flowing hair:1.3), (gentle gaze:1.2), (soft tones:1.5), whimsical, enchanting, (natural colors:1.3)","style":"Watercolor"},
-
-{"prompt":"a character with pink hair and green eyes, futuristic atmosphere, sci-fi setting, (short hair:1.3), (intense look:1.2), (metallic elements:1.5), cyberpunk, futuristic aesthetic, (cool colors:1.3)","style":"3D_Model"}
+    {
+        "reply": "博士，这张图片上画了一个很可爱的人物，她看起来很友好和欢快。不论遇到什么困难，我们都应该保持这份乐观的心态，这样对罗德岛的每一位成员都是一种激励。",
+        "mental": "努力传达正能量，同时暗示维持士气的重要性。",
+        "activity": "注视着图片，想象着背后可能的积极故事。",
+        "role": "阿米娅",
+        "corelation_on_topic": 1.0,
+        "corelation_on_conversation": 1.0
+    }
 ]
+```
 """
 
     print(extract_json(str_to_test))
