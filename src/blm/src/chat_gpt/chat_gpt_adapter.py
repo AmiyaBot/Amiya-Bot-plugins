@@ -1,3 +1,4 @@
+import json
 import time
 import traceback
 
@@ -11,6 +12,7 @@ from amiyabot.log import LoggerManager
 
 from ..common.database import AmiyaBotBLMLibraryTokenConsumeModel
 from ..common.blm_types import BLMAdapter, BLMFunctionCall
+from ..common.extract_json import extract_json
 
 enabled = False
 try:
@@ -85,6 +87,7 @@ class ChatGPTAdapter(BLMAdapter):
             {
                 "model_name": "gpt-3.5-turbo",
                 "type": "low-cost",
+                "max_token": 2000,                    
                 "max-token": 2000,
                 "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
             },
@@ -96,6 +99,7 @@ class ChatGPTAdapter(BLMAdapter):
                 {
                     "model_name": "gpt-4",
                     "type": "high-cost",
+                    "max_token": 4000,                    
                     "max-token": 4000,
                     "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
                 }
@@ -104,19 +108,30 @@ class ChatGPTAdapter(BLMAdapter):
                 {
                     "model_name": "gpt-4-1106-preview",
                     "type": "high-cost",
+                    "max_token": 128000,                    
                     "max-token": 128000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","json_mode"],
+                }
+            )
+            model_list_response.append(
+                {
+                    "model_name": "gpt-4-vision-preview",
+                    "type": "high-cost",
+                    "max_token": 4096,                    
+                    "max-token": 4096,
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
                 }
             )
         return model_list_response
 
     async def chat_flow(
         self,
-        prompt: Union[str, List[str]],
+        prompt: Union[Union[str, dict], List[Union[str, dict]]],
         model: Optional[Union[str, dict]] = None,
         context_id: Optional[str] = None,
         channel_id: Optional[str] = None,
         functions: Optional[List[BLMFunctionCall]] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         if not enabled:
             return None
@@ -159,17 +174,73 @@ class ChatGPTAdapter(BLMAdapter):
         if isinstance(prompt, str):
             prompt = [prompt]
 
-        prompt = [{"role": "user", "content": command} for command in prompt]
+        if isinstance(prompt, dict):
+            prompt = [prompt]
+
+        # prompt = [{"role": "user", "content": command} for command in prompt]
+        for i in range(len(prompt)):
+            if isinstance(prompt[i], str):
+                prompt[i] = {"role": "user", "content": [{"type": "text", "text": prompt[i]}]}
+            elif isinstance(prompt[i], dict):
+                if "type" not in prompt[i]:
+                    raise ValueError("无效的prompt")
+                if prompt[i]["type"] == "text":
+                    prompt[i] = {"role": "user", "content": [{"type": "text", "text": prompt[i]["text"]}]}
+                elif prompt[i]["type"] == "image_url":
+                    prompt[i] = {"role": "user", "content": [{"type": "image_url", "image_url":{"url": prompt[i]["url"]}}]}
+                else:
+                    raise ValueError("无效的prompt")
+            else:
+                raise ValueError("无效的prompt")
 
         if context_id is not None:
             if context_id not in self.context_holder:
                 self.context_holder[context_id] = []
             prompt = self.context_holder[context_id] + prompt
 
-        combined_message = ''.join(obj['content'] for obj in prompt)
+        def prompt_filter(item):
+            if not model_info["supported_feature"].__contains__("vision"):
+                if item["content"][0]["type"] == "image_url":
+                    self.debug_log(f"image_url not supported in {model_info['model_name']}")
+                    return False
+            return True
 
+        prompt = list(filter(prompt_filter, prompt))
+
+        if not model_info["supported_feature"].__contains__("vision"):
+            # 扁平化prompt的content为str
+            prompt = [{"role": item["role"], "content": item["content"][0]["text"]} for item in prompt if item["content"][0]["type"] == "text"]
+
+        if json_mode:
+            if not model_info["supported_feature"].__contains__("json_mode"):
+                # 非原生支持json_mode时需要拼接prompt
+                prompt.append({"role": "assistant", "content": "(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。"})
+
+        # combine text message for debuging
+        combined_message = ""
+        for item in prompt:
+            if isinstance(item["content"] , str):
+                combined_message += item["content"]+"\n"
+            else:
+                if item["content"][0]["type"] == "text":
+                    combined_message += item["content"][0]["text"]+"\n"
+                elif item["content"][0]["type"] == "image_url":
+                    combined_message += f'<img src="{item["content"][0]["image_url"]["url"]}"/>'
+        
         try:
-            completions = await client.chat.completions.create(model=model_info["model_name"], messages=prompt)
+            call_param = {}
+            call_param["model"]=model_info["model_name"]
+            call_param["messages"]=prompt
+
+            if json_mode:
+                if model_info["supported_feature"].__contains__("json_mode"):
+                    call_param["response_format"] = {"type": "json_object"}
+
+            if model_info["model_name"] == "gpt-4-vision-preview":
+                # 特别的，为vision指定一个4096的max_tokens
+                call_param["max_tokens"] = 4096
+
+            completions = await client.chat.completions.create(**call_param)
 
         except RateLimitError as e:
             self.debug_log(f"RateLimitError: {e}")
@@ -198,7 +269,7 @@ class ChatGPTAdapter(BLMAdapter):
             file.write(f'{formatted_timestamp} {model_info["model_name"]}')
             file.write('-' * 20)
             file.write('\n')
-            all_contents = "\n".join([item["content"] for item in prompt])
+            all_contents = combined_message
             file.write(f'{all_contents}')
             file.write('\n')
             file.write('-' * 20)
@@ -226,4 +297,21 @@ class ChatGPTAdapter(BLMAdapter):
             prompt.append({"role": "assistant", "content": text})
             self.context_holder[context_id] = prompt
 
-        return f"{text}".strip()
+        ret_str = f"{text}".strip()
+
+        # 确认模型是否支持json_mode
+        if json_mode:
+            self.debug_log(f"json_mode enabled in {model_info['model_name']}")
+
+            if model_info["supported_feature"].__contains__("json_mode"):
+                return ret_str
+            else:
+                self.debug_log(f"json_mode not supported in {model_info['model_name']}, extracting from:\n{text}")
+                json_obj = extract_json(ret_str)
+                if json_obj is not None:
+                    ret_str = json.dumps(json_obj)
+                else:
+                    ret_str = None
+                return ret_str
+        else:
+            return ret_str

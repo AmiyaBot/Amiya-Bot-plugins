@@ -13,6 +13,8 @@ from amiyabot.network.httpRequests import http_requests
 from ..common.blm_types import BLMAdapter, BLMFunctionCall
 from ..common.database import AmiyaBotBLMLibraryMetaStorageModel, AmiyaBotBLMLibraryTokenConsumeModel
 
+from ..common.extract_json import extract_json
+
 logger = LoggerManager('BLM-ERNIE')
 
 
@@ -75,14 +77,16 @@ class ERNIEAdapter(BLMAdapter):
             {
                 "model_name": "ERNIE-Bot",
                 "type": "low-cost",
+                "max_token": 4000,
                 "max-token": 4000,
-                "supported_feature": ["completion_flow", "chat_flow"],
+                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
             },
             {
                 "model_name": "ERNIE-Bot-turbo",
                 "type": "low-cost",
+                "max_token": 4000,                
                 "max-token": 4000,
-                "supported_feature": ["completion_flow", "chat_flow"],
+                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
             },
         ]
 
@@ -96,10 +100,18 @@ class ERNIEAdapter(BLMAdapter):
                 {
                     "model_name": "ERNIE-Bot 4.0",
                     "type": ernie_4_cost,
+                    "max_token": 4000,
                     "max-token": 4000,
-                    "supported_feature": ["completion_flow", "chat_flow"],
+                    "supported_feature": ["completion_flow", "chat_flow","json_mode"],
                 }
-            )
+            ),
+            {
+                "model_name": "ERNIE-Bot-8K",
+                "type": ernie_4_cost,
+                "max_token": 8000,                
+                "max-token": 8000,
+                "supported_feature": ["completion_flow", "chat_flow","function_call","json_mode"],
+            },
         return model_list_response
 
     async def __get_access_token(self, channel_id):
@@ -181,20 +193,51 @@ class ERNIEAdapter(BLMAdapter):
         context_id: Optional[str] = None,
         channel_id: Optional[str] = None,
         functions: Optional[List[BLMFunctionCall]] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         access_token = await self.__get_access_token(channel_id)
 
         if not access_token:
             return None
 
+        model_info = self.get_model(model)
+
         if isinstance(prompt, str):
             prompt = [prompt]
+        
+        if isinstance(prompt, dict):
+            prompt = [prompt]
+
+        def prompt_filter(item):
+            if not model_info["supported_feature"].__contains__("vision"):
+                if item["type"] == "image_url":
+                    self.debug_log(f"image_url not supported in {model_info['model_name']}")
+                    return False
+            return True
+
+        prompt = list(filter(prompt_filter, prompt))
+
+        for i in range(len(prompt)):
+            if isinstance(prompt[i], str):
+                prompt[i] = prompt[i]
+            elif isinstance(prompt[i], dict):
+                if "type" not in prompt[i]:
+                    raise ValueError("无效的prompt")
+                if prompt[i]["type"] == "text":
+                    prompt[i] = prompt[i]["text"]
+                else:
+                    raise ValueError("无效的prompt")
+            else:
+                raise ValueError("无效的prompt")
 
         # 百度对Message的要求比较奇葩
         # 必须为奇数个成员，成员中message的role必须依次为user、assistant
         # 所以用户的提交必须合并
 
         big_prompt = "\n".join(prompt)
+
+        if json_mode:
+            big_prompt = big_prompt + "\n" + "(Important!!)Please output the result in json format. (重要!!) 请以json格式输出结果。"
 
         prompt = [{"role": "user", "content": big_prompt}]
 
@@ -237,6 +280,7 @@ class ERNIEAdapter(BLMAdapter):
             "ERNIE-Bot 4.0": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro",
             "ERNIE-Bot": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions",
             "ERNIE-Bot-turbo": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant",
+            "ERNIE-Bot-8K": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_bot_8k",
         }
 
         if model not in model_url_map:
@@ -304,4 +348,13 @@ class ERNIEAdapter(BLMAdapter):
             prompt.append({"role": "assistant", "content": result})
             self.context_holder[context_id] = prompt
 
-        return f"{result}".strip()
+        ret_str = f"{result}".strip()
+
+        if json_mode:
+            json_obj = extract_json(ret_str)
+            if json_obj is not None:
+                ret_str = json.dumps(json_obj)
+            else:
+                ret_str = None
+
+        return ret_str

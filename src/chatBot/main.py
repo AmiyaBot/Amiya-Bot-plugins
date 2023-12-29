@@ -72,7 +72,7 @@ class ERNIEBotPluginInstance(AmiyaBotPluginInstance):
 
 bot = ERNIEBotPluginInstance(
     name='简易兔兔聊天',
-    version='0.2',
+    version='0.3',
     plugin_id='amiyabot-chat-bot',
     plugin_type='official',
     description='一个简易的使用BLM库进行聊天的插件',
@@ -133,6 +133,7 @@ async def _(data: Message):
         last_msg = talk.message
 
         messages = []
+        images = []
         for item in [last_msg] + talk.event.data:
             if item.text_original in ['不聊了', '结束']:
                 res = await blm_library.chat_flow(f'{prompt}聊天结束，再见。', model)
@@ -143,10 +144,18 @@ async def _(data: Message):
 
             if item.text_original:
                 messages.append(item.text_original)
+            
+            if item.image:
+                images = images + item.image
 
         talk.event.clean()
 
         if messages:
-            res = await blm_library.chat_flow(prompt + '\n\n'.join(messages), model)
+            command = []
+            command = [{"type":"text","text":prompt + '\n\n'.join(messages)}]
+            if model_obj["supported_feature"].__contains__("vision"):
+                command = command + [{"type":"image_url","url":imgPath} for imgPath in images]
+                images = []
+            res = await blm_library.chat_flow(command, model)
             if res:
                 await data.send(Chain(last_msg, at=False).text(res))

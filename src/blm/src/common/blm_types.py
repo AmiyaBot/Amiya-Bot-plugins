@@ -30,11 +30,12 @@ class BLMAdapter:
 
     async def chat_flow(
         self,
-        prompt: Union[str, List[str]],
+        prompt: Union[Union[str, dict], List[Union[str, dict]]],
         model: Optional[Union[str, dict]] = None,
         context_id: Optional[str] = None,
         channel_id: Optional[str] = None,
         functions: Optional[List[BLMFunctionCall]] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         ...
 
