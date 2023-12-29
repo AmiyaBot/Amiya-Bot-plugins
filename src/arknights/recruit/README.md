@@ -23,4 +23,8 @@ secretKey: XR*********************U7UM
 
 > PaddleOCR
 
-如果以上两者没有结果且 python 环境安装了 PaddleOCR，则调用 PaddleOCR 继续尝试识别。
+如果以上没有结果且 python 环境安装了 PaddleOCR，则调用 PaddleOCR 继续尝试识别。
+
+> [Windows.Media.Ocr.Cli](https://github.com/zh-h/Windows.Media.Ocr.Cli)
+
+如果以上没有结果且为 windows 系统，则调用 Windows.Media.Ocr.Cli 继续尝试识别（内置，不需要安装）。
