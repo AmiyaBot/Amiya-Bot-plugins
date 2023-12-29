@@ -2,8 +2,9 @@ import os
 import dhash
 import jieba
 import shutil
-import asyncio
 import random
+import asyncio
+import platform
 
 from io import BytesIO
 from PIL import Image
@@ -22,19 +23,22 @@ from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
 config_path = 'resource/plugins/baiduCloud.yaml'
+localOCR_path = 'resource/plugins/Windows.Media.Ocr.Cli.exe'
 
 if not os.path.exists(config_path):
     create_dir(config_path, is_file=True)
     shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
 
+if not os.path.exists(localOCR_path):
+    create_dir(localOCR_path, is_file=True)
+    shutil.copy(f'{curr_dir}/tools/Windows.Media.Ocr.Cli.exe', localOCR_path)
+
 
 recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
 
+localOCR_enabled = platform.release() == '10'
 paddle_enabled = False
-
-localOCR_enabled = os.path.exists(f'resource/Windows.Media.Ocr.Cli.exe')
-
 try:
     from paddleocr import PaddleOCR
 
@@ -44,6 +48,7 @@ try:
     log.info('PaddleOCR初始化完成')
 except ModuleNotFoundError:
     paddle_enabled = False
+
 
 class Recruit:
     tags_list: List[str] = []
@@ -256,19 +261,19 @@ async def get_ocr_result(data: Message):
         except Exception as e:
             log.error(e, desc='ocr error:')
 
-    #如果存在本地OCR程序，调用
+    # 如果存在本地 OCR 程序，调用
     if localOCR_enabled and not result:
         try:
-            fname = f'{curr_dir}/{random.random()}.png'
+            f_name = f'{curr_dir}/{random.random()}.png'
             img = data.image[0]
-            if type(img) == type('string'):
+            if isinstance(img, str):
                 img = await download_async(data.image[0])
-            PILImage = Image.open(BytesIO(img))
-            PILImage.save(fname, 'PNG')
-            with os.popen(f'"./resource/Windows.Media.Ocr.Cli.exe" {fname}','r') as pipe:
+            pil_image = Image.open(BytesIO(img))
+            pil_image.save(f_name, 'PNG')
+            with os.popen(f'"{os.path.abspath(localOCR_path)}" {f_name}', 'r') as pipe:
                 result = await run_in_thread_pool(pipe.read)
             result.replace('\n', '')
-            os.remove(fname)
+            os.remove(f_name)
         except Exception as e:
             log.error(e, desc='Windows.Media.Ocr error:')
 
