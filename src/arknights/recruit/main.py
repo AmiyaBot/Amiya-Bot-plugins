@@ -2,7 +2,9 @@ import os
 import dhash
 import jieba
 import shutil
+import random
 import asyncio
+import platform
 
 from io import BytesIO
 from PIL import Image
@@ -21,15 +23,21 @@ from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
 config_path = 'resource/plugins/baiduCloud.yaml'
+localOCR_path = 'resource/plugins/Windows.Media.Ocr.Cli.exe'
 
 if not os.path.exists(config_path):
     create_dir(config_path, is_file=True)
     shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
 
+if not os.path.exists(localOCR_path):
+    create_dir(localOCR_path, is_file=True)
+    shutil.copy(f'{curr_dir}/tools/Windows.Media.Ocr.Cli.exe', localOCR_path)
+
 
 recruit_config = read_yaml(f'{curr_dir}/recruit.yaml')
 discern = recruit_config.autoDiscern
 
+localOCR_enabled = platform.release() == '10'
 paddle_enabled = False
 try:
     from paddleocr import PaddleOCR
@@ -140,7 +148,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.5',
+    version='2.6',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -253,6 +261,22 @@ async def get_ocr_result(data: Message):
         except Exception as e:
             log.error(e, desc='ocr error:')
 
+    # 如果存在本地 OCR 程序，调用
+    if localOCR_enabled and not result:
+        try:
+            f_name = f'{curr_dir}/{random.random()}.png'
+            img = data.image[0]
+            if isinstance(img, str):
+                img = await download_async(data.image[0])
+            pil_image = Image.open(BytesIO(img))
+            pil_image.save(f_name, 'PNG')
+            with os.popen(f'"{os.path.abspath(localOCR_path)}" {f_name}', 'r') as pipe:
+                result = await run_in_thread_pool(pipe.read)
+            result.replace('\n', '')
+            os.remove(f_name)
+        except Exception as e:
+            log.error(e, desc='Windows.Media.Ocr error:')
+
     return result
 
 
@@ -270,7 +294,7 @@ async def _(data: Message):
             baidu = get_baidu()
 
             # 文本内容验证不出则询问截图
-            if not baidu.enable and type(data.instance) is not CQHttpBotInstance:
+            if not baidu.enable and type(data.instance) is not CQHttpBotInstance and not localOCR_enabled:
                 return None
 
             wait = await data.wait(Chain(data, at=True).text('博士，请发送您的公招界面截图~'), force=True)
