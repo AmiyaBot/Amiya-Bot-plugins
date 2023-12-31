@@ -200,25 +200,34 @@ class ChatGPTAdapter(BLMAdapter):
 
         def prompt_filter(item):
             if not model_info["supported_feature"].__contains__("vision"):
-                if item["content"][0]["type"] == "image_url":
+                if isinstance(item["content"], dict) and item["content"][0]["type"] == "image_url":
                     self.debug_log(f"image_url not supported in {model_info['model_name']}")
                     return False
             return True
 
         prompt = list(filter(prompt_filter, prompt))
 
+        exec_prompt = [] + prompt
+
         if not model_info["supported_feature"].__contains__("vision"):
             # 扁平化prompt的content为str
-            prompt = [{"role": item["role"], "content": item["content"][0]["text"]} for item in prompt if item["content"][0]["type"] == "text"]
+            for i in range(len(exec_prompt)):
+                if isinstance(exec_prompt[i]["content"], list):
+                    exec_prompt[i]["content"] = exec_prompt[i]["content"][0]["text"]
+                elif isinstance(exec_prompt[i]["content"], dict):
+                    exec_prompt[i]["content"] = exec_prompt[i]["content"]["text"]
+                elif isinstance(exec_prompt[i]["content"], str):
+                    pass
+
 
         if json_mode:
             if not model_info["supported_feature"].__contains__("json_mode"):
                 # 非原生支持json_mode时需要拼接prompt
-                prompt.append({"role": "assistant", "content": "(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。"})
+                exec_prompt.append({"role": "assistant", "content": "(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。"})
 
         # combine text message for debuging
         combined_message = ""
-        for item in prompt:
+        for item in exec_prompt:
             if isinstance(item["content"] , str):
                 combined_message += item["content"]+"\n"
             else:
@@ -230,7 +239,7 @@ class ChatGPTAdapter(BLMAdapter):
         try:
             call_param = {}
             call_param["model"]=model_info["model_name"]
-            call_param["messages"]=prompt
+            call_param["messages"]=exec_prompt
 
             if json_mode:
                 if model_info["supported_feature"].__contains__("json_mode"):
