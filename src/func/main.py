@@ -13,7 +13,7 @@ from .database import ChannelRecord
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='1.8',
+    version='1.9',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
