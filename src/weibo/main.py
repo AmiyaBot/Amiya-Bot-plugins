@@ -5,6 +5,7 @@ import asyncio
 
 from amiyabot import QQGuildBotInstance
 from amiyabot.builtin.message import MessageStructure
+from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core.database.group import GroupSetting
 from core.database.messages import *
@@ -22,7 +23,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='2.8',
+    version='2.9',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
@@ -71,6 +72,9 @@ def get_index_from_text(text: str, array: list):
 
 @bot.on_message(group_id='weibo', keywords=['开启微博推送'])
 async def _(data: Message):
+    if isinstance(data.instance, QQGroupBotInstance):
+        return Chain(data).text('抱歉博士，该功能在群聊暂不可用~')
+
     if not data.is_admin:
         return Chain(data).text('抱歉，微博推送只能由管理员设置')
 

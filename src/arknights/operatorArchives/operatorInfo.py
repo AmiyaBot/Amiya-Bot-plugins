@@ -4,7 +4,7 @@ import jieba
 
 from typing import Dict, List
 from core import log
-from core.util import chinese_to_digits, is_contain_digit
+from core.util import chinese_to_digits, is_contain_digit, create_dir
 from core.resource.arknightsGameData import ArknightsGameData, Operator
 
 curr_dir = os.path.dirname(__file__)
@@ -68,7 +68,11 @@ class OperatorInfo:
 
     @classmethod
     def set_jieba_dict(cls):
-        with open(f'{curr_dir}/operators.txt', mode='w', encoding='utf-8') as file:
+        dict_file = 'resource/plugins/operators.txt'
+
+        create_dir(dict_file, is_file=True)
+
+        with open(dict_file, mode='w', encoding='utf-8') as file:
             words = []
             for name in cls.operator_list:
                 words.append(f'{name} 1 n')
@@ -77,7 +81,7 @@ class OperatorInfo:
 
             file.write('\n'.join(words))
 
-        jieba.load_userdict(f'{curr_dir}/operators.txt')
+        jieba.load_userdict(dict_file)
 
     @classmethod
     async def init_operator(cls):

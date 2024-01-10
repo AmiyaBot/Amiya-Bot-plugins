@@ -3,6 +3,7 @@ from amiyabot.adapters.kook import KOOKBotInstance
 from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
+from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core import Chain, Message
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
@@ -284,7 +285,7 @@ async def _(data: Message):
     source = type(data.instance)
     operator_group = OperatorInfo.operator_group_map[info.group_key]
 
-    if source in [QQGuildBotInstance, KOOKBotInstance]:
+    if source in [QQGuildBotInstance, QQGroupBotInstance, KOOKBotInstance]:
         text = f'## {info.group_key}\n'
         for item in operator_group:
             text += f'- {item.name}\n'
@@ -325,3 +326,8 @@ async def _(data: Message):
         text += f'|{item}|%s|\n' % ('、'.join([n.name for n in group]))
 
     return Chain(data).markdown(text)
+
+
+@bot.on_message(group_id='operator', keywords='/干员查询')
+async def _(data: Message):
+    return Chain(data).text('博士，请输入需要查询的干员名称')

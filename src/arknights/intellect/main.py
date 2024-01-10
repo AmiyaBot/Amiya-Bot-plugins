@@ -2,6 +2,7 @@ import os
 import time
 
 from amiyabot.database import *
+from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core import bot as main_bot, Message, Chain, AmiyaBotPluginInstance
 from core.database.user import UserBaseModel
@@ -48,7 +49,7 @@ class IntellectPluginInstance(AmiyaBotPluginInstance):
 
 bot = IntellectPluginInstance(
     name='理智恢复提醒',
-    version='1.4',
+    version='1.5',
     plugin_id='amiyabot-arknights-intellect',
     plugin_type='official',
     description='可以记录理智量并在回复满时发送提醒',
@@ -63,6 +64,9 @@ async def verify(data: Message):
 
 @bot.on_message(verify=verify)
 async def _(data: Message):
+    if isinstance(data.instance, QQGroupBotInstance):
+        return Chain(data).text('抱歉博士，该功能在群聊暂不可用~')
+
     message = data.text_digits
 
     r = re.search(re.compile(r'理智(\d+)满(\d+)'), message)

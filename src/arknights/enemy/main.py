@@ -15,8 +15,9 @@ class Enemy:
     @classmethod
     def find_enemies(cls, name: str):
         result = []
+        name = name.lower()
         for e_name, item in ArknightsGameData.enemies.items():
-            if name.lower() == e_name.lower() or name.lower() in e_name.lower():
+            if name == e_name.lower() or (len(name) > 1 and name in e_name.lower()):
                 result.append([e_name, item])
 
         return result
@@ -84,7 +85,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.5',
+    version='2.7',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -94,7 +95,9 @@ bot = EnemiesPluginInstance(
 
 
 async def verify(data: Message):
-    name = find_most_similar(data.text.replace('敌人', '').replace('敌方', ''), list(ArknightsGameData.enemies.keys()))
+    name = find_most_similar(
+        data.text.replace('敌人', '').replace('敌方', '').replace('单位', '').strip(), list(ArknightsGameData.enemies.keys())
+    )
     keyword = any_match(data.text, ['敌人', '敌方'])
 
     if name == '-':
@@ -108,9 +111,14 @@ async def verify(data: Message):
         return False
 
     if name or keyword:
-        return True, (5 if keyword else 1), name
+        return True, ((5 + int(bool(name))) if keyword else 1), name
 
     return False
+
+
+@bot.on_message(group_id='operator', keywords='/敌方单位', level=5)
+async def _(data: Message):
+    return Chain(data).text('博士，请在指令后面输入需要查询的敌方单位名称')
 
 
 @bot.on_message(verify=verify, allow_direct=True)
@@ -119,7 +127,7 @@ async def _(data: Message):
     for reg in ['敌人(资料)?(.*)', '敌方(资料)?(.*)']:
         r = re.search(re.compile(reg), data.text)
         if r:
-            enemy_name = r.group(2).strip()
+            enemy_name = r.group(2).replace('单位', '').strip()
 
     if not enemy_name:
         if data.verify.keypoint:

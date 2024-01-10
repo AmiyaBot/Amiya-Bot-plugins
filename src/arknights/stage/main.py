@@ -36,7 +36,7 @@ class StagePluginInstance(AmiyaBotPluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -121,7 +121,7 @@ async def _(data: Message):
             if key in ArknightsGameData.side_story_map:
                 ss = ArknightsGameData.side_story_map[key]
 
-                text = f'博士，以下是活动【{key}】的关卡列表。\n发送“兔兔地图 + 关卡代号或关卡名”查看详情。\n|关卡代号|关卡名|关卡代号|关卡名|\n|----|----|----|----|\n'
+                text = f'博士，以下是活动【{key}】的关卡列表。\n发送“兔兔关卡 + 关卡代号或关卡名”查看详情。\n|关卡代号|关卡名|关卡代号|关卡名|\n|----|----|----|----|\n'
                 for index, item in enumerate(ss.values()):
                     text += '|%s|%s%s' % (
                         item['code'] + ('**突袭**' if item['difficulty'] == 'FOUR_STAR' else ''),
