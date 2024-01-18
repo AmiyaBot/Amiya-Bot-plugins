@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 import traceback
@@ -119,7 +120,7 @@ class ChatGPTAdapter(BLMAdapter):
                     "type": "high-cost",
                     "max_token": 4096,                    
                     "max-token": 4096,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow","vision"],
                 }
             )
         return model_list_response
@@ -136,7 +137,13 @@ class ChatGPTAdapter(BLMAdapter):
         if not enabled:
             return None
 
-        self.debug_log(f'chat_flow received: {prompt} {model} {context_id} {channel_id} {functions}')
+        # self.debug_log(f'chat_flow received: {prompt} {model} {context_id} {channel_id} {functions}')
+        self.debug_log(f'chat_flow received prompt: {prompt}')
+        self.debug_log(f'chat_flow received model: {model}')
+        self.debug_log(f'chat_flow received context_id: {context_id}')
+        self.debug_log(f'chat_flow received channel_id: {channel_id}')
+        self.debug_log(f'chat_flow received functions: {functions}')
+        self.debug_log(f'chat_flow received json_mode: {json_mode}')
 
         model_info = self.get_model(model)
         if model_info is None:
@@ -248,8 +255,93 @@ class ChatGPTAdapter(BLMAdapter):
             if model_info["model_name"] == "gpt-4-vision-preview":
                 # 特别的，为vision指定一个4096的max_tokens
                 call_param["max_tokens"] = 4096
+            
+            if  model_info["supported_feature"].__contains__("function_call") and functions is not None and len(functions) > 0:
+                # tools = [
+                #     {
+                #         "type": "function",
+                #         "function": {
+                #             "name": "get_current_weather",
+                #             "description": "Get the current weather in a given location",
+                #             "parameters": {
+                #                 "type": "object",
+                #                 "properties": {
+                #                     "location": {
+                #                         "type": "string",
+                #                         "description": "The city and state, e.g. San Francisco, CA",
+                #                     },
+                #                     "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                #                 },
+                #                 "required": ["location"],
+                #             },
+                #         },
+                #     }
+                # ]
+                tools = []
+                for function in functions:
+                    tools.append({
+                        "type": "function",
+                        "function": function.function_schema
+                    })
+                call_param["tools"] = tools
+                # tool_choice="auto",
+                call_param["tool_choice"] = "auto"
+                self.debug_log(f"append tools: {tools}")
 
-            completions = await client.chat.completions.create(**call_param)
+            while True:
+                completions = await client.chat.completions.create(**call_param)
+
+                response_message = completions.choices[0].message
+                tool_calls = response_message.tool_calls
+
+                if tool_calls is not None and len(tool_calls) > 0:
+                    self.debug_log(f"tool_calls: {tool_calls}")
+
+                    call_param["messages"].append(response_message)
+
+                    for tool_call in tool_calls:
+                        function_name = tool_call.function.name
+                        func_call = next((func for func in functions if func.function_schema["name"] == function_name), None)
+                        func_response = None
+                        if func_call is not None:
+                            function_args = json.loads(tool_call.function.arguments)
+                            # 如果func_call是async
+                            if asyncio.iscoroutinefunction(func_call.function):
+                                func_response = await func_call.function(**function_args)
+                            else:
+                                func_response = func_call.function(**function_args)
+                            
+                            if func_response is not None:
+                                if not isinstance(func_response, str):
+                                    func_response = json.dumps(func_response)
+                        else:
+                            self.debug_log(f"function {function_name} not found")
+
+                        if func_response is not None:
+                            self.debug_log(f"function response: {func_response}")
+                            call_param["messages"].append(
+                                {
+                                    "tool_call_id": tool_call.id,
+                                    "role": "tool",
+                                    "name": function_name,
+                                    "content": func_response,
+                                }
+                            )
+                        else:
+                            self.debug_log(f"function response: 参数错误，请更换参数后重试。Invalid Parameters。Please change your parameter and try again.")
+                            call_param["messages"].append(
+                                {
+                                    "tool_call_id": tool_call.id,
+                                    "role": "tool",
+                                    "name": function_name,
+                                    "content": "参数错误，请更换参数后重试。Invalid Parameters。Please change your parameter and try again.",
+                                }
+                            )
+                            
+                    self.debug_log(f"Resend request。")
+                    continue
+
+                break
 
         except RateLimitError as e:
             self.debug_log(f"RateLimitError: {e}")
