@@ -1,5 +1,6 @@
 import asyncio
 
+from typing import Optional
 from dataclasses import dataclass
 from amiyabot import GroupConfig, event_bus
 
@@ -33,7 +34,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='4.5',
+    version='4.6',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -66,8 +67,8 @@ class FuncsVerify:
         return bool(condition or condition2), (6 if condition2 else 2), info
 
     @classmethod
-    async def operator(cls, data: Message):
-        info = search_info(data, source_keys=['name'])
+    async def operator(cls, data: Message, check_amiya: bool = True):
+        info = search_info(data, source_keys=['name'], check_amiya=check_amiya)
 
         if bot.get_config('searchSetting')['needPrefix'] and '查询' not in data.text:
             return False
@@ -81,7 +82,7 @@ class FuncsVerify:
         return bool(info.group_key), default_level + 1, info
 
 
-def search_info(data: Message, source_keys: list = None):
+def search_info(data: Message, source_keys: Optional[list] = None, check_amiya: bool = True):
     info_source = {
         'name': OperatorInfo.operator_list + list(OperatorInfo.operator_en_name_map.keys()),
         'skin_key': list(OperatorInfo.skins_map.keys()),
@@ -111,7 +112,7 @@ def search_info(data: Message, source_keys: list = None):
                 if info.name not in data.text_words:
                     continue
 
-                if info.name == '阿米娅':
+                if info.name == '阿米娅' and check_amiya:
                     for item in ['阿米娅', 'amiya']:
                         t = data.text.lower()
                         if t.startswith(item) and t.count(item) == 1:

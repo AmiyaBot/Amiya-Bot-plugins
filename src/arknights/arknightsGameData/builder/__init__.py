@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -99,11 +99,11 @@ def gamedata_initialize(cls: ArknightsGameData):
 
 def init_operators():
     recruit_detail = remove_xml_tag(JsonData.get_json_data('gacha_table')['recruitDetail'])
-    recruit_group = re.findall(r'★\\n(.*)', recruit_detail)
+    recruit_group: List[str] = re.findall(r'★\\n(.*)', recruit_detail)
     recruit_operators = []
 
     for item in recruit_group:
-        recruit_operators += item.replace(' ', '').split('/')
+        recruit_operators += [n.strip().strip('\r') for n in item.split('/')]
 
     operators_list = JsonData.get_json_data('character_table')
     operators_patch_list = JsonData.get_json_data('char_patch_table')['patchChars']

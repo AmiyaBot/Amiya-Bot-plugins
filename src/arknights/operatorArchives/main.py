@@ -1,3 +1,4 @@
+from typing import Optional
 from amiyabot import ChainBuilder
 from amiyabot.adapters.kook import KOOKBotInstance
 from amiyabot.adapters.mirai import MiraiForwardMessage
@@ -254,8 +255,8 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', verify=FuncsVerify.operator)
-async def _(data: Message):
-    info: OperatorSearchInfo = data.verify.keypoint
+async def operator_func(data: Message, info: Optional[OperatorSearchInfo] = None):
+    info = info or data.verify.keypoint
 
     reply = Chain(data)
 
@@ -334,6 +335,14 @@ async def _(data: Message):
     return Chain(data).markdown(text)
 
 
-@bot.on_message(group_id='operator', keywords='/干员查询')
+@bot.on_message(group_id='operator', keywords=['/干员资料', '/干员查询'])
 async def _(data: Message):
-    return Chain(data).text('博士，请输入需要查询的干员名称')
+    res = await FuncsVerify.operator(data)
+    if res[0]:
+        return await operator_func(data, res[2])
+
+    wait = await data.wait(Chain(data).text('博士，请输入需要查询的干员名称'), force=True)
+    if wait:
+        res = await FuncsVerify.operator(wait, check_amiya=False)
+        if res[0]:
+            return await operator_func(wait, res[2])
