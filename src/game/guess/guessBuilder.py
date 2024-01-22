@@ -2,6 +2,7 @@ from typing import Dict
 from operator import itemgetter
 from itertools import groupby
 from dataclasses import dataclass, field
+from amiyabot import Chain
 from amiyabot.builtin.message import ChannelMessagesItem
 from core import Message
 
@@ -58,19 +59,50 @@ class GuessReferee(RateCalculator):
     round: int = 0
     combo_user: str = ''
     combo_count: int = 0
-    user_num: int = 0
+    user_num: int = 1
+    user_index: str = 'A'
     user_ranking: Dict[str, GuessUser] = field(default_factory=dict)
     user_rate: Dict[str, int] = field(default_factory=dict)
     total_rate: int = 0
 
-    def set_rank(self, answer: Message, point: int):
+    def increment_index(self):
+        curr = self.user_index
+        mapping = {chr(65 + i): i for i in range(26)}
+        i_mapping = {i: chr(65 + i) for i in range(26)}
+
+        nums = [mapping[c] for c in curr]
+
+        carry = 1
+        for i in range(len(nums) - 1, -1, -1):
+            sum_ = nums[i] + carry
+            nums[i], carry = sum_ % 26, sum_ // 26
+
+        if carry:
+            nums.insert(0, 0)
+
+        self.user_num += 1
+        self.user_index = ''.join(i_mapping[n] for n in nums)
+
+        return curr
+
+    async def set_rank(self, answer: Message, point: int):
         user_id = answer.user_id
 
         if user_id not in self.user_ranking:
-            self.user_num += 1
+            game_name = answer.nickname
+            if not game_name:
+                game_name = f'博士{self.user_index}'
+                await answer.send(Chain(answer).text(f'欢迎博士加入排行榜，您的本轮游戏昵称是：{game_name}'))
+
             self.user_ranking[user_id] = GuessUser(
-                **{'user_id': user_id, 'nickname': answer.nickname, 'index': self.user_num, 'point': point}
+                **{
+                    'user_id': user_id,
+                    'nickname': game_name,
+                    'index': self.user_index,
+                    'point': point,
+                }
             )
+            self.increment_index()
         else:
             self.user_ranking[user_id].point += point
 

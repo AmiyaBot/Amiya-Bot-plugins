@@ -9,7 +9,7 @@ from .guessStart import *
 
 bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='2.7',
+    version='2.8',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -29,7 +29,7 @@ async def _(data: Message):
     level_text = '\n'.join([f'【{lv}】{ct}猜干员' for lv, ct in level.items()])
 
     select_level = (
-        f'（测试）博士，请选择难度：\n\n{level_text}\n\n'
+        f'博士，请选择难度：\n\n{level_text}\n\n'
         '请回复【难度等级】开始游戏。\n'
         '所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n'
         '详细说明请查看功能菜单'
@@ -83,7 +83,7 @@ async def _(data: Message):
             skip = True
         if result.state == GameState.bingo:
             UserInfo.add_jade_point(result.answer.user_id, result.rewards, game_config.jade_point_max)
-            referee.set_rank(result.answer, result.point)
+            await referee.set_rank(result.answer, result.point)
 
         if result.user_rate:
             for user_id, rate in result.user_rate.items():
@@ -106,12 +106,7 @@ async def _(data: Message):
     rewards_rate = (100 + (referee.total_rate if referee.total_rate > -50 else -50)) / 100
     text, reward_list = referee.calc_rank()
 
-    text += (
-        f'\n通关速度：{time_rec.total()}'
-        f'\n难度倍率：{level_rate * 100}%'
-        f'\n进度倍率：{finish_rate * 100}%'
-        f'\n结算倍率：{rewards_rate * 100}%\n\n'
-    )
+    text += f'\n通关速度：{time_rec.total()}\n难度倍率：{level_rate}\n进度倍率：{finish_rate}\n结算倍率：{rewards_rate}\n\n'
 
     for r, l in reward_list.items():
         if r == 0:
