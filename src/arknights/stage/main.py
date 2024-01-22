@@ -36,7 +36,7 @@ class StagePluginInstance(AmiyaBotPluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',

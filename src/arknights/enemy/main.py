@@ -85,7 +85,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.7',
+    version='2.8',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',

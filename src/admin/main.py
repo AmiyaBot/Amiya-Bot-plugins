@@ -10,7 +10,7 @@ from core.database.group import GroupActive, check_group_active
 curr_dir = os.path.dirname(__file__)
 bot = PluginInstance(
     name='管理员模块',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-admin',
     plugin_type='official',
     description='可使用 BOT 的开关功能以及获取频道信息',

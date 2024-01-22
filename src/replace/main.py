@@ -46,7 +46,7 @@ class ReplacePluginInstance(AmiyaBotPluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',

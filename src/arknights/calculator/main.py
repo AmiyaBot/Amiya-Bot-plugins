@@ -11,7 +11,7 @@ curr_dir = os.path.dirname(__file__)
 
 bot = PluginInstance(
     name='明日方舟计算器',
-    version='1.1',
+    version='1.2',
     plugin_id='amiyabot-arknights-calculator',
     plugin_type='official',
     description='计算合成玉获得数量或龙门币花费数量等',
@@ -21,11 +21,15 @@ bot = PluginInstance(
 
 @bot.on_message(keywords=['/计算合成玉'], level=3)
 async def action(data: Message):
+    date_text = data.text_original.strip('/计算合成玉').strip()
+    if date_text:
+        return await calc_jade(Chain(data), date_text)
+
     wait = await data.wait(Chain(data).text('博士，请说明需要计算从今天起的合成玉的截止日期，可以为时间、日期或节日'))
-    if not wait or not wait.text:
+    if not wait or not wait.text_original:
         return None
 
-    return await calc_jade(Chain(wait), wait.text)
+    return await calc_jade(Chain(wait), wait.text_original)
 
 
 @bot.on_message(keywords=re.compile(r'多少(合成)?玉'), allow_direct=True, level=3)

@@ -49,7 +49,7 @@ class IntellectPluginInstance(AmiyaBotPluginInstance):
 
 bot = IntellectPluginInstance(
     name='理智恢复提醒',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-arknights-intellect',
     plugin_type='official',
     description='可以记录理智量并在回复满时发送提醒',

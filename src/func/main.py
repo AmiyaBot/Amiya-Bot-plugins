@@ -4,16 +4,18 @@ import datetime
 
 from typing import List, Set
 from amiyabot import Message, Chain
+from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
+from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 from core import bot as main_bot, log, AmiyaBotPluginInstance
 from core.database.bot import DisabledFunction, FunctionUsed
-from core.util import get_index_from_text, get_doc, check_file_content
+from core.util import get_index_from_text, check_file_content
 
 from .database import ChannelRecord
 
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='1.9',
+    version='2.0',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
@@ -105,7 +107,12 @@ async def _(data: Message):
     if reply:
         index = get_index_from_text(reply.text_digits, funcs)
         if index is not None:
-            return Chain(reply).markdown(get_plugin_use_doc(funcs[index]))
+            return Chain(reply).markdown(
+                get_plugin_use_doc(
+                    data.instance,
+                    funcs[index],
+                )
+            )
 
 
 @bot.on_message(keywords=re.compile(r'开启(全部|所有)?功能'), level=5)
@@ -134,7 +141,16 @@ async def _(data: Message):
                     DisabledFunction.channel_id == data.channel_id, DisabledFunction.function_id == func.plugin_id
                 ).execute()
 
-                return Chain(data).text(f'已开启功能【{func.name}】').markdown(get_plugin_use_doc(func))
+                return (
+                    Chain(data)
+                    .text(f'已开启功能【{func.name}】')
+                    .markdown(
+                        get_plugin_use_doc(
+                            data.instance,
+                            func,
+                        )
+                    )
+                )
     else:
         return Chain(data).text('未关闭任何功能，无需开启~')
 
@@ -176,13 +192,27 @@ def disabled_all(channel_id):
     DisabledFunction.batch_insert(funcs)
 
 
-def get_plugin_use_doc(instance: AmiyaBotPluginInstance):
-    if hasattr(instance, 'instruction'):
-        content = check_file_content(instance.instruction)
-        if content:
-            return f'# {instance.name}\n\n{content}'
+def get_plugin_use_doc(instance, plugin: AmiyaBotPluginInstance):
+    public_bot = isinstance(instance, (QQGroupBotInstance, QQGuildBotInstance))
 
-    return get_doc(instance)
+    doc = plugin.document
+    if hasattr(plugin, 'instruction') and plugin.instruction:
+        doc = plugin.instruction
+
+    if public_bot and doc and os.path.isfile(doc):
+        if not instance.bot.private:
+            doc_file = os.path.splitext(os.path.basename(doc))
+            doc_public = os.path.join(os.path.dirname(doc), f'{doc_file[0]}-public{doc_file[1]}')
+
+            if os.path.exists(doc_public):
+                doc = doc_public
+
+    content = check_file_content(doc)
+    if content:
+        if public_bot:
+            content = content.format(bot_name='@%s ' % (instance.bot_name if hasattr(instance, 'bot_name') else '机器人'))
+
+        return f'# {plugin.name}\n\n{content}'
 
 
 def get_plugins_set():
