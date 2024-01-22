@@ -63,15 +63,21 @@ class PRTS:
             tail = '_ita'
 
         if is_url:
-            return f'{source}/voice{voice_type}/{char_id}{tail}/{cn_key}.wav?filename={voice_key}.wav'
+            return f'{source}/voice{voice_type}/{char_id}{tail}/{cn_key}.wav?filename={voice_key}.wav'.lower()
 
         return f'{source}/voice{voice_type}/{char_id}{tail}/{char_name}_{voice_key}.wav'
 
     @classmethod
     async def download_operator_voices(cls, filepath: str, operator: Operator, voice_key: str, voice_type: str = ''):
         async with log.catch('voices download error:'):
-            url = cls.get_voice_path('https://static.prts.wiki', operator, voice_key, voice_type, is_url=True)
-            res = await download_async(url, headers={'origin': 'https://prts.wiki/', 'referer': 'https://prts.wiki/'})
+            url = cls.get_voice_path(
+                'https://torappu.prts.wiki/assets/audio',
+                operator,
+                voice_key,
+                voice_type,
+                is_url=True,
+            )
+            res = await download_async(url)
             if res:
                 create_dir(filepath, is_file=True)
                 with open(filepath, mode='wb+') as src:

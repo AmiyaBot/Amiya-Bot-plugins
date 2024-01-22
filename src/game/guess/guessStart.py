@@ -83,7 +83,17 @@ async def guess_start(
 
         voice_type = random.choice(list(operator.cv.keys()))
         type_v = ''
-        type_d = {'中文-普通话': '_cn', '中文-方言': '_custom', '意大利语': '_ita', '英文': '_en', '韩文': '_kr', '日文': '', '联动': ''}
+        type_d = {
+            '中文-普通话': '_cn',
+            '中文-方言': '_custom',
+            '意大利语': '_ita',
+            '英语': '_en',
+            '韩语': '_kr',
+            '俄语': '_custom',
+            '德语': '_custom',
+            '日语': '',
+            '联动': '',
+        }
         if voice_type in type_d:
             type_v = type_d[voice_type]
 

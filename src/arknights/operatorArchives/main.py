@@ -58,6 +58,12 @@ async def _(data: Message):
     if '韩' in data.text:
         voice_type = '_kr'
         voice_name = '韩语'
+    if '俄' in data.text:
+        voice_type = '_custom'
+        voice_name = '俄语'
+    if '德' in data.text:
+        voice_type = '_custom'
+        voice_name = '德语'
     if '方言' in data.text:
         voice_type = '_custom'
         voice_name = '方言'
