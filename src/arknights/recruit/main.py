@@ -148,7 +148,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.7',
+    version='2.8',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -302,7 +302,7 @@ async def _(data: Message):
             if wait and wait.image:
                 return await Recruit.action(wait, await get_ocr_result(wait), ocr=True)
             else:
-                return Chain(data, at=True).text('博士，您没有发送图片哦~')
+                return Chain(data, at=True).text('博士，您没有发送图片哦~如有需要，请再 at 我并发送“公招”使用该功能~')
 
 
 @bot.on_message(verify=auto_discern, check_prefix=False, allow_direct=True)
