@@ -16,9 +16,9 @@
         <div class="base-info">
             <div class="avatar">
                 <div class="avatar-image">
-                    <img :src="data.avatar" :alt="data.nickname">
+                    <img :src="data.avatar || './avatar.webp'" :alt="data.nickname">
                 </div>
-                <div class="nickname">{{ data.nickname }}</div>
+                <div class="nickname">{{ data.nickname || data.user.user_id }}</div>
             </div>
             <div class="info">
                 <div>最后签到日期：{{ data.user_info.sign_date }}</div>
@@ -42,7 +42,8 @@
             <div>已经抽取了 <span class="mark">{{ data.user_gacha_info.gacha_break_even }}</span> 次而未获得六星干员
             </div>
             <div>抽卡总次数：{{ total }}</div>
-            <div class="pie" ref="pie"></div>
+            <div class="pie" v-if="res.length" ref="pie"></div>
+            <div class="no-chat" v-else>无抽卡数据</div>
         </div>
         <div class="barcode">
             <canvas ref="barcode"></canvas>
@@ -103,6 +104,7 @@
                     )
                 }
 
+                this.$set(this, 'res', res)
                 this.$set(this, 'data', data)
                 this.$nextTick(() => {
                     this.setCharts(res)
@@ -160,6 +162,7 @@
         },
         data() {
             return {
+                res: [],
                 data: {},
                 total: 0,
                 operatorNum: 0
