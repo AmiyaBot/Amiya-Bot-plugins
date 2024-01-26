@@ -9,7 +9,7 @@ from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core.database.group import GroupSetting
 from core.database.messages import *
-from core.util import TimeRecorder, AttrDict
+from core.util import TimeRecorder, AttrDict, find_most_similar
 from core import send_to_console_channel, Message, Chain, AmiyaBotPluginInstance, bot as main_bot
 
 from .helper import WeiboUser
@@ -23,7 +23,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance):
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='3.0',
+    version='3.1',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
@@ -112,22 +112,33 @@ async def _(data: Message):
     listens: list = bot.get_config('listen')
     setting = AttrDict(bot.get_config('setting'))
 
-    if len(listens) == 1:
-        weibo = WeiboUser(listens[0]['uid'], setting)
-    else:
-        md = '回复序号选择已关注的微博：\n\n|序号|微博ID|备注|\n|----|----|----|\n'
-        for index, item in enumerate(listens):
-            md += '|{index}|{uid}|{name}|\n'.format(index=index + 1, **item)
+    weibo: Optional[WeiboUser] = None
 
-        wait = await data.wait(Chain(data).markdown(md))
-        if not wait:
-            return None
+    text = data.text.replace('微博', '').replace('最新', '')
 
-        index = get_index_from_text(wait.text_digits, listens)
-        if index is None:
-            return None
+    if text:
+        name_map = {item['name']: item for item in listens}
+        name = find_most_similar(text, list(name_map.keys()))
+        if name:
+            weibo = WeiboUser(name_map[name]['uid'], setting)
 
-        weibo = WeiboUser(listens[index]['uid'], setting)
+    if not weibo:
+        if len(listens) == 1:
+            weibo = WeiboUser(listens[0]['uid'], setting)
+        else:
+            md = '回复序号选择已关注的微博：\n\n|序号|微博ID|备注|\n|----|----|----|\n'
+            for index, item in enumerate(listens):
+                md += '|{index}|{uid}|{name}|\n'.format(index=index + 1, **item)
+
+            wait = await data.wait(Chain(data).markdown(md))
+            if not wait:
+                return None
+
+            index = get_index_from_text(wait.text_digits, listens)
+            if index is None:
+                return None
+
+            weibo = WeiboUser(listens[index]['uid'], setting)
 
     message = data.text_digits
     index = 0

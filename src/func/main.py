@@ -15,7 +15,7 @@ from .database import ChannelRecord
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='2.0',
+    version='2.1',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
@@ -88,10 +88,14 @@ async def _(data: Message):
     with open(f'{curr_dir}/template.md', mode='r', encoding='utf-8') as template:
         content = template.read().strip('\n')
 
-    index = 1
+    sorted_plugins = sorted(main_bot.plugins.items(), key=lambda n: n[1].name)
+
     funcs = []
     items = ''
-    for _, item in main_bot.plugins.items():
+    for i, n in enumerate(sorted_plugins):
+        index = i + 1
+        item = n[1]
+
         if item.plugin_id == bot.plugin_id:
             continue
 
@@ -101,7 +105,6 @@ async def _(data: Message):
 
         funcs.append(item)
         items += f'|{index}|{item.name}|{item.version}|{item.description}|{status}|\n'
-        index += 1
 
     reply = await data.wait(Chain(data).markdown(content.format(items=items)))
     if reply:
