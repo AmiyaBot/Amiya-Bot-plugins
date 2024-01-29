@@ -15,11 +15,12 @@ from .database import ChannelRecord
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='2.1',
+    version='2.3',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
     document=f'{curr_dir}/README.md',
+    instruction=f'{curr_dir}/README_USE.md',
     global_config_default=f'{curr_dir}/configs/global_config_default.json',
     global_config_schema=f'{curr_dir}/configs/global_config_schema.json',
 )
@@ -96,8 +97,8 @@ async def _(data: Message):
         index = i + 1
         item = n[1]
 
-        if item.plugin_id == bot.plugin_id:
-            continue
+        # if item.plugin_id == bot.plugin_id:
+        #     continue
 
         status = '<span style="color: #4caf50">开启</span>'
         if item.plugin_id in disabled:
