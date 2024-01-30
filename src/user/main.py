@@ -85,7 +85,7 @@ async def _(data: Message):
     return Chain(data).text(f'Dr. {data.nickname}，晚安～')
 
 
-@bot.on_message(group_id='user', keywords=['我错了', '对不起', '抱歉'])
+@bot.on_message(group_id='user', verify=compose_keyword_verify(['我错了', '对不起', '抱歉']))
 async def _(data: Message):
     info: UserInfo = UserInfo.get_user(data.user_id)
 
@@ -143,6 +143,10 @@ async def _(event: Event, instance: CQHttpBotInstance):
 
 @bot.message_before_handle
 async def _(data: Message, factory_name: str, _):
+    if bot:
+        if bot.get_config('emotion_enabled', data.channel_id) == False:
+            return False
+
     user: UserInfo = UserInfo.get_user(data.user_id)
 
     if user.user_id.black == 1:
@@ -159,6 +163,10 @@ async def _(data: Message, factory_name: str, _):
 async def _(data: Chain, factory_name: str, _):
     if not data.data:
         return
+    
+    if bot:
+        if bot.get_config('emotion_enabled', data.data.channel_id) == False:
+            return False
 
     user_id = data.data.user_id
 
