@@ -53,7 +53,7 @@ async def _(data: Message):
     return reply.text(f'博士为什么要说这种话，阿米娅要生气了！[face:67]（怒气值：{anger}%）')
 
 
-@bot.on_message(group_id='user', keywords=list(talking.call.inactive), check_prefix=False)
+@bot.on_message(group_id='user', verify=compose_keyword_verify(talking.call.inactive), check_prefix=False)
 async def _(data: Message):
     bad_word = any_match(data.text, list(talking.call.inactive))
     text = f'哼！Dr. {data.nickname}不许叫人家{bad_word}，不然人家要生气了！'
@@ -145,7 +145,7 @@ async def _(event: Event, instance: CQHttpBotInstance):
 async def _(data: Message, factory_name: str, _):
     if bot:
         if bot.get_config('emotion_enabled', data.channel_id) == False:
-            return False
+            return True
 
     user: UserInfo = UserInfo.get_user(data.user_id)
 
@@ -162,11 +162,11 @@ async def _(data: Message, factory_name: str, _):
 @bot.message_after_send
 async def _(data: Chain, factory_name: str, _):
     if not data.data:
-        return
+        return None
     
     if bot:
         if bot.get_config('emotion_enabled', data.data.channel_id) == False:
-            return False
+            return None
 
     user_id = data.data.user_id
 
