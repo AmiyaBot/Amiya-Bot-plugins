@@ -479,7 +479,9 @@ def html_tag_format(text: str):
 
 def parse_template(blackboard: list, description: str):
     formatter = {'0%': lambda v: f'{round(v * 100)}%'}
-    data_dict = {item['key']: item['value'] for index, item in enumerate(blackboard)}
+    data_dict = {
+        item['key']: item.get('valueStr') or item.get('value') for index, item in enumerate(blackboard)
+    }
 
     desc = html_tag_format(description.replace('>-{', '>{'))
     format_str = re.findall(r'({(\S+?)})', desc)
@@ -490,7 +492,7 @@ def parse_template(blackboard: list, description: str):
             if fd in data_dict:
                 value = integer(data_dict[fd])
 
-                if len(key) >= 2 and key[1] in formatter:
+                if len(key) >= 2 and key[1] in formatter and value:
                     value = formatter[key[1]](value)
 
                 desc = desc.replace(desc_item[0], f' [cl {value}@#174CC6 cle] ')
