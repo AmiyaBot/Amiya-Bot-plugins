@@ -8,7 +8,7 @@ from amiyabot import GroupConfig
 from amiyabot.network.download import download_async
 
 from core import Message, Chain, AmiyaBotPluginInstance
-from core.util import read_yaml, check_sentence_by_re
+from core.util import read_yaml, check_sentence_by_re, any_match
 from core.database.user import UserInfo, UserGachaInfo
 
 curr_dir = os.path.dirname(__file__)
@@ -28,12 +28,16 @@ class UserPluginInstance(AmiyaBotPluginInstance):
 
 bot = UserPluginInstance(
     name='兔兔互动',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-user',
     plugin_type='official',
     description='包含签到、问候、好感和戳一戳等日常互动',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    channel_config_default=f'{curr_dir}/configs/channel_config_default.json',
+    channel_config_schema=f'{curr_dir}/configs/channel_config_schema.json',
+    global_config_default=f'{curr_dir}/configs/global_config_default.json',
+    global_config_schema=f'{curr_dir}/configs/global_config_schema.json',
 )
 bot.set_group_config(GroupConfig('user', allow_direct=True))
 
@@ -93,10 +97,21 @@ def talk_time():
 
 def compose_talk_verify(words, names):
     async def verify(data: Message):
+        if bot:
+            if bot.get_config('emotion_enabled',data.channel_id) == False:
+                return False
         return check_sentence_by_re(data.text, words, names)
 
     return verify
 
+def compose_keyword_verify(words: list):
+    async def verify(data: Message):
+        if bot:
+            if bot.get_config('emotion_enabled',data.channel_id) == False:
+                return False
+        return any_match(data.text, words) is not None
+
+    return verify
 
 async def user_info(data: Message):
     image = ''
