@@ -1,14 +1,17 @@
 import os
+import json
 import jieba
 import asyncio
 
 from amiyabot import event_bus
+from amiyabot.network.download import download_async
 
 from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
-from core.util import any_match, remove_punctuation, get_index_from_text
+from core.util import any_match, remove_punctuation, get_index_from_text, create_dir
 from core.resource.arknightsGameData import ArknightsGameData
 
 curr_dir = os.path.dirname(__file__)
+cache_dir = 'resource/plugins/stages'
 
 multiple_zone_stage = {'CF-9': 2}
 
@@ -20,14 +23,15 @@ class Stage:
 
         stages = list(ArknightsGameData.stages_map.keys()) + list(ArknightsGameData.side_story_map.keys())
 
-        with open(f'{curr_dir}/stages.txt', mode='w', encoding='utf-8') as file:
+        with open(f'{cache_dir}/stages.txt', mode='w', encoding='utf-8') as file:
             file.write('\n'.join([f'{name} 500 n' for name in stages]))
 
-        jieba.load_userdict(f'{curr_dir}/stages.txt')
+        jieba.load_userdict(f'{cache_dir}/stages.txt')
 
 
 class StagePluginInstance(AmiyaBotPluginInstance):
     def install(self):
+        create_dir(cache_dir)
         asyncio.create_task(Stage.init_stages())
 
     def uninstall(self):
@@ -36,7 +40,7 @@ class StagePluginInstance(AmiyaBotPluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.5',
+    version='2.6',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -57,6 +61,25 @@ def update(_):
 
 @bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
 async def _(data: Message):
+    with open(f'{curr_dir}/sxys.json', mode='r', encoding='utf-8') as f:
+        sxys_maps: dict = json.load(f)
+
+    no_punctuation = {remove_punctuation(item, ['-']): key for item, key in sxys_maps.items()}
+    sxys_titles = list(sxys_maps.keys()) + list(no_punctuation.keys())
+    sxys_match = any_match(data.text_original, sxys_titles)
+    if sxys_match:
+        sxys_key = sxys_maps.get(sxys_match) or no_punctuation.get(sxys_match)
+        sxys_file = os.path.join(cache_dir, f'{sxys_key}.jpg')
+
+        if not os.path.exists(os.path.join(cache_dir, sxys_file)):
+            f = await download_async(
+                f'https://amiyabot-1302462817.cos.ap-guangzhou.myqcloud.com/resource/maps/{sxys_key}.jpg'
+            )
+            with open(sxys_file, mode='wb') as cache_file:
+                cache_file.write(f)
+
+        return Chain(data).image(sxys_file)
+
     words = jieba.lcut(remove_punctuation(data.text, ['-']).upper().replace(' ', ''))
 
     level = ''
