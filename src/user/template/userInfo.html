@@ -18,7 +18,10 @@
                 <div class="avatar-image">
                     <img :src="data.avatar || './avatar.webp'" :alt="data.nickname">
                 </div>
-                <div class="nickname">{{ data.nickname || data.user.user_id }}</div>
+                <div class="nickname">
+                    <div style="font-size: 22px">{{ nickname }}</div>
+                    <div style="font-size: 14px; color: #9E9E9E">{{ idx }}</div>
+                </div>
             </div>
             <div class="info">
                 <div>最后签到日期：{{ data.user_info.sign_date }}</div>
@@ -57,6 +60,20 @@
 <script>
     const template = new Vue({
         el: '#template',
+        computed: {
+            nickname() {
+                return (this.data.nickname || this.data.user.user_id).split('#')[0]
+            },
+            idx() {
+                if (this.data.nickname) {
+                    const s = this.data.nickname.split('#')
+                    if (s[1]) {
+                        return '#' + s[1]
+                    }
+                }
+                return ''
+            }
+        },
         methods: {
             init(data) {
                 const box = data.operator_box.operator.split('|').filter(n => n)
@@ -87,6 +104,7 @@
                     res.push(
                         {
                             type: 'bar',
+                            barMaxWidth: 20,
                             name: new Array(parseInt(r)).fill('★').join(''),
                             data: [value],
                             itemStyle: {

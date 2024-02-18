@@ -5,14 +5,39 @@ from amiyabot.adapters.cqhttp import CQHttpBotInstance
 
 from core import Event
 from core.util import any_match
+from core.lib.baiduCloud import BaiduCloud
 from core.database.user import *
 
 from .mainBot import *
+
+curr_dir = os.path.dirname(__file__)
+config_path = 'resource/plugins/baiduCloud.yaml'
+
+if not os.path.exists(config_path):
+    create_dir(config_path, is_file=True)
+    shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
+
+baidu = BaiduCloud(read_yaml(config_path))
 
 
 @table
 class PokeLock(UserBaseModel):
     group_id: str = CharField()
+
+
+@table
+class UserCustom(UserBaseModel):
+    user_id: Union[CharField, str] = CharField()
+    custom_nickname: Union[CharField, str] = CharField(null=True)
+
+    @classmethod
+    def get_nickname(cls, user_id: str):
+        custom: UserCustom = cls.get_or_none(user_id=user_id)
+        if custom and custom.custom_nickname:
+            idx = str(custom.id)
+            id_suffix = ('0' * (4 - len(idx)) + idx) if len(idx) < 4 else idx
+
+            return f'{custom.custom_nickname}#{id_suffix}'
 
 
 @bot.on_message(group_id='user', verify=only_name)
@@ -62,6 +87,50 @@ async def _(data: Message):
     setattr(reply, 'feeling', -5)
 
     return reply
+
+
+@bot.on_message(group_id='user', keywords=['昵称'], level=10)
+async def _(data: Message):
+    if '删除昵称' in data.text_original:
+        user: UserCustom = UserCustom.get_or_none(user_id=data.user_id)
+        if user:
+            user.custom_nickname = ''
+            user.save()
+
+        return Chain(data).text('自定义昵称已删除')
+
+    r = re.search(r'/?昵称(.*)', data.text_original)
+    if r:
+        nickname = r.group(1).strip()
+
+        if len(nickname) > 10:
+            return Chain(data).text('博士，昵称长度不能超过 10 个字 >.<')
+
+        if baidu.enable:
+            await data.send(Chain(data).text('昵称审核中，请稍等...'))
+
+            check = await baidu.text_censor(nickname)
+
+            if not check:
+                return Chain(data).text('审核失败...')
+
+            if check['conclusionType'] == 2:
+                text = '审核不通过！检测到以下违规内容：\n'
+                for item in check['data']:
+                    text += item['msg'] + '\n'
+
+                return Chain(data).text(text)
+
+        user: UserCustom = UserCustom.get_or_none(user_id=data.user_id)
+        if user:
+            user.custom_nickname = nickname
+            user.save()
+        else:
+            UserCustom.create(user_id=data.user_id, custom_nickname=nickname)
+
+        return Chain(data).text(f'审核通过！你好，{UserCustom.get_nickname(data.user_id)}')
+    else:
+        return Chain(data).text('博士，请正确使用指令设置昵称哦~')
 
 
 @bot.on_message(group_id='user', keywords=['早上好', '早安', '中午好', '午安', '下午好', '晚上好'])
@@ -139,6 +208,15 @@ async def _(event: Event, instance: CQHttpBotInstance):
             await instance.api.send_nudge(event.data['user_id'], event.data['group_id'])
         else:
             await instance.send_message(await echo(), event.data['user_id'], event.data['group_id'])
+
+
+@bot.message_created
+async def _(data: Message, _):
+    custom_nickname = UserCustom.get_nickname(data.user_id)
+    if custom_nickname:
+        data.nickname = custom_nickname
+
+    return data
 
 
 @bot.message_before_handle
