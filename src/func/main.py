@@ -15,7 +15,7 @@ from .database import ChannelRecord
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
@@ -214,7 +214,8 @@ def get_plugin_use_doc(instance, plugin: AmiyaBotPluginInstance):
     content = check_file_content(doc)
     if content:
         if public_bot:
-            content = content.format(bot_name='@%s ' % (instance.bot_name if hasattr(instance, 'bot_name') else '机器人'))
+            bot_name = '@%s ' % (instance.bot_name if hasattr(instance, 'bot_name') else '机器人')
+            content = content.replace('{bot_name}', bot_name)
 
         return f'# {plugin.name}\n\n{content}'
 

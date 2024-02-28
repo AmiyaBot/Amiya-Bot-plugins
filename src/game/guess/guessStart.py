@@ -1,13 +1,11 @@
-import re
 import os
 import random
 
-from io import BytesIO
-from PIL import Image
+from typing import Optional
 from core.util import any_match, random_pop, read_yaml
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, Operator
-from core import Chain
 
+from .guessTools import ImageCropper
 from .guessBuilder import *
 
 curr_dir = os.path.dirname(__file__)
@@ -29,6 +27,7 @@ async def guess_start(
     referee: GuessReferee, data: Message, operator: Operator, title: str, level: str, level_rate: int
 ):
     ask = Chain(data, at=False)
+    cropper: Optional[ImageCropper] = None
 
     if referee.round == 0:
         ask.text(f'博士，这是哪位干员的{title}呢，请发送干员名猜一猜吧！').text('\n')
@@ -44,19 +43,8 @@ async def guess_start(
         if not skin_path:
             return GuessResult(answer=data, state=GameState.systemSkip)
         else:
-            img = Image.open(skin_path)
-
-            area_size = int(img.size[0] * 0.2)
-            padding = 200
-
-            position_x = random.randint(padding, img.size[0] - area_size - padding)
-            position_y = random.randint(padding, img.size[1] - area_size - padding)
-
-            container = BytesIO()
-            region = img.crop((position_x, position_y, position_x + area_size, position_y + area_size))
-            region.save(container, format='PNG')
-
-            ask.image(container.getvalue())
+            cropper = ImageCropper(skin_path)
+            ask.image(cropper.crop())
 
     if level == '中级':
         skills = operator.skills()[0]
@@ -123,14 +111,16 @@ async def guess_start(
 
         ask.text(story, auto_convert=False)
 
-    tips = [f'TA是{operator.rarity}星干员', f'TA的职业是{operator.classes}', f'TA的分支职业是{operator.classes_sub}']
+    tips = [f'TA的职业是{operator.classes}，分支职业是{operator.classes_sub}']
 
     for t, v in {'队伍': operator.team, '阵营': operator.group, '势力': operator.nation}.items():
         if v != '未知':
             tips.append(f'TA的所属{t}是{v}')
 
     if operator.sex != '未知':
-        tips.append(f'TA的性别是【{operator.sex}】')
+        tips.append(f'TA是{operator.rarity}星{operator.sex}性干员')
+    else:
+        tips.append(f'TA是{operator.rarity}星干员')
 
     if len(operator.name) > 1:
         tips.append(f'TA的代号里有一个字是【{random.choice(operator.name)}】')
@@ -166,12 +156,26 @@ async def guess_start(
 
         # 获取提示
         if answer.text in guess_keyword.tips:
-            if tips:
-                text = f'{answer.nickname} 使用了提示，结算奖励-2%'
-                await data.send(Chain(answer, at=False, reference=True).text(text).text('\n').text(random_pop(tips)))
-                result.set_rate(answer.user_id, -2)
+            reply = Chain(answer, at=False, reference=True)
+            text = f'{answer.nickname} 使用了提示，结算奖励-2%'
+
+            if level == '初级':
+                res = cropper.expand(int(cropper.image.size[0] * 0.2))
+                if res:
+                    await data.send(reply.text(text))
+                    await data.send(
+                        Chain(answer, at=False).text('图片再放大一点了哦~').image(cropper.crop(check_transparent=False))
+                    )
+                    result.set_rate(answer.user_id, -2)
+                else:
+                    await data.send(reply.text('不能继续放大了 >.<'))
             else:
-                await data.send(Chain(answer, at=False, reference=True).text('没有更多提示了~'))
+                if tips:
+                    await data.send(reply.text(text).text('\n').text(random_pop(tips)))
+                    result.set_rate(answer.user_id, -2)
+                else:
+                    await data.send(reply.text('没有更多提示了 >.<'))
+
             continue
 
         # 手动结束游戏
