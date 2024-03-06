@@ -20,8 +20,8 @@ icon_size = 34
 line_height = 16
 side_padding = 10
 
-yituliu_t3 = 'https://backend.yituliu.site/stage/t3?expCoefficient=0.625'
-yituliu_t2 = 'https://backend.yituliu.site/stage/t2?expCoefficient=0.625'
+yituliu_t3 = 'https://ark.yituliu.cn/backend/stage/t3?expCoefficient=0.625'
+yituliu_t2 = 'https://ark.yituliu.cn/backend/stage/t2?expCoefficient=0.625'
 
 
 @table
