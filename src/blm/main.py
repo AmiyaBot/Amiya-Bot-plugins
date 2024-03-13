@@ -37,7 +37,7 @@ def dynamic_get_global_config_schema_data():
 
 bot = BLMLibraryPluginInstance(
     name='大语言模型调用库',
-    version='1.2.1',
+    version='1.2.2',
     plugin_id='amiyabot-blm-library',
     plugin_type='official',
     description='为其他插件提供大语音模型调用库',
