@@ -54,11 +54,11 @@ class WaitALLRequestsDone(ChainBuilder):
 
 
 bot = SKLandPluginInstance(
-    name='森空岛（已失效）',
-    version='3.4',
+    name='森空岛',
+    version='3.5',
     plugin_id='amiyabot-skland',
     plugin_type='official',
-    description='通过森空岛 API 查询玩家信息展示游戏数据（API 已失效，插件已暂停维护）',
+    description='通过森空岛 API 查询玩家信息展示游戏数据',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],

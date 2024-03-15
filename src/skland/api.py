@@ -1,5 +1,9 @@
+import time
 import json
+import hmac
+import hashlib
 
+from urllib import parse
 from typing import Optional, Dict
 from dataclasses import dataclass
 from amiyabot.network.httpRequests import http_requests
@@ -9,15 +13,11 @@ log = LoggerManager('SKLand')
 
 
 class SKLandAPI:
+    agent = 'Skland/1.0.1 (com.hypergryph.skland; build:100001014; Android 31; ) Okhttp/4.11.0'
     headers = {
-        'Origin': 'https://www.skland.com',
-        'Referer': 'https://www.skland.com/',
-        'Content-Type': 'application/json;charset=UTF-8',
-        'Accept': '*/*',
-        'Accept-Language': 'zh-CN,zh;q=0.9,eo;q=0.8,en;q=0.7',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/105.0.0.0 Safari/537.36',
+        'User-Agent': agent,
+        'Accept-Encoding': 'gzip',
+        'Connection': 'close',
     }
 
     def __init__(self):
@@ -38,11 +38,11 @@ class SKLandAPI:
         if user_id in self.user_id_map:
             del self.users[self.user_id_map[user_id]]
 
-        cred = await self.__get_cred(code)
+        cred, sign_token = await self.__get_cred(code)
         if not cred:
             return None
 
-        self.users[token] = SKLandUser(code, cred, token, user_id)
+        self.users[token] = SKLandUser(code, cred, token, user_id, sign_token)
 
         return self.users[token]
 
@@ -63,6 +63,8 @@ class SKLandAPI:
 
     async def __get_cred(self, code: str):
         cred = ''
+        sign_token = ''
+
         payload = {'code': code, 'kind': 1}
         headers = {**self.headers, 'Host': 'zonai.skland.com'}
         res = await http_requests.post(
@@ -72,8 +74,9 @@ class SKLandAPI:
             data = json.loads(res)
             if data['code'] == 0:
                 cred = data['data']['cred']
+                sign_token = data['data']['token']
 
-        return cred
+        return cred, sign_token
 
 
 @dataclass
@@ -82,19 +85,48 @@ class SKLandUser:
     cred: str
     token: str
     user_id: str
+    sign_token: str
+
+    def get_headers(self, url: str):
+        t = str(int(time.time()) - 30)
+        data = {
+            'platform': '',
+            'timestamp': t,
+            'dId': '',
+            'vName': '',
+        }
+        return {
+            **SKLandAPI.headers,
+            **data,
+            'Host': 'zonai.skland.com',
+            'Cred': self.cred,
+            'Sign': generate_sign(data, t, url, self.sign_token),
+        }
 
     async def user_info(self) -> Optional[dict]:
-        headers = {**SKLandAPI.headers, 'Host': 'zonai.skland.com', 'Cred': self.cred}
-        res = await http_requests.get('https://zonai.skland.com/api/v1/user/me', headers=headers)
+        url = 'https://zonai.skland.com/api/v1/user/me'
+        headers = self.get_headers(url)
+        res = await http_requests.get(url, headers=headers)
         if res:
             data = json.loads(res)
             if data['code'] == 0:
                 return data['data']
 
     async def character_info(self, uid: str) -> Optional[dict]:
-        headers = {**SKLandAPI.headers, 'Host': 'zonai.skland.com', 'Cred': self.cred}
-        res = await http_requests.get(f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}', headers=headers)
+        url = f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}'
+        headers = self.get_headers(url)
+        res = await http_requests.get(url, headers=headers)
         if res:
             data = json.loads(res)
             if data['code'] == 0:
                 return data['data']
+
+
+def generate_sign(data: dict, t: str, url: str, token: str):
+    ca = json.dumps(data, separators=(',', ':'))
+    p = parse.urlparse(url)
+    s = p.path + p.query + t + ca
+    hex_s = hmac.new(token.encode('utf-8'), s.encode('utf-8'), hashlib.sha256).hexdigest()
+    sign = hashlib.md5(hex_s.encode('utf-8')).hexdigest().encode('utf-8').decode('utf-8')
+
+    return sign
