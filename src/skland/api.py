@@ -88,7 +88,7 @@ class SKLandUser:
     sign_token: str
 
     def get_headers(self, url: str):
-        t = str(int(time.time()) - 30)
+        t = str(int(time.time()) - 25)
         data = {
             'platform': '',
             'timestamp': t,
