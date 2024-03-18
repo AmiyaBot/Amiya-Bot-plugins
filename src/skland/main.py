@@ -55,7 +55,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='3.6',
+    version='3.7',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -67,7 +67,7 @@ bot = SKLandPluginInstance(
 
 async def is_token_str(data: Message):
     try:
-        res = json.loads(data.text)
+        res = json.loads(data.text_original)
         token = res['data']['content']
 
         assert isinstance(token, str) and '鹰角网络通行证账号' in res['msg']
