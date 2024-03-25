@@ -46,12 +46,14 @@ class ReplacePluginInstance(AmiyaBotPluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='2.2',
+    version='2.3',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
 )
 
 
@@ -120,37 +122,38 @@ async def _(data: Message):
                 text += '（未审核通过）'
             return Chain(data).text(text)
 
-        # 超管不需要审核
-        if is_super:
-            return save_replace(data, origin, replace, is_global=1)
+        if bot.get_config('is_check'):
+            # 超管不需要审核
+            if is_super:
+                return save_replace(data, origin, replace, is_global=1)
 
-        # 开始审核...
-        await data.send(Chain(data).text('正在审核，博士请稍等...'))
+            # 开始审核...
+            await data.send(Chain(data).text('正在审核，博士请稍等...'))
 
-        # 检查原生词语和设置禁止的词语，禁止使用数字替换词
-        forbidden = check_forbidden(replace, origin)
-        if forbidden:
-            return Chain(data).text(f'审核不通过！检测到存在禁止替换的内容：{forbidden}')
+            # 检查原生词语和设置禁止的词语，禁止使用数字替换词
+            forbidden = check_forbidden(replace, origin)
+            if forbidden:
+                return Chain(data).text(f'审核不通过！检测到存在禁止替换的内容：{forbidden}')
 
-        # 白名单可直接通过审核
-        if check_permissible(replace):
-            return save_replace(data, origin, replace)
-
-        # 百度审核
-        if baidu.enable:
-            check = await baidu.text_censor(replace)
-
-            if not check:
-                return Chain(data).text('审核失败...')
-
-            if check['conclusionType'] == 2:
-                text = '审核不通过！检测到以下违规内容：\n'
-                for item in check['data']:
-                    text += item['msg'] + '\n'
-
-                return Chain(data).text(text)
-            else:
+            # 白名单可直接通过审核
+            if check_permissible(replace):
                 return save_replace(data, origin, replace)
+
+            # 百度审核
+            if baidu.enable:
+                check = await baidu.text_censor(replace)
+
+                if not check:
+                    return Chain(data).text('审核失败...')
+
+                if check['conclusionType'] == 2:
+                    text = '审核不通过！检测到以下违规内容：\n'
+                    for item in check['data']:
+                        text += item['msg'] + '\n'
+
+                    return Chain(data).text(text)
+                else:
+                    return save_replace(data, origin, replace)
 
         return save_replace(data, origin, replace)
 
