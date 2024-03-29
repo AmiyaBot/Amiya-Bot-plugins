@@ -210,7 +210,7 @@ class ERNIEAdapter(BLMAdapter):
 
         def prompt_filter(item):
             if not model_info["supported_feature"].__contains__("vision"):
-                if item["type"] == "image_url":
+                if isinstance(item,dict) and item["type"] == "image_url":
                     self.debug_log(f"image_url not supported in {model_info['model_name']}")
                     return False
             return True
