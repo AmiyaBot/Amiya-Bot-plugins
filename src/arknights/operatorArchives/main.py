@@ -21,7 +21,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 
 @bot.on_message(group_id='operator', keywords=['模组'], level=default_level)
-async def _(data: Message):
+async def operator_archives_module_func(data: Message):
     info = search_info(data, source_keys=['name'])
 
     if not info.name:
@@ -45,7 +45,7 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', keywords=['语音'], level=default_level)
-async def _(data: Message):
+async def operator_archives_voice_func(data: Message):
     info = search_info(data, source_keys=['voice_key', 'name'])
 
     voice_type = ''
@@ -128,7 +128,7 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', keywords=['档案', '资料'], level=default_level)
-async def _(data: Message):
+async def operator_archives_story_func(data: Message):
     info = search_info(data, source_keys=['story_key', 'name'])
 
     if not info.name:
@@ -180,7 +180,7 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', keywords=['皮肤', '立绘'], level=default_level)
-async def _(data: Message):
+async def operator_archives_skin_func(data: Message):
     info = search_info(data, source_keys=['skin_key', 'name'])
 
     skin_item = None
@@ -232,7 +232,7 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', verify=FuncsVerify.level_up)
-async def _(data: Message):
+async def operator_archives_skill_and_material_func(data: Message):
     info: OperatorSearchInfo = data.verify.keypoint
 
     if not info.name:
@@ -283,7 +283,7 @@ async def operator_func(data: Message, info: Optional[OperatorSearchInfo] = None
 
 
 @bot.on_message(group_id='operator', verify=FuncsVerify.group)
-async def _(data: Message):
+async def operator_archives_group_query_1(data: Message):
     info: OperatorSearchInfo = data.verify.keypoint
 
     if not info.group_key:
@@ -323,7 +323,7 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', keywords='阵营', level=default_level)
-async def _(data: Message):
+async def operator_archives_group_query_2(data: Message):
     operator_group = OperatorInfo.operator_group_map
 
     text = '|阵营名|干员|\n|----|----|\n'
@@ -336,7 +336,7 @@ async def _(data: Message):
 
 
 @bot.on_message(group_id='operator', keywords=['/干员资料', '/干员查询'])
-async def _(data: Message):
+async def operator_archives_operator_query(data: Message):
     res = await FuncsVerify.operator(data)
     if res[0]:
         return await operator_func(data, res[2])

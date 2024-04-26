@@ -122,7 +122,7 @@ async def _(data: Message):
 
 
 @bot.on_message(verify=verify, allow_direct=True)
-async def _(data: Message):
+async def enemy_query(data: Message):
     enemy_name = ''
     for reg in ['敌人(资料)?(.*)', '敌方(资料)?(.*)']:
         r = re.search(re.compile(reg), data.text)
