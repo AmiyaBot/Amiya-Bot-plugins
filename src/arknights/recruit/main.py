@@ -15,6 +15,7 @@ from itertools import combinations
 from amiyabot import event_bus
 from amiyabot.network.download import download_async
 from amiyabot.adapters.cqhttp import CQHttpBotInstance
+from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core import log, Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import all_match, read_yaml, create_dir, run_in_thread_pool
@@ -302,7 +303,10 @@ async def _(data: Message):
             if wait and wait.image:
                 return await Recruit.action(wait, await get_ocr_result(wait), ocr=True)
             else:
-                return Chain(data, at=True).text('博士，您没有发送图片哦~如有需要，请再 at 我并发送“公招”使用该功能~')
+                append_text = ""
+                if type(data.instance) is QQGroupBotInstance:
+                    append_text = "我只能接收到at我的消息，您可能是发送图片时忘记at我了呢。如有需要再 at 我并发送“公招”使用该功能~"
+                return Chain(data, at=True).text(f'博士，您没有发送图片哦~{append_text}')
 
 
 @bot.on_message(verify=auto_discern, check_prefix=False, allow_direct=True)
