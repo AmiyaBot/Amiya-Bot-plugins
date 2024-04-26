@@ -65,6 +65,8 @@ class GuessReferee(RateCalculator):
     user_rate: Dict[str, int] = field(default_factory=dict)
     total_rate: int = 0
 
+    markdown_template_id: str = ''
+
     def increment_index(self):
         curr = self.user_index
         mapping = {chr(65 + i): i for i in range(26)}

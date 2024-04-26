@@ -34,7 +34,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='4.6',
+    version='4.7',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',

@@ -1,7 +1,11 @@
 import os
+import copy
+import time
 import random
 
 from typing import Optional
+from amiyabot import InlineKeyboard
+from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 from core.util import any_match, random_pop, read_yaml
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, Operator
 
@@ -15,6 +19,10 @@ guess_config = game_config.guess
 guess_keyword = game_config.keyword
 
 
+def can_send_buttons(data: Message, markdown_template_id: str):
+    return isinstance(data.instance, QQGroupBotInstance) and markdown_template_id
+
+
 async def guess_filter(data: Message):
     return data.text in ArknightsGameData.operators or data.text in [
         *guess_keyword.skip,
@@ -24,7 +32,12 @@ async def guess_filter(data: Message):
 
 
 async def guess_start(
-    referee: GuessReferee, data: Message, operator: Operator, title: str, level: str, level_rate: int
+    referee: GuessReferee,
+    data: Message,
+    operator: Operator,
+    title: str,
+    level: str,
+    level_rate: int,
 ):
     ask = Chain(data, at=False)
     cropper: Optional[ImageCropper] = None
@@ -131,19 +144,55 @@ async def guess_start(
     result = GuessResult(answer=data)
     count = 0
     max_count = 10
+    final_tips = False
+
+    time_rec = time.time()
+    alert_step = 0
+
+    if can_send_buttons(data, referee.markdown_template_id):
+        keyboard = InlineKeyboard(int(data.instance.appid))
+
+        row = keyboard.add_row()
+        row.add_button('1', '下一题➡️', action_data='下一题', action_enter=True)
+        row.add_button('2', '提示💡', action_data='提示', action_enter=True)
+
+        row2 = keyboard.add_row()
+        row2.add_button('3', '结束🚫', action_data='结束')
+
+        ask.markdown_template(
+            referee.markdown_template_id,
+            [
+                {'key': 'content', 'values': ['点击按钮获取帮助']},
+            ],
+            keyboard=keyboard,
+        )
+
+    def refresh_time():
+        nonlocal time_rec, alert_step
+        time_rec = time.time()
+        alert_step = 0
 
     # 开始竞猜
     while True:
-        event = await data.wait_channel(ask, force=True, clean=bool(ask), max_time=60, data_filter=guess_filter)
+        event = await data.wait_channel(ask, force=True, clean=bool(ask), max_time=5, data_filter=guess_filter)
 
         ask = None
         result.event = event
 
         # 超时没人回答，游戏结束
         if not event:
-            await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
-            result.state = GameState.systemClose
-            return result
+            over_time = time.time() - time_rec
+            if over_time >= 60:
+                await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
+                result.state = GameState.systemClose
+                return result
+            elif over_time >= 50 and alert_step == 1:
+                alert_step = 2
+                await data.send(Chain(data, at=False).text('还剩10秒...>.<'))
+            elif over_time >= 30 and alert_step == 0:
+                alert_step = 1
+                await data.send(Chain(data, at=False).text('还剩30秒...'))
+            continue
 
         result.answer = answer = event.message
 
@@ -170,12 +219,52 @@ async def guess_start(
                 else:
                     await data.send(reply.text('不能继续放大了 >.<'))
             else:
-                if tips:
-                    await data.send(reply.text(text).text('\n').text(random_pop(tips)))
-                    result.set_rate(answer.user_id, -2)
+                if tips or not final_tips:
+                    if tips:
+                        reply.text(text).text('\n').text(random_pop(tips))
+                        if not tips:
+                            reply.text('\n提示用完啦！请注意，下一次就是终极提示了，博士，请加油哦！')
+
+                        await data.send(reply)
+                        result.set_rate(answer.user_id, -2)
+                    else:
+                        reply.text(f'{answer.nickname} 使用了终极提示，结算奖励-10% >.<')
+
+                        operators = copy.deepcopy(list(ArknightsGameData.operators.keys()))
+                        operators.remove(operator.name)
+
+                        tips_opts = [*[random_pop(operators) for _ in range(3)], operator.name]
+                        random.shuffle(tips_opts)
+
+                        if can_send_buttons(data, referee.markdown_template_id):
+                            keyboard = InlineKeyboard(int(data.instance.appid))
+
+                            row = keyboard.add_row()
+                            row.add_button('1', tips_opts[0], action_enter=True, action_click_limit=1)
+                            row.add_button('2', tips_opts[1], action_enter=True, action_click_limit=1)
+
+                            row2 = keyboard.add_row()
+                            row2.add_button('3', tips_opts[2], action_enter=True, action_click_limit=1)
+                            row2.add_button('4', tips_opts[3], action_enter=True, action_click_limit=1)
+
+                            reply.markdown_template(
+                                referee.markdown_template_id,
+                                [
+                                    {'key': 'content', 'values': ['TA是以下干员的其中一位（点击按钮选择干员）']},
+                                ],
+                                keyboard=keyboard,
+                            )
+                        else:
+                            reply.text('\n').text('TA是以下干员的其中一位：\n' + '、'.join(tips_opts))
+
+                        await data.send(reply)
+                        result.set_rate(answer.user_id, -10)
+
+                        final_tips = True
                 else:
                     await data.send(reply.text('没有更多提示了 >.<'))
 
+            refresh_time()
             continue
 
         # 手动结束游戏
@@ -244,3 +333,5 @@ async def guess_start(
                 return result
             else:
                 await data.send(reply.text(f'答案不正确。请再猜猜吧~（{count}/{max_count}）'))
+
+        refresh_time()

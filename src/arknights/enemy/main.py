@@ -85,7 +85,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='2.8',
+    version='3.0',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -99,6 +99,7 @@ async def verify(data: Message):
         data.text.replace('敌人', '').replace('敌方', '').replace('单位', '').strip(), list(ArknightsGameData.enemies.keys())
     )
     keyword = any_match(data.text, ['敌人', '敌方'])
+    level = (5 + int(bool(name))) if keyword else 1
 
     if name == '-':
         name = ''
@@ -106,12 +107,11 @@ async def verify(data: Message):
     if not keyword and name and remove_punctuation(name) not in remove_punctuation(data.text):
         return False
 
-    # W 触发频率过高
-    if name in ['w'] and not keyword:
+    if name in ['w', '“阿米娅”'] and not keyword:
         return False
 
     if name or keyword:
-        return True, ((5 + int(bool(name))) if keyword else 1), name
+        return True, level, name
 
     return False
 

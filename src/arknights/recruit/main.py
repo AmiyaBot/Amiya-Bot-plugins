@@ -149,7 +149,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.8',
+    version='2.9',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -305,7 +305,7 @@ async def _(data: Message):
             else:
                 append_text = ""
                 if type(data.instance) is QQGroupBotInstance:
-                    append_text = "我只能接收到at我的消息，您可能是发送图片时忘记at我了呢。如有需要再 at 我并发送“公招”使用该功能~"
+                    append_text = "我只能接收到 at 我的消息，您可能是发送图片时忘记 at 我了呢。如有需要再 at 我并发送“公招”使用该功能~"
                 return Chain(data, at=True).text(f'博士，您没有发送图片哦~{append_text}')
 
 

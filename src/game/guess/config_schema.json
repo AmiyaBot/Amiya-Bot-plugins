@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "markdown_template_id": {
+            "title": "markdown模板ID",
+            "type": "string",
+            "default": ""
+        }
+    }
+}

@@ -1,4 +1,3 @@
-import copy
 import asyncio
 
 from core import AmiyaBotPluginInstance, Requirement
@@ -9,11 +8,13 @@ from .guessStart import *
 
 bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='2.9',
+    version='3.0',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
     document=f'{curr_dir}/README.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
@@ -27,15 +28,33 @@ async def _(data: Message):
         '资深': '档案',
     }
     level_text = '\n'.join([f'【{lv}】{ct}猜干员' for lv, ct in level.items()])
-
     select_level = (
-        f'博士，请选择难度：\n\n{level_text}\n\n'
-        '请回复【难度等级】开始游戏。\n'
-        '所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n'
-        '详细说明请查看功能菜单'
+        f'博士，请选择难度：\n\n{level_text}\n\n请回复【难度等级】开始游戏。\n所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n详细说明请查看功能菜单'
     )
 
-    choice = await data.wait(Chain(data).text(select_level), force=True)
+    choice_chain = Chain(data).text(select_level)
+    markdown_template_id = bot.get_config('markdown_template_id')
+
+    if can_send_buttons(data, markdown_template_id):
+        keyboard = InlineKeyboard(int(data.instance.appid))
+
+        row = keyboard.add_row()
+        row.add_button('1', '初级🌱', action_data='初级', action_enter=True)
+        row.add_button('2', '中级🌟', action_data='中级', action_enter=True)
+
+        row2 = keyboard.add_row()
+        row2.add_button('3', '高级🏆', action_data='高级', action_enter=True)
+        row2.add_button('4', '资深👑', action_data='资深', action_enter=True)
+
+        choice_chain = Chain(data).markdown_template(
+            markdown_template_id,
+            [
+                {'key': 'content', 'values': [select_level]},
+            ],
+            keyboard=keyboard,
+        )
+
+    choice = await data.wait(choice_chain, force=True)
 
     if not choice:
         return None
@@ -46,7 +65,7 @@ async def _(data: Message):
         return Chain(choice).text('博士，您没有选择难度哦，游戏取消。')
 
     operators = {}
-    referee = GuessReferee()
+    referee = GuessReferee(markdown_template_id=markdown_template_id)
     curr = None
     level_rate = list(level.keys()).index(choice_level) + 1
 
@@ -71,7 +90,14 @@ async def _(data: Message):
             await target.send(text)
             await asyncio.sleep(2)
 
-        result = await guess_start(referee, target, operator, level[choice_level], choice_level, level_rate)
+        result = await guess_start(
+            referee,
+            target,
+            operator,
+            level[choice_level],
+            choice_level,
+            level_rate,
+        )
         end = False
         skip = False
 
