@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='2.9',
+    version='3.0',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -233,7 +233,12 @@ def init_enemies():
     enemies_info = JsonData.get_json_data('enemy_handbook_table')
     enemies_data = JsonData.get_json_data('enemy_database', folder='levels/enemydata')
 
-    enemies_data_map = {item['Key']: item['Value'] for item in enemies_data['enemies']}
+    enemies_data_map = {}
+    for item in enemies_data['enemies']:
+        if 'Key' in item:
+            enemies_data_map[item['Key']] = item['Value']
+        else:
+            enemies_data_map[item['key']] = item['value']
 
     data = {}
     for e_id, info in enemies_info['enemyData'].items():
