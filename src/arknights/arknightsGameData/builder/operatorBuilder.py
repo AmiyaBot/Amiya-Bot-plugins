@@ -414,10 +414,10 @@ class OperatorImpl(Operator):
                     self.origin_name = character[oid]['name']
 
     def __extra(self):
-        if self.id == 'char_1001_amiya2':
-            self.name = '阿米娅近卫'
-            self.en_name = 'AmiyaGuard'
-            self.wiki_name = '阿米娅(近卫)'
+        if self.id in ['char_1001_amiya2', 'char_1037_amiya3']:
+            self.name = f'阿米娅{self.classes}'
+            self.en_name = 'Amiya' + self.data['profession'].title()
+            self.wiki_name = f'阿米娅({self.classes})'
             self.origin_name = '阿米娅'
 
 
@@ -479,9 +479,7 @@ def html_tag_format(text: str):
 
 def parse_template(blackboard: list, description: str):
     formatter = {'0%': lambda v: f'{round(v * 100)}%'}
-    data_dict = {
-        item['key']: item.get('valueStr') or item.get('value') for index, item in enumerate(blackboard)
-    }
+    data_dict = {item['key']: item.get('valueStr') or item.get('value') for index, item in enumerate(blackboard)}
 
     desc = html_tag_format(description.replace('>-{', '>{'))
     format_str = re.findall(r'({(\S+?)})', desc)
