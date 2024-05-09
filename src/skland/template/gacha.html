@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"
+		content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>template</title>
+	<link type="text/css" rel="styleSheet" href="font/font.css" />
+	<link type="text/css" rel="stylesheet" href="gacha.css">
+</head>
+
+<body>
+	<div id="template">
+		<div class="main" :style="{ width: (data.pools.length * 480 - 80) + 'px' }">
+			<div class="gacha-pool" v-for="(pool, i) in data.pools">
+				<div class="pool-name">{{ pool.poolName }}</div>
+				<div class="color-info">
+					<div class="color star6">6星</div>
+					<div class="color star5">5星</div>
+					<div class="color star4">4星</div>
+					<div class="color star3">3星</div>
+				</div>
+				<div class="canvas-content">
+					<canvas :id="'cvs' + i" width="400" height="200"></canvas>
+				</div>
+				<div class="time-range">{{ pool.timeRange }}</div>
+				<div class="gacha-info">
+					<span>总计<span style="color: #09f;">{{ pool.list.length }}</span>抽，当前已经抽取了<span
+							style="color: #09f;">{{ pool.lastCount }}</span>次而未获得六星干员，下次抽出六星干员的概率为<span
+							style="color: #09f;">{{ pool.lastChance }}%</span></span><br />
+					<span class="star6-text" v-if="pool.poolInfo.s6 > 0">6星干员：{{ pool.poolInfo.s6 }}个，
+						占百分比{{ (pool.poolInfo.p6 * 100).toFixed(2) }}%</span><br />
+					<span class="star5-text" v-if="pool.poolInfo.s5 > 0">5星干员：{{ pool.poolInfo.s5 }}个，
+						占百分比{{ (pool.poolInfo.p5 * 100).toFixed(2) }}%</span><br />
+					<span class="star4-text" v-if="pool.poolInfo.s4 > 0">4星干员：{{ pool.poolInfo.s4 }}个，
+						占百分比{{ (pool.poolInfo.p4 * 100).toFixed(2) }}%</span><br />
+					<span class="star3-text" v-if="pool.poolInfo.s3 > 0">3星干员：{{ pool.poolInfo.s3 }}个，
+						占百分比{{ (pool.poolInfo.p3 * 100).toFixed(2) }}%</span><br />
+					<span>6星干员平均抽取次数为：<span style="color: #09f;">{{ pool.star6Avg }}</span></span><br />
+					<span>抽取的6星干员记录：<span class="star6-block star6-text" v-for="(item, i) in pool.star6List">{{
+							item.name }}[{{ item.count }}]<span class="new" v-if="item.isNew">new</span></span></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script src="./js/vue.min.js"></script>
+<script>
+	const template = new Vue({
+		el: '#template',
+		methods: {
+			init(param) {
+				let list = param.list;
+
+				// 简单排个序，降序
+				list = list.sort((a, b) => {
+					return b.timeStamp - a.timeStamp;
+				});
+
+				// 拆分卡池
+				let pools = [];
+				let poolNames = [];
+				let timeRanges = [];
+				let lastCounts = [];
+				for (let i = 0; i < list.length; i++) {
+					// 获取当前卡池id
+					let curPool = poolNames.indexOf(list[i].poolName);
+
+					// 如果是-1，则新增该卡池
+					if (curPool == -1) {
+						// 获取卡池id
+						curPool = poolNames.push(list[i].poolName) - 1;
+
+						// 初始化timeRanges数组，用于获取最大时间和最小时间
+						timeRanges.push({
+							min: 9999999999,
+							max: 0
+						});
+
+						// 初始化lastCounts数组，用于获取已经抽了多少次未获得6星的次数
+						lastCounts.push({
+							count: 0,
+							counting: true
+						});
+
+						// 卡池数据本体初始化，用于交给html来渲染数据
+						pools.push({
+							list: [],
+							poolName: list[i].poolName,
+							timeRange: '',
+							poolInfo: {},
+							lastCount: 0,
+							lastChance: 0,
+							star6List: [],
+							star6Avg: 0
+						});
+					}
+
+					// 抽到的干员数据扔进对应的卡池里
+					pools[curPool].list.push(list[i]);
+
+					// 获取每个卡池抽卡数据的最大时间和最小时间
+					let t = list[i].timeStamp;
+					if (t > timeRanges[curPool].max) {
+						timeRanges[curPool].max = t;
+					}
+					if (t < timeRanges[curPool].min) {
+						timeRanges[curPool].min = t;
+					}
+
+					// 计算每个卡池已经抽了多少次未获得6星的次数
+					if (lastCounts[curPool].counting) {
+						if (list[i].star != 6) {
+							lastCounts[curPool].count++;
+						} else {
+							// 终止计算
+							lastCounts[curPool].counting = false;
+						}
+					}
+				}
+
+				// 循环每个卡池，处理其他数据
+				for (let i = 0; i < pools.length; i++) {
+					// 存储每个卡池已经抽了多少次未获得6星的次数，顺手计算下次抽到6星的百分比
+					let last = lastCounts[i].count;
+					pools[i].lastCount = last;
+					pools[i].lastChance = 2 + (last > 50 ? ((last - 50) * 2) : 0);
+
+					// 格式化日期
+					let minStr = this.dateFormat(timeRanges[i].min * 1000, 'YYYY.MM.DD hh:mm:ss');
+					let maxStr = this.dateFormat(timeRanges[i].max * 1000, 'YYYY.MM.DD hh:mm:ss');
+					pools[i].timeRange = maxStr + ' ~ ' + minStr;
+					pools[i].poolInfo = this.calcPoolInfo(pools[i].list);
+
+					// 倒着数更方便点
+					let c = 0;
+					let s = 0;
+					for (let j = pools[i].list.length - 1; j >= 0; j--) {
+						let operator = pools[i].list[j];
+						if (operator.star == 6) {
+							pools[i].star6List.push({
+								name: operator.name,
+								isNew: operator.isNew == 'True',
+								count: c + 1
+							});
+							s += c + 1;
+							c = 0;
+						} else {
+							c++;
+						}
+					}
+
+					// 再倒过来，以及计算平均数
+					pools[i].star6List = pools[i].star6List.reverse();
+					let len = pools[i].star6List.length;
+					pools[i].star6Avg = len == 0 ? 0 : Math.round(s / len);
+				}
+
+				// 生成数据，渲染页面
+				let data = {
+					pools
+				};
+				this.$set(this, 'data', data);
+				this.$nextTick(() => {
+					this.drawCanvas(data);
+				});
+			},
+			calcPoolInfo(pool) {
+				let s6 = 0, s5 = 0, s4 = 0, s3 = 0;
+				let p6 = 0, p5 = 0, p4 = 0, p3 = 0;
+				if (pool.length > 0) {
+					for (let i = 0; i < pool.length; i++) {
+						if (pool[i].star == 6) s6++;
+						if (pool[i].star == 5) s5++;
+						if (pool[i].star == 4) s4++;
+						if (pool[i].star == 3) s3++;
+					}
+					p6 = s6 / pool.length;
+					p5 = s5 / pool.length;
+					p4 = s4 / pool.length;
+					p3 = s3 / pool.length;
+				}
+				return {
+					s6, s5, s4, s3, p6, p5, p4, p3
+				};
+			},
+			drawCanvas(data) {
+				let x = 200;
+				let y = 100;
+				let r = 90;
+				let p6 = 0, p5 = 0, p4 = 0;
+
+				for (let i = 0; i < data.pools.length; i++) {
+					if (data.pools[i].list.length > 0) {
+						let cvs = document.getElementById('cvs' + i);
+						let ctx = cvs.getContext('2d');
+						let info = data.pools[i].poolInfo;
+						p6 = Math.round(info.p6 * 360);
+						p5 = Math.round(info.p5 * 360) + p6;
+						p4 = Math.round(info.p4 * 360) + p5;
+						this.drawArc(ctx, x, y, r, 0, p6, 'orange');
+						this.drawArc(ctx, x, y, r, p6, p5, 'gold');
+						this.drawArc(ctx, x, y, r, p5, p4, 'dodgerblue');
+						this.drawArc(ctx, x, y, r, p4, 360, 'grey');
+					}
+				}
+			},
+			drawArc(ctx, x, y, r, startDeg, endDeg, color) {
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.arc(x, y, r, (startDeg - 90) * Math.PI / 180, (endDeg - 90) * Math.PI / 180);
+				ctx.closePath();
+				ctx.fillStyle = color;
+				ctx.strokeStyle = color;
+				ctx.lineWidth = '0';
+				ctx.stroke();
+				ctx.fill();
+			},
+			dateFormat(timeStamp, formatStr) {
+				let str = formatStr;
+				let Week = ['日', '一', '二', '三', '四', '五', '六'];
+				let date = new Date(timeStamp);
+
+				str = str.replace(/yyyy|YYYY/, date.getFullYear());
+				str = str.replace(/yy|YY/, (date.getYear() % 100) > 9 ? (date.getYear() % 100).toString() : '0' + (date.getYear() % 100));
+
+				str = str.replace(/MM/, date.getMonth() > 9 ? (date.getMonth() + 1).toString() : '0' + (date.getMonth() + 1));
+				str = str.replace(/M/g, date.getMonth());
+
+				str = str.replace(/w|W/g, Week[date.getDay()]);
+
+				str = str.replace(/dd|DD/, date.getDate() > 9 ? date.getDate().toString() : '0' + date.getDate());
+				str = str.replace(/d|D/g, date.getDate());
+
+				str = str.replace(/hh|HH/, date.getHours() > 9 ? date.getHours().toString() : '0' + date.getHours());
+				str = str.replace(/h|H/g, date.getHours());
+				str = str.replace(/mm/, date.getMinutes() > 9 ? date.getMinutes().toString() : '0' + date.getMinutes());
+				str = str.replace(/m/g, date.getMinutes());
+
+				str = str.replace(/ss|SS/, date.getSeconds() > 9 ? date.getSeconds().toString() : '0' + date.getSeconds());
+				str = str.replace(/s|S/g, date.getSeconds());
+
+				return str;
+			}
+		},
+		data() {
+			return {
+				data: {
+					pools: []
+				}
+			}
+		},
+		mounted() {
+			window.init = this.init;
+		}
+	});
+</script>
+
+</html>
