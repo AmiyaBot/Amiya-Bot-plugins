@@ -1,0 +1,35 @@
+{
+    "title": "GlobalConfig",
+    "type": "object",
+    "properties": {
+        "arkgacha_kwer_top": {
+            "title": "arkgacha.kwer.top",
+            "description": "从arkgacha.kwer.top而不是官网获取数据",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将选择此查询服务提供者。",
+                    "type": "boolean"
+                },
+                "app_id": {
+                    "title": "APP ID",
+                    "description": "由https://arkgacha.kwer.top提供的AppID。",
+                    "type": "string"
+                },
+                "app_secret": {
+                    "title": "APP Secret",
+                    "description": "由https://arkgacha.kwer.top提供的AppSecret。",
+                    "type": "string"
+                },
+                "refresh_rate_hour": {
+                    "title": "刷新间隔(小时)",
+                    "description": "全量刷新历史抽卡记录的时间间隔",
+                    "type": "number"
+                }
+            }
+        }
+    },
+    "required": [
+    ]
+}

@@ -16,14 +16,14 @@
 		<div class="main" :style="{ width: (data.pools.length * 480 - 80) + 'px' }">
 			<div class="gacha-pool" v-for="(pool, i) in data.pools">
 				<div class="pool-name">{{ pool.poolName }}</div>
-				<div class="color-info">
+				<!-- <div class="color-info">
 					<div class="color star6">6星</div>
 					<div class="color star5">5星</div>
 					<div class="color star4">4星</div>
 					<div class="color star3">3星</div>
-				</div>
+				</div> -->
 				<div class="canvas-content">
-					<canvas :id="'cvs' + i" width="400" height="200"></canvas>
+					<canvas :id="'cvs' + i" width="400" height="40"></canvas>
 				</div>
 				<div class="time-range">{{ pool.timeRange }}</div>
 				<div class="gacha-info">
@@ -43,6 +43,9 @@
 							item.name }}[{{ item.count }}]<span class="new" v-if="item.isNew">new</span></span></span>
 				</div>
 			</div>
+		</div>
+		<div id="copyright" class="right-bottom-corner">
+			{{ copyright }}
 		</div>
 	</div>
 </body>
@@ -160,7 +163,8 @@
 
 				// 生成数据，渲染页面
 				let data = {
-					pools
+					pools,
+					param["copyright"]
 				};
 				this.$set(this, 'data', data);
 				this.$nextTick(() => {
@@ -187,37 +191,51 @@
 				};
 			},
 			drawCanvas(data) {
-				let x = 200;
-				let y = 100;
-				let r = 90;
-				let p6 = 0, p5 = 0, p4 = 0;
+				const barWidth = 360; // 矩形条的总宽度
+				const barHeight = 30; // 矩形条的固定高度
+				const startX = 20; // 绘制起始位置 X 坐标
+				const startY = 5; // 绘制起始位置 Y 坐标
 
 				for (let i = 0; i < data.pools.length; i++) {
 					if (data.pools[i].list.length > 0) {
-						let cvs = document.getElementById('cvs' + i);
-						let ctx = cvs.getContext('2d');
-						let info = data.pools[i].poolInfo;
-						p6 = Math.round(info.p6 * 360);
-						p5 = Math.round(info.p5 * 360) + p6;
-						p4 = Math.round(info.p4 * 360) + p5;
-						this.drawArc(ctx, x, y, r, 0, p6, 'orange');
-						this.drawArc(ctx, x, y, r, p6, p5, 'gold');
-						this.drawArc(ctx, x, y, r, p5, p4, 'dodgerblue');
-						this.drawArc(ctx, x, y, r, p4, 360, 'grey');
+						const cvs = document.getElementById('cvs' + i);
+						const ctx = cvs.getContext('2d');
+						const info = data.pools[i].poolInfo;
+
+						// 调用分段绘制方法
+						this.drawSegmentedBar(ctx, startX, startY, barWidth, barHeight, info);
 					}
 				}
 			},
-			drawArc(ctx, x, y, r, startDeg, endDeg, color) {
-				ctx.beginPath();
-				ctx.moveTo(x, y);
-				ctx.arc(x, y, r, (startDeg - 90) * Math.PI / 180, (endDeg - 90) * Math.PI / 180);
-				ctx.closePath();
-				ctx.fillStyle = color;
-				ctx.strokeStyle = color;
-				ctx.lineWidth = '0';
-				ctx.stroke();
-				ctx.fill();
+			drawSegmentedBar(ctx, x, y, width, height, poolInfo) {
+				// 计算每个星级的宽度
+				const w6 = width * poolInfo.p6;
+				const w5 = width * poolInfo.p5;
+				const w4 = width * poolInfo.p4;
+				const w3 = width * poolInfo.p3;
+
+				// 绘制每个星级的矩形段
+				this.drawBarSegment(ctx, x, y, w6, height, 'orange', '6星');
+				this.drawBarSegment(ctx, x + w6, y, w5, height, 'gold', '5星');
+				this.drawBarSegment(ctx, x + w6 + w5, y, w4, height, 'dodgerblue', '4星');
+				this.drawBarSegment(ctx, x + w6 + w5 + w4, y, w3, height, 'grey', '3星');
 			},
+
+			// 辅助方法：绘制单个矩形段
+			drawBarSegment(ctx, x, y, width, height, color, label) {
+				ctx.fillStyle = color;
+				ctx.fillRect(x, y, width, height);
+				if (width > 10) {
+					// 设置文本属性并居中绘制
+					ctx.fillStyle = 'white'; // 将文本颜色设为白色
+					ctx.textAlign = 'center'; // 文本水平居中
+					ctx.textBaseline = 'middle'; // 文本垂直居中
+					const textX = x + width / 2; // 中心 X 坐标
+					const textY = y + height / 2; // 中心 Y 坐标
+					ctx.fillText(label, textX, textY); // 绘制文本
+				}
+			},
+
 			dateFormat(timeStamp, formatStr) {
 				let str = formatStr;
 				let Week = ['日', '一', '二', '三', '四', '五', '六'];
@@ -248,7 +266,8 @@
 		data() {
 			return {
 				data: {
-					pools: []
+					pools: [],
+					copyright: "AmiyaBot"
 				}
 			}
 		},
