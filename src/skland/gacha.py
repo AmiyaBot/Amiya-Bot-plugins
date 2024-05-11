@@ -1,3 +1,4 @@
+import datetime
 import json
 from urllib import parse
 from amiyabot.network.httpRequests import http_requests
@@ -49,31 +50,40 @@ async def get_gacha_arkgacha_kwer_top(server_name,token,appid,appsecret):
     res = await http_requests.post(url, payload=payload)
     result = json.loads(res)
 
-    # { "data": {
-    # "1712858630": { // timestamp
-    #     "c": [
-    #         [
-    #             "维荻",
-    #             3,
-    #             0
-    #         ]
-    #     ],
-    #     "p": "常驻标准寻访"
-    # }
-    # }}
-
-    log.info(f'{result}')
-
     if result['code'] != 200:
+        return None,None
+
+    private_uid = result['privateUid']
+
+    url = f'https://arkgacha.kwer.top/rawData?privateUid={private_uid}&fileType=gacha&rspType=json'
+
+    res = await http_requests.get(url)
+    result:dict = json.loads(res)
+
+    if 'data' not in result.keys():
         return None,None
     
     list = []
     pool_list = []
+
+    # 只接受60天内的数据
+    current_timestamp = datetime.datetime.now().timestamp()
+
+    log.info(f"current_timestamp:{current_timestamp}")
+
     for timestamp in result['data'].keys():
+        if int(timestamp) < current_timestamp - 60*24*60*60:
+            continue
         for obj in result['data'][timestamp]['c']:
             pool_name = result['data'][timestamp]['p']
-            if pool_name not in pool_list:
-                pool_list.append(pool_name)
+            if pool_name == '常驻标准寻访':
+                pool_name = '常驻标准寻访(60天内)'
+
+            if pool_name not in [x['pool_name'] for x in pool_list]:
+                pool_list.append(
+                    {'pool_name':pool_name,'last_time':timestamp}
+                )
+
             list.append({
                 'poolName': pool_name,
                 'timeStamp': timestamp,
@@ -82,7 +92,23 @@ async def get_gacha_arkgacha_kwer_top(server_name,token,appid,appsecret):
                 'name': obj[0],
                 'star': obj[1]+1
             })
+            # compare with the last time
+            if pool_name in pool_list:
+                if pool_list[pool_name]['last_time'] < timestamp:
+                    pool_list[pool_name]['last_time'] = timestamp
 
-    return list,pool_list
+    # pick last 4 pool
+    pool_list = sorted(pool_list,key=lambda x:x['last_time'],reverse=True)[:4]
+
+    # 从list中踹掉不在pool_list中的数据
+    list = [x for x in list if x['poolName'] in [x['pool_name'] for x in pool_list]]
+
+    pool_name_list = [x['pool_name'] for x in pool_list]
+
+    # 临时输出list和pool_name_list
+    log.info(f"list:{list}")
+    log.info(f"pool_name_list:{pool_name_list}")
+
+    return list,pool_name_list
 
 
