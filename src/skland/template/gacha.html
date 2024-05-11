@@ -13,17 +13,11 @@
 
 <body>
 	<div id="template">
-		<div class="main" :style="{ width: (data.pools.length * 480 - 80) + 'px' }">
+		<div class="main">
 			<div class="gacha-pool" v-for="(pool, i) in data.pools">
 				<div class="pool-name">{{ pool.poolName }}</div>
-				<!-- <div class="color-info">
-					<div class="color star6">6星</div>
-					<div class="color star5">5星</div>
-					<div class="color star4">4星</div>
-					<div class="color star3">3星</div>
-				</div> -->
 				<div class="canvas-content">
-					<canvas :id="'cvs' + i" width="400" height="40"></canvas>
+					<canvas :id="'cvs' + i" width="280" height="40"></canvas>
 				</div>
 				<div class="time-range">{{ pool.timeRange }}</div>
 				<div class="gacha-info">
@@ -39,13 +33,14 @@
 					<span class="star3-text" v-if="pool.poolInfo.s3 > 0">3星干员：{{ pool.poolInfo.s3 }}个，
 						占百分比{{ (pool.poolInfo.p3 * 100).toFixed(2) }}%</span><br />
 					<span>6星干员平均抽取次数为：<span style="color: #09f;">{{ pool.star6Avg }}</span></span><br />
-					<span>抽取的6星干员记录：<span class="star6-block star6-text" v-for="(item, i) in pool.star6List">{{
-							item.name }}[{{ item.count }}]<span class="new" v-if="item.isNew">new</span></span></span>
+					<span>抽取的6星干员记录：</span>
+					<div class="star6-container"><span class="star6-block star6-text" v-for="(item, i) in pool.star6List">{{
+						item.name }}[{{ item.count }}]<span class="new" v-if="item.isNew">new</span></span></div>
 				</div>
 			</div>
-		</div>
-		<div id="copyright" class="right-bottom-corner">
-			{{ copyright }}
+			<div class="footer">
+				<div id="copyright" class="copyright" v-html="data.copyright"></div>
+			</div>
 		</div>
 	</div>
 </body>
@@ -164,7 +159,7 @@
 				// 生成数据，渲染页面
 				let data = {
 					pools,
-					param["copyright"]
+					copyright:param.copyright
 				};
 				this.$set(this, 'data', data);
 				this.$nextTick(() => {
@@ -191,9 +186,9 @@
 				};
 			},
 			drawCanvas(data) {
-				const barWidth = 360; // 矩形条的总宽度
+				const barWidth = 280; // 矩形条的总宽度
 				const barHeight = 30; // 矩形条的固定高度
-				const startX = 20; // 绘制起始位置 X 坐标
+				const startX = 0; // 绘制起始位置 X 坐标
 				const startY = 5; // 绘制起始位置 Y 坐标
 
 				for (let i = 0; i < data.pools.length; i++) {

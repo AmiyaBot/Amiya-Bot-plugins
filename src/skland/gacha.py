@@ -2,6 +2,7 @@ import json
 from urllib import parse
 from amiyabot.network.httpRequests import http_requests
 import hashlib
+from .api import SKLandAPI, log
 
 async def get_gacha_official(server_name,token):
     url = ''
@@ -34,8 +35,7 @@ async def get_gacha_official(server_name,token):
                 })
     return list,pool_list
 
-def arkgacha_kwer_top_sign_req_data(req_data):
-    app_secret = "APPSECRET"
+def arkgacha_kwer_top_sign_req_data(req_data,app_secret):
     sign_str = "&".join([f"{key}={value}" for key, value in sorted(req_data.items())])
     sign_str += f"&appsecret={app_secret}"
     req_data['sign'] = hashlib.sha256(sign_str.encode()).hexdigest()
@@ -46,7 +46,7 @@ async def get_gacha_arkgacha_kwer_top(server_name,token,appid,appsecret):
 
     payload = arkgacha_kwer_top_sign_req_data({'cmd': 'sync', 'token': token}, appsecret)
 
-    res = await http_requests.post(url, data=payload)
+    res = await http_requests.post(url, payload=payload)
     result = json.loads(res)
 
     # { "data": {
@@ -62,7 +62,9 @@ async def get_gacha_arkgacha_kwer_top(server_name,token,appid,appsecret):
     # }
     # }}
 
-    if result['code'] != 0:
+    log.info(f'{result}')
+
+    if result['code'] != 200:
         return None,None
     
     list = []
@@ -75,13 +77,11 @@ async def get_gacha_arkgacha_kwer_top(server_name,token,appid,appsecret):
             list.append({
                 'poolName': pool_name,
                 'timeStamp': timestamp,
-                'isNew': str(obj[2]),
+                # 'isNew': obj[2]==1?'true':'false'
+                'isNew': str(obj[2]==1),
                 'name': obj[0],
-                'star': obj[1]
+                'star': obj[1]+1
             })
-    info = {
-        'list': list
-    }
 
     return list,pool_list
 

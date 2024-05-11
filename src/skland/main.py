@@ -245,10 +245,10 @@ async def _(data: Message):
         kwer_config = bot.get_config("arkgacha_kwer_top")
 
         if(kwer_config["enable"]==True):
-            appid = kwer_config["appid"]
-            appsecret = kwer_config["appsecret"]
+            appid = kwer_config["app_id"]
+            appsecret = kwer_config["app_secret"]
             gacha_list, pool_list = await get_gacha_arkgacha_kwer_top(server_name, token, appid, appsecret)
-            info['copyright'] = '历史数据来自鹰角网络官网以及&nbsp;<span style="color: blue;">https://arkgacha.kwer.top/</span>&nbsp;感谢Bilibili@呱行次比猫'
+            info['copyright'] = '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
         else:
             gacha_list, pool_list = await get_gacha_official(server_name, token)
             info['copyright'] = '历史数据来自鹰角网络官网'
@@ -256,10 +256,11 @@ async def _(data: Message):
         if not gacha_list:
             return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
 
-        html_width = len(pool_list) * 480 - 60
+        html_width = len(pool_list) * 320 - 40
+        html_height = len(pool_list) * 650
         info['list'] = gacha_list
         log.info(f"info: {info}")
-        return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=html_width, height=650)
+        return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=320)
     except Exception as e:
         log.error(e)
         return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
