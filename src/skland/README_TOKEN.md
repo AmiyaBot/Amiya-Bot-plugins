@@ -3,6 +3,10 @@
 1. 前往森空岛官网 https://www.skland.com/ 登录你的账号。
 2. 访问接口 https://web-api.skland.com/account/info/hg (官服B服均为此链接)并将页面返回的**全部内容**复制。
 3. 将复制的内容**私聊**兔兔即可。（不需要加任何唤起词）
+4. 如果您想要查询B服抽卡记录，您还需遵循以下步骤获取B服Token：(官服查询抽卡记录不需进行此步骤)
+    - 在官网登录：https://ak.hypergryph.com/user/login
+    - 访问接口：https://web-api.hypergryph.com/account/info/ak-b 并将页面返回的**全部内容**复制。
+    - 将复制的内容**私聊**兔兔即可。（不需要加任何唤起词）
 
 群聊发送复制的内容也可以绑定，但是这可能会**泄露您的 Token**，如果兔兔有管理员权限，会撤回您的消息。
 

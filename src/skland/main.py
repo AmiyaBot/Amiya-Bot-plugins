@@ -1,12 +1,16 @@
 import json
 
 from typing import Iterable
+from urllib import parse
+
 from amiyabot import ChainBuilder
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
+from amiyabot.network.httpRequests import http_requests
 from amiyabot.database import *
+
 from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import snake_case_to_pascal_case, integer
-from core.database.user import UserBaseModel
+from core.database.user import UserBaseModel,UserInfo
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 
 from .api import SKLandAPI, log
@@ -19,6 +23,7 @@ skland_api = SKLandAPI()
 class UserToken(UserBaseModel):
     user_id: str = CharField(primary_key=True)
     token: str = CharField(null=True)
+    bilibili_token: str = TextField(null=True) # B服Token特别长，CharField存不下
 
 
 class SKLandPluginInstance(AmiyaBotPluginInstance):
@@ -45,6 +50,30 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
             return None
 
         return await user.character_info(uid)
+    
+    @staticmethod
+    async def get_binding(token: str):
+        user = await skland_api.user(token)
+        if not user:
+            log.warning('森空岛用户获取失败。')
+            return None
+
+        return await user.binding()
+
+    @staticmethod
+    async def get_server_type(token: str, uid: str = None):
+        app_code = 'arknights'
+
+        data = await SKLandPluginInstance.get_binding(token)
+        for app in data['list']:
+            if app['appCode'] == app_code:
+                if uid is None:
+                    uid = app['defaultUid']
+                for binding in app['bindingList']:
+                    if binding['uid'] == uid:
+                        return binding['channelName'], binding['nickName']
+
+        return None, None
 
 
 class WaitALLRequestsDone(ChainBuilder):
@@ -55,7 +84,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='3.7',
+    version='3.8',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -91,7 +120,6 @@ async def check_user_info(data: Message):
         return None, token
 
     return user_info, token
-
 
 @bot.on_message(keywords=['我的游戏信息'], level=5)
 async def _(data: Message):
@@ -188,6 +216,68 @@ async def _(data: Message):
         f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000
     )
 
+@bot.on_message(keywords=['抽卡记录'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    # map: dict = UserInfo.get_meta_value(data.user_id, 'amiyabot_query_gacha')
+    if not token:
+        return
+    
+    server_name, _ = await bot.get_server_type(token, user_info['gameStatus']['uid'])
+    
+    if server_name == "bilibili服":
+        rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
+        if rec.bilibili_token:
+            token = rec.bilibili_token
+        else:
+            await data.send(Chain(data).text('您是BiliBili服玩家，还需要提供B服Token才能查询抽卡记录，请发送 “兔兔绑定” 并查看其中关于获取B服Token的相关说明。>.<'))
+            return
+
+    url = ''
+    list = []
+    last_text = ''
+    try:
+        html_width = 0
+        pool_list = []
+        for page in range(1, 10):
+            if server_name == "bilibili服":
+                url = 'https://ak.hypergryph.com/user/api/inquiry/gacha?page=' + str(page) + '&channelId=2&token=' + parse.quote(token)
+            else:
+                url = 'https://ak.hypergryph.com/user/api/inquiry/gacha?page=' + str(page) + '&token=' + parse.quote(token)
+
+            res = await http_requests.get(url)
+            last_text = res
+            result = json.loads(res)
+
+            if result['code'] != 0:
+                await data.send(Chain(data).text('Token 无效，无法获取信息，请重新绑定 Token。>.<'))
+                return
+
+            for obj in result['data']['list']:
+                pool_name = obj['pool']
+                time_stamp = obj['ts']
+                if pool_name not in pool_list:
+                    pool_list.append(pool_name)
+                for o in range(len(obj['chars']) - 1, -1, -1):
+                    list.append({
+                        'poolName': pool_name,
+                        'timeStamp': time_stamp,
+                        'isNew': str(obj['chars'][o]['isNew']),
+                        'name': obj['chars'][o]['name'],
+                        'star': obj['chars'][o]['rarity'] + 1
+                    })
+        info = {
+            'list': list
+        }
+        html_width = len(pool_list) * 480 - 60
+        return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=html_width, height=650)
+    except Exception as e:
+        log.error(e)
+        log.warning('响应内容：' + last_text)
+        return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
 
 @bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
 async def _(data: Message):
@@ -212,7 +302,7 @@ async def _(data: Message):
     chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
 
     if not isinstance(data.instance, QQGuildBotInstance):
-        chain.text('https://www.skland.com/\nhttps://web-api.skland.com/account/info/hg')
+        chain.text('森空岛绑定:\nhttps://www.skland.com/\nhttps://web-api.skland.com/account/info/hg\nB服Token获取\nhttps://ak.hypergryph.com/user/login\nhttps://web-api.hypergryph.com/account/info/ak-b')
 
     return chain
 
@@ -223,10 +313,25 @@ async def _(data: Message):
         await data.recall()
         await data.send(Chain(data).text('博士，请注意保护您的敏感信息！>.<'))
 
-    UserToken.delete().where(UserToken.user_id == data.user_id).execute()
-    UserToken.create(user_id=data.user_id, token=data.verify.keypoint)
+    token = data.verify.keypoint
 
-    return Chain(data).text('Token 绑定成功！')
+    rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
+    if rec:
+        if len(token)>200:
+            rec.bilibili_token = token
+        else:
+            rec.token = token
+        rec.save()
+    else:
+        if len(token)>200:
+            UserToken.create(user_id=data.user_id, token=None, bilibili_token=token)
+        else:
+            UserToken.create(user_id=data.user_id, token=token, bilibili_token=None)
+
+    if len(token)>200:
+        return Chain(data).text('B服Token 绑定成功！')
+    else:
+        return Chain(data).text('Token 绑定成功！')
 
 
 def get_longest(text: str, items: Iterable):

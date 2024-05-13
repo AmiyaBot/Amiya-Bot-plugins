@@ -120,6 +120,15 @@ class SKLandUser:
             data = json.loads(res)
             if data['code'] == 0:
                 return data['data']
+    
+    async def binding(self) -> Optional[dict]:
+        url = f'https://zonai.skland.com/api/v1/game/player/binding'
+        headers = self.get_headers(url)
+        res = await http_requests.get(url, headers=headers)
+        if res:
+            data = json.loads(res)
+            if data['code'] == 0:
+                return data['data']
 
 
 def generate_sign(data: dict, t: str, url: str, token: str):
