@@ -1,20 +1,17 @@
 .main {
-	min-width: 400px;
-	min-height: 600px;
-	float: left;
+	width: 320px;
+	display: flex;
+    flex-direction: column;
+    justify-content: center; /* 垂直居中对齐 */
+    align-items: center; /* 水平居中对齐 */
 	font-family: '微软雅黑';
 	font-size: 14px;
 }
 
 .gacha-pool {
-	width: 400px;
+	width: 280px;
 	height: 100%;
 	float: left;
-	margin-left: 80px;
-}
-
-.gacha-pool:first-child {
-	margin-left: 0;
 }
 
 .gacha-pool > div {
@@ -28,32 +25,15 @@
 	text-align: center;
 	color: #666;
 	font-size: 20px;
-	margin-bottom: 20px;
-}
-
-.color-info {
-	height: 30px;
-}
-
-.color-info .color {
-	width: 80px;
-	height: calc(100% - 10px);
-	margin: 5px 10px;
-	border-radius: 3px;
-	text-align: center;
-	color: #fff;
-	float: left;
+	margin-top: 10px;
 }
 
 .canvas-content {
 	width: 100%;
-	height: 220px;
 }
 
 .canvas-content canvas {
-	width: 400px;
-	height: 200px;
-	margin: 10px 0;
+	margin: 0;
 }
 
 .time-range {
@@ -64,12 +44,21 @@
 }
 
 .gacha-info {
-	min-height: 280px;
 	line-height: 24px;
 }
 
+.star6-container {
+    display: grid; /* Enables CSS Grid layout */
+    grid-template-columns: repeat(2, 1fr); /* 2 equal-width columns */
+    gap: 5px; /* Adjusts spacing between grid items */
+}
+
 .star6-block {
-	margin: 0 5px;
+	padding: 5px; /* Adds padding around each block */
+    border: 1px solid #ccc; /* Adds a border to each block */
+    border-radius: 5px; /* Optional: adds rounded corners */
+    text-align: center; /* Centers text inside the block */
+    background-color: #f9f9f9; /* Optional: background color */
 }
 
 .star6 {
@@ -110,4 +99,16 @@
 	top: -12px;
 	font-size: 12px;
 	color: red;
+}
+
+.footer {
+	width: 100%;
+}
+
+.copyright {
+    font-family: '微软雅黑'; 
+    font-size: 14px;
+	line-height: 14px;
+	margin-top: 10px;
+	text-align: center;
 }

@@ -15,6 +15,7 @@ from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameData
 
 from .api import SKLandAPI, log
 from .tools import *
+from .gacha import get_gacha_official,get_gacha_arkgacha_kwer_top
 
 skland_api = SKLandAPI()
 
@@ -91,6 +92,8 @@ bot = SKLandPluginInstance(
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
+    global_config_default=f'{curr_dir}/config_templates/global_config_default.json',
+    global_config_schema=f'{curr_dir}/config_templates/global_config_schema.json',
 )
 
 
@@ -236,47 +239,30 @@ async def _(data: Message):
             await data.send(Chain(data).text('您是BiliBili服玩家，还需要提供B服Token才能查询抽卡记录，请发送 “兔兔绑定” 并查看其中关于获取B服Token的相关说明。>.<'))
             return
 
-    url = ''
-    list = []
-    last_text = ''
     try:
-        html_width = 0
-        pool_list = []
-        for page in range(1, 10):
-            if server_name == "bilibili服":
-                url = 'https://ak.hypergryph.com/user/api/inquiry/gacha?page=' + str(page) + '&channelId=2&token=' + parse.quote(token)
-            else:
-                url = 'https://ak.hypergryph.com/user/api/inquiry/gacha?page=' + str(page) + '&token=' + parse.quote(token)
+        info = {}
 
-            res = await http_requests.get(url)
-            last_text = res
-            result = json.loads(res)
+        kwer_config = bot.get_config("arkgacha_kwer_top")
 
-            if result['code'] != 0:
-                await data.send(Chain(data).text('Token 无效，无法获取信息，请重新绑定 Token。>.<'))
-                return
+        if(kwer_config["enable"]==True):
+            appid = kwer_config["app_id"]
+            appsecret = kwer_config["app_secret"]
+            gacha_list, pool_list = await get_gacha_arkgacha_kwer_top(server_name, token, appid, appsecret)
+            info['copyright'] = '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
+        else:
+            gacha_list, pool_list = await get_gacha_official(server_name, token)
+            info['copyright'] = '历史数据来自鹰角网络官网'
+        
+        if not gacha_list:
+            return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
 
-            for obj in result['data']['list']:
-                pool_name = obj['pool']
-                time_stamp = obj['ts']
-                if pool_name not in pool_list:
-                    pool_list.append(pool_name)
-                for o in range(len(obj['chars']) - 1, -1, -1):
-                    list.append({
-                        'poolName': pool_name,
-                        'timeStamp': time_stamp,
-                        'isNew': str(obj['chars'][o]['isNew']),
-                        'name': obj['chars'][o]['name'],
-                        'star': obj['chars'][o]['rarity'] + 1
-                    })
-        info = {
-            'list': list
-        }
-        html_width = len(pool_list) * 480 - 60
-        return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=html_width, height=650)
+        html_width = len(pool_list) * 320 - 40
+        html_height = len(pool_list) * 650
+        info['list'] = gacha_list
+        log.info(f"info: {info}")
+        return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=320)
     except Exception as e:
         log.error(e)
-        log.warning('响应内容：' + last_text)
         return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
 
 @bot.on_message(keywords=['我的进度', '我的关卡'], level=5)

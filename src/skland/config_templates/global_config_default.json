@@ -1,0 +1,8 @@
+{
+    "arkgacha_kwer_top": {
+        "enable": false,
+        "app_id": "",
+        "app_secret": "",
+        "refresh_rate_hour": 5
+    }
+}
