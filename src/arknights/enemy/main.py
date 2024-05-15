@@ -85,7 +85,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='3.0',
+    version='3.2',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -95,9 +95,22 @@ bot = EnemiesPluginInstance(
 
 
 async def verify(data: Message):
-    name = find_most_similar(
-        data.text.replace('敌人', '').replace('敌方', '').replace('单位', '').strip(), list(ArknightsGameData.enemies.keys())
-    )
+    name = ''
+    name_char = ''
+    r = re.search(r'(敌[人|方])?(单位)?(资料)?(.*)', data.text)
+    if r:
+        name_char = r.group(4).strip()
+
+    if name_char:
+        index_map = {}
+        for item in ArknightsGameData.enemies.values():
+            index_map[item['info']['enemyIndex']] = item['info']['name']
+
+        if name_char in index_map:
+            name = index_map[name_char]
+        else:
+            name = find_most_similar(name_char, list(ArknightsGameData.enemies.keys()))
+
     keyword = any_match(data.text, ['敌人', '敌方'])
     level = (5 + int(bool(name))) if keyword else 1
 
@@ -123,11 +136,7 @@ async def _(data: Message):
 
 @bot.on_message(verify=verify, allow_direct=True)
 async def enemy_query(data: Message):
-    enemy_name = ''
-    for reg in ['敌人(资料)?(.*)', '敌方(资料)?(.*)']:
-        r = re.search(re.compile(reg), data.text)
-        if r:
-            enemy_name = r.group(2).replace('单位', '').strip()
+    enemy_name = data.verify.keypoint or ''
 
     if not enemy_name:
         if data.verify.keypoint:
