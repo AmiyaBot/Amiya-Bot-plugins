@@ -1,21 +1,19 @@
 import json
 
 from typing import Iterable
-from urllib import parse
 
 from amiyabot import ChainBuilder
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
-from amiyabot.network.httpRequests import http_requests
 from amiyabot.database import *
 
 from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import snake_case_to_pascal_case, integer
-from core.database.user import UserBaseModel,UserInfo
-from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
+from core.database.user import UserBaseModel
+from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, ArknightsConfig
 
 from .api import SKLandAPI, log
 from .tools import *
-from .gacha import get_gacha_official,get_gacha_arkgacha_kwer_top
+from .gacha import get_gacha_official, get_gacha_arkgacha_kwer_top
 
 skland_api = SKLandAPI()
 
@@ -24,7 +22,7 @@ skland_api = SKLandAPI()
 class UserToken(UserBaseModel):
     user_id: str = CharField(primary_key=True)
     token: str = CharField(null=True)
-    bilibili_token: str = TextField(null=True) # B服Token特别长，CharField存不下
+    bilibili_token: str = TextField(null=True)  # B服Token特别长，CharField存不下
 
 
 class SKLandPluginInstance(AmiyaBotPluginInstance):
@@ -51,7 +49,7 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
             return None
 
         return await user.character_info(uid)
-    
+
     @staticmethod
     async def get_binding(token: str):
         user = await skland_api.user(token)
@@ -85,7 +83,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='3.8',
+    version='3.9',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -124,6 +122,7 @@ async def check_user_info(data: Message):
 
     return user_info, token
 
+
 @bot.on_message(keywords=['我的游戏信息'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
@@ -154,10 +153,14 @@ async def _(data: Message):
 
     char_name = get_longest(data.text, ArknightsGameData.operators.keys())
     if char_name:
+        amiya_promotion = {
+            'char_1001_amiya2': '阿米娅近卫',
+            'char_1037_amiya3': '阿米娅医疗',
+        }
         char_list = {
             character_info['charInfoMap'][item['charId']]['name']
-            if item['charId'] != 'char_1001_amiya2'
-            else '阿米娅近卫': item
+            if item['charId'] not in amiya_promotion
+            else amiya_promotion[item['charId']]: item
             for item in character_info['chars']
         }
         if char_name in char_list:
@@ -200,6 +203,12 @@ async def _(data: Message):
         else:
             return Chain(data).text(f'博士，您尚未招募干员【{char_name}】')
 
+    character_info.update(
+        {
+            'limitChars': ArknightsConfig.limit,
+        }
+    )
+
     return Chain(data, chain_builder=WaitALLRequestsDone()).html(
         f'{curr_dir}/template/chars.html', character_info, width=1640, render_time=1000
     )
@@ -219,6 +228,7 @@ async def _(data: Message):
         f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000
     )
 
+
 @bot.on_message(keywords=['抽卡记录'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
@@ -228,10 +238,10 @@ async def _(data: Message):
     # map: dict = UserInfo.get_meta_value(data.user_id, 'amiyabot_query_gacha')
     if not token:
         return
-    
+
     server_name, _ = await bot.get_server_type(token, user_info['gameStatus']['uid'])
-    
-    if server_name == "bilibili服":
+
+    if server_name == 'bilibili服':
         rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
         if rec.bilibili_token:
             token = rec.bilibili_token
@@ -242,28 +252,29 @@ async def _(data: Message):
     try:
         info = {}
 
-        kwer_config = bot.get_config("arkgacha_kwer_top")
+        kwer_config = bot.get_config('arkgacha_kwer_top')
 
-        if(kwer_config["enable"]==True):
-            appid = kwer_config["app_id"]
-            appsecret = kwer_config["app_secret"]
+        if kwer_config['enable']:
+            appid = kwer_config['app_id']
+            appsecret = kwer_config['app_secret']
             gacha_list, pool_list = await get_gacha_arkgacha_kwer_top(server_name, token, appid, appsecret)
-            info['copyright'] = '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
+            info[
+                'copyright'
+            ] = '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
         else:
             gacha_list, pool_list = await get_gacha_official(server_name, token)
             info['copyright'] = '历史数据来自鹰角网络官网'
-        
+
         if not gacha_list:
             return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
 
-        html_width = len(pool_list) * 320 - 40
-        html_height = len(pool_list) * 650
         info['list'] = gacha_list
-        log.info(f"info: {info}")
+        log.info(f'info: {info}')
         return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=320)
     except Exception as e:
         log.error(e)
         return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
+
 
 @bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
 async def _(data: Message):
@@ -288,7 +299,14 @@ async def _(data: Message):
     chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
 
     if not isinstance(data.instance, QQGuildBotInstance):
-        chain.text('森空岛绑定:\nhttps://www.skland.com/\nhttps://web-api.skland.com/account/info/hg\nB服Token获取\nhttps://ak.hypergryph.com/user/login\nhttps://web-api.hypergryph.com/account/info/ak-b')
+        chain.text(
+            '森空岛绑定:\n'
+            'https://www.skland.com/\n'
+            'https://web-api.skland.com/account/info/hg\n'
+            'B服Token获取:\n'
+            'https://ak.hypergryph.com/user/login\n'
+            'https://web-api.hypergryph.com/account/info/ak-b'
+        )
 
     return chain
 
@@ -303,18 +321,18 @@ async def _(data: Message):
 
     rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
     if rec:
-        if len(token)>200:
+        if len(token) > 200:
             rec.bilibili_token = token
         else:
             rec.token = token
         rec.save()
     else:
-        if len(token)>200:
+        if len(token) > 200:
             UserToken.create(user_id=data.user_id, token=None, bilibili_token=token)
         else:
             UserToken.create(user_id=data.user_id, token=token, bilibili_token=None)
 
-    if len(token)>200:
+    if len(token) > 200:
         return Chain(data).text('B服Token 绑定成功！')
     else:
         return Chain(data).text('Token 绑定成功！')

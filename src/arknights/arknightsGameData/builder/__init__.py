@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='3.0',
+    version='3.1',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -128,6 +128,9 @@ def init_operators():
 
         if 'char_1001_amiya2' in skin_id:
             char_id = 'char_1001_amiya2'
+
+        if 'char_1037_amiya3' in skin_id:
+            char_id = 'char_1037_amiya3'
 
         if char_id not in Collection.skins_map:
             Collection.skins_map[char_id] = []
