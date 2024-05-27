@@ -128,7 +128,7 @@ class ChatGPTAdapter(BLMAdapter):
                     "type": "high-cost",
                     "max_token": 128000,                    
                     "max-token": 128000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision","json_mode"],
                 }
             )
             model_list_response.append(
@@ -137,7 +137,7 @@ class ChatGPTAdapter(BLMAdapter):
                     "type": "high-cost",
                     "max_token": 128000,                    
                     "max-token": 128000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision","json_mode"],
                 }
             )
         return model_list_response
