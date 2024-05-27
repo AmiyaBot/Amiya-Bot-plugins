@@ -122,6 +122,24 @@ class ChatGPTAdapter(BLMAdapter):
                     "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
                 }
             )
+            model_list_response.append(
+                {
+                    "model_name": "gpt-4-turbo",
+                    "type": "high-cost",
+                    "max_token": 128000,                    
+                    "max-token": 128000,
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
+                }
+            )
+            model_list_response.append(
+                {
+                    "model_name": "gpt-4o",
+                    "type": "high-cost",
+                    "max_token": 128000,                    
+                    "max-token": 128000,
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision"],
+                }
+            )
         return model_list_response
 
     async def chat_flow(
