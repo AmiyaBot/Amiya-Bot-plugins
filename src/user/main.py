@@ -227,7 +227,8 @@ async def _(data: Message, factory_name: str, _):
         return False
 
     if user.user_mood <= 0 and not any_match(data.text, ['我错了', '对不起', '抱歉']):
-        await data.send(Chain(data).text('哼~阿米娅生气了！不理博士！[face:38]'))
+        if data.is_at or data.is_at_all or data.text.startswith('兔兔') or data.text.startswith('阿米娅'):
+            await data.send(Chain(data).text('哼~阿米娅生气了！不理博士！[face:38]'))
         return False
 
     return True

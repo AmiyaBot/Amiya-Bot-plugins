@@ -471,6 +471,9 @@ class Collection:
 
 
 def html_tag_format(text: str):
+    if text is None:
+        return ''
+
     for o, f in html_symbol.items():
         text = text.replace(o, f)
 
