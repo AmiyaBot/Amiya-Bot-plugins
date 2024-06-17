@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import jieba
@@ -40,7 +41,7 @@ class StagePluginInstance(AmiyaBotPluginInstance):
 
 bot = StagePluginInstance(
     name='明日方舟关卡查询',
-    version='2.6',
+    version='2.7',
     plugin_id='amiyabot-arknights-stages',
     plugin_type='official',
     description='查询明日方舟关卡资料',
@@ -61,6 +62,11 @@ def update(_):
 
 @bot.on_message(keywords=['地图', '关卡'], allow_direct=True, level=5)
 async def _(data: Message):
+    r = re.search(r'(/)?([地图|关卡])?(.*)', data.text)
+    if r:
+        if not r.group(3).strip():
+            return Chain(data).text('博士，请发送“地图 + 地图编号/地图名”查询信息~')
+
     with open(f'{curr_dir}/sxys.json', mode='r', encoding='utf-8') as f:
         sxys_maps: dict = json.load(f)
 

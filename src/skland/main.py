@@ -101,7 +101,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='4.2',
+    version='4.3',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -141,7 +141,7 @@ async def check_user_info(data: Message):
     return user_info, token
 
 
-@bot.on_message(keywords=['我的游戏信息'], level=5)
+@bot.on_message(keywords=['我的游戏信息', '森空岛'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:

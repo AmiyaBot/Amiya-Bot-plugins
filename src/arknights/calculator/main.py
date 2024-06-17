@@ -11,7 +11,7 @@ curr_dir = os.path.dirname(__file__)
 
 bot = PluginInstance(
     name='明日方舟计算器',
-    version='1.2',
+    version='1.3',
     plugin_id='amiyabot-arknights-calculator',
     plugin_type='official',
     description='计算合成玉获得数量或龙门币花费数量等',
@@ -19,7 +19,7 @@ bot = PluginInstance(
 )
 
 
-@bot.on_message(keywords=['/计算合成玉'], level=3)
+@bot.on_message(keywords=['/计算合成玉'], level=10)
 async def action(data: Message):
     date_text = data.text_original.strip('/计算合成玉').strip()
     if date_text:

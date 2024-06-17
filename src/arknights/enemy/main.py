@@ -85,7 +85,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance):
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='3.2',
+    version='3.3',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -97,9 +97,9 @@ bot = EnemiesPluginInstance(
 async def verify(data: Message):
     name = ''
     name_char = ''
-    r = re.search(r'(敌[人|方])?(单位)?(资料)?(.*)', data.text)
+    r = re.search(r'(/)?(敌[人|方])?(单位)?(资料)?(.*)', data.text)
     if r:
-        name_char = r.group(4).strip()
+        name_char = r.group(5).strip()
 
     if name_char:
         index_map = {}
