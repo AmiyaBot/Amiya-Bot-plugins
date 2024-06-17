@@ -120,7 +120,25 @@ class SKLandUser:
             data = json.loads(res)
             if data['code'] == 0:
                 return data['data']
-    
+
+    async def cultivate_player(self, uid: str) -> Optional[dict]:
+        url = f'https://zonai.skland.com/api/v1/game/cultivate/player?uid={uid}'
+        headers = self.get_headers(url)
+        res = await http_requests.get(url, headers=headers)
+        if res:
+            data = json.loads(res)
+            if data['code'] == 0:
+                return data['data']
+
+    async def cultivate_character(self, char_id: str) -> Optional[dict]:
+        url = f'https://zonai.skland.com/api/v1/game/cultivate/character?characterld={char_id}'
+        headers = self.get_headers(url)
+        res = await http_requests.get(url, headers=headers)
+        if res:
+            data = json.loads(res)
+            if data['code'] == 0:
+                return data['data']
+
     async def binding(self) -> Optional[dict]:
         url = f'https://zonai.skland.com/api/v1/game/player/binding'
         headers = self.get_headers(url)

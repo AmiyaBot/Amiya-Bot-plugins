@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="no-referrer"/>
+    <link type="text/css" rel="styleSheet" href="font/font.css"/>
+    <link type="text/css" rel="styleSheet" href="warehouse.css">
+    <title>template</title>
+</head>
+<body>
+<div id="template">
+    <div class="items">
+        <div v-for="item in data"
+             :style="{ backgroundImage: `url(${gamedataPath}resource/gamedata/item/${item.material_icon}.png)` }">
+            <div>{{ count(item.count) }}</div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="js/vue.min.js"></script>
+<script src="js/character.js"></script>
+<script>
+    const template = new Vue({
+        el: '#template',
+        methods: {
+            init(data) {
+                data.sort((a, b) => {
+                    return a.meta_data.sortId - b.meta_data.sortId
+                })
+                this.$set(this, 'data', data)
+            },
+            count(num) {
+                if (num >= 10000) {
+                    num = (num / 10000).toFixed(2) + '万'
+                }
+                return num
+            }
+        },
+        data() {
+            return {
+                data: {}
+            }
+        },
+        mounted() {
+            window.init = this.init
+        }
+    })
+</script>
+</html>

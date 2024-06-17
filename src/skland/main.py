@@ -51,6 +51,24 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
         return await user.character_info(uid)
 
     @staticmethod
+    async def get_cultivate_player(token: str, uid: str):
+        user = await skland_api.user(token)
+        if not user:
+            log.warning('森空岛用户获取失败。')
+            return None
+
+        return await user.cultivate_player(uid)
+
+    @staticmethod
+    async def get_cultivate_character(token: str, char_id: str):
+        user = await skland_api.user(token)
+        if not user:
+            log.warning('森空岛用户获取失败。')
+            return None
+
+        return await user.cultivate_character(char_id)
+
+    @staticmethod
     async def get_binding(token: str):
         user = await skland_api.user(token)
         if not user:
@@ -83,7 +101,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='3.9',
+    version='4.2',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -129,6 +147,8 @@ async def _(data: Message):
     if not user_info:
         return
 
+    await data.send(Chain(data).text('开始获取并生成游戏信息，请稍后...'))
+
     character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
     character_info['backgroundImage'] = await ArknightsGameDataResource.get_skin_file(
         {'skin_id': character_info['status']['secretary']['charId'] + '#1'}, encode_url=True
@@ -137,6 +157,28 @@ async def _(data: Message):
     return (
         Chain(data, chain_builder=WaitALLRequestsDone())
         .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400, render_time=1000)
+        .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。')
+    )
+
+
+@bot.on_message(keywords=['我的仓库'], level=5)
+async def _(data: Message):
+    user_info, token = await check_user_info(data)
+    if not user_info:
+        return
+
+    await data.send(Chain(data).text('开始获取并生成仓库信息，请稍后...'))
+
+    cultivate_data = await bot.get_cultivate_player(token, user_info['gameStatus']['uid'])
+
+    result = []
+    for item in cultivate_data['items']:
+        if item['count'] != '0' and item['id'] in ArknightsGameData.materials:
+            result.append({**item, **ArknightsGameData.materials[item['id']]})
+
+    return (
+        Chain(data, chain_builder=WaitALLRequestsDone())
+        .html(f'{curr_dir}/template/warehouse.html', result, width=1140, render_time=1000)
         .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。')
     )
 

@@ -15,13 +15,19 @@ const spType = {
     'INCREASE_WITH_TIME': '自动回复',
     'INCREASE_WHEN_ATTACK': '攻击回复',
     'INCREASE_WHEN_TAKEN_DAMAGE': '受击回复',
+    1: '自动回复',
+    2: '攻击回复',
+    4: '受击回复',
     8: '被动'
 }
 
 const skillType = {
     'PASSIVE': '被动',
     'MANUAL': '手动触发',
-    'AUTO': '自动触发'
+    'AUTO': '自动触发',
+    0: '被动',
+    1: '手动触发',
+    2: '自动触发'
 }
 
 const skillLevel = {

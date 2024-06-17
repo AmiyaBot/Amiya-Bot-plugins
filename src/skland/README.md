@@ -58,10 +58,28 @@ async def example():
 | token | str | Token          |     |
 | uid   | str | 要获取数据的游戏内角色UID |     |
 
-### get_binding
+### get_cultivate_player
 
-获取该Token在森空岛绑定的多个账户的详细信息
+获取游戏仓库信息
 
 | 参数名   | 类型  | 释义             | 默认值 |
 |-------|-----|----------------|-----|
 | token | str | Token          |     |
+| uid   | str | 要获取数据的游戏内角色UID |     |
+
+### get_cultivate_character
+
+？？？
+
+| 参数名     | 类型  | 释义    | 默认值 |
+|---------|-----|-------|-----|
+| token   | str | Token |     |
+| char_id | str | 干员ID  |     |
+
+### get_binding
+
+获取该Token在森空岛绑定的多个账户的详细信息
+
+| 参数名   | 类型  | 释义    | 默认值 |
+|-------|-----|-------|-----|
+| token | str | Token |     |
