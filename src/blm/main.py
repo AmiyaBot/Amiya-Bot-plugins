@@ -14,7 +14,7 @@ def dynamic_get_global_config_schema_data():
     filepath = f'{curr_dir}/config_templates/global_config_schema.json'
     if bot:
         try:
-            with open(filepath, 'r') as file:
+            with open(filepath, 'r', encoding='utf-8') as file:
                 data = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             log.info(f'Failed to load JSON from {filepath}.')
@@ -37,7 +37,7 @@ def dynamic_get_global_config_schema_data():
 
 bot = BLMLibraryPluginInstance(
     name='大语言模型调用库',
-    version='1.2.2',
+    version='1.2.3',
     plugin_id='amiyabot-blm-library',
     plugin_type='official',
     description='为其他插件提供大语音模型调用库',

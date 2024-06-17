@@ -88,6 +88,27 @@ class ERNIEAdapter(BLMAdapter):
                 "max-token": 4000,
                 "supported_feature": ["completion_flow", "chat_flow","json_mode"],
             },
+            {
+                "model_name": "ERNIE-Speed-8K",
+                "type": "low-cost",
+                "max_token": 8000,                
+                "max-token": 8000,
+                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+            },
+            {
+                "model_name": "ERNIE-Lite-8K",
+                "type": "low-cost",
+                "max_token": 8000,                
+                "max-token": 8000,
+                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+            },
+            {
+                "model_name": "ERNIE-Tiny-8K",
+                "type": "low-cost",
+                "max_token": 8000,                
+                "max-token": 8000,
+                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+            },
         ]
 
         disable_high_cost = self.get_config("disable_high_cost")
@@ -281,6 +302,9 @@ class ERNIEAdapter(BLMAdapter):
             "ERNIE-Bot": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions",
             "ERNIE-Bot-turbo": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant",
             "ERNIE-Bot-8K": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_bot_8k",
+            "ERNIE-Speed-8K":"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed",
+            "ERNIE-Lite-8K":"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-lite-8k",
+            "ERNIE-Tiny-8K":"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-tiny-8k",
         }
 
         if model not in model_url_map:
