@@ -2,7 +2,7 @@ import json
 
 from typing import Iterable
 
-from amiyabot import ChainBuilder
+from amiyabot import ChainBuilder, GroupConfig
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.database import *
 
@@ -101,7 +101,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='4.3',
+    version='4.4',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -111,6 +111,7 @@ bot = SKLandPluginInstance(
     global_config_default=f'{curr_dir}/config_templates/global_config_default.json',
     global_config_schema=f'{curr_dir}/config_templates/global_config_schema.json',
 )
+bot.set_group_config(GroupConfig('skland', allow_direct=True))
 
 
 async def is_token_str(data: Message):
@@ -141,7 +142,7 @@ async def check_user_info(data: Message):
     return user_info, token
 
 
-@bot.on_message(keywords=['我的游戏信息', '森空岛'], level=5)
+@bot.on_message(group_id='skland', keywords=['我的游戏信息', '森空岛'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:
@@ -161,7 +162,7 @@ async def _(data: Message):
     )
 
 
-@bot.on_message(keywords=['我的仓库'], level=5)
+@bot.on_message(group_id='skland', keywords=['我的仓库'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:
@@ -183,7 +184,7 @@ async def _(data: Message):
     )
 
 
-@bot.on_message(keywords=['我的干员', '练度'], level=5)
+@bot.on_message(group_id='skland', keywords=['我的干员', '练度'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:
@@ -256,7 +257,7 @@ async def _(data: Message):
     )
 
 
-@bot.on_message(keywords=['我的基建'], level=5)
+@bot.on_message(group_id='skland', keywords=['我的基建'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:
@@ -271,7 +272,7 @@ async def _(data: Message):
     )
 
 
-@bot.on_message(keywords=['抽卡记录'], level=5)
+@bot.on_message(group_id='skland', keywords=['抽卡记录'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:
@@ -318,7 +319,7 @@ async def _(data: Message):
         return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
 
 
-@bot.on_message(keywords=['我的进度', '我的关卡'], level=5)
+@bot.on_message(group_id='skland', keywords=['我的进度', '我的关卡'], level=5)
 async def _(data: Message):
     user_info, token = await check_user_info(data)
     if not user_info:
@@ -333,7 +334,7 @@ async def _(data: Message):
     )
 
 
-@bot.on_message(keywords='绑定', allow_direct=True)
+@bot.on_message(group_id='skland', keywords='绑定', allow_direct=True)
 async def _(data: Message):
     with open(f'{curr_dir}/README_TOKEN.md', mode='r', encoding='utf-8') as md:
         content = md.read()
@@ -353,7 +354,7 @@ async def _(data: Message):
     return chain
 
 
-@bot.on_message(verify=is_token_str, check_prefix=False, allow_direct=True)
+@bot.on_message(group_id='skland', verify=is_token_str, check_prefix=False, allow_direct=True)
 async def _(data: Message):
     if not data.is_direct:
         await data.recall()
