@@ -6,6 +6,7 @@ import random
 from typing import Optional
 from amiyabot import InlineKeyboard
 from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
+from amiyabot.adapters.tencent.qqGlobal import QQGlobalBotInstance
 from core.util import any_match, random_pop, read_yaml
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, Operator
 
@@ -20,7 +21,9 @@ guess_keyword = game_config.keyword
 
 
 def can_send_buttons(data: Message, markdown_template_id: str):
-    return isinstance(data.instance, QQGroupBotInstance) and markdown_template_id
+    return (
+        isinstance(data.instance, QQGroupBotInstance) or isinstance(data.instance, QQGlobalBotInstance)
+    ) and markdown_template_id
 
 
 async def guess_filter(data: Message):

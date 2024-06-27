@@ -8,7 +8,7 @@ from .guessStart import *
 
 bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='3.0',
+    version='3.1',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -17,6 +17,14 @@ bot = AmiyaBotPluginInstance(
     global_config_default=f'{curr_dir}/config_default.yaml',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
+
+
+def get_markdown_template_id(data: Message):
+    markdown_template_id: list = bot.get_config('markdown_template_id')
+    for item in markdown_template_id:
+        if item['bot_id'] == data.instance.appid:
+            return item['template_id']
+    return ''
 
 
 @bot.on_message(keywords=['猜干员'])
@@ -33,7 +41,7 @@ async def _(data: Message):
     )
 
     choice_chain = Chain(data).text(select_level)
-    markdown_template_id = bot.get_config('markdown_template_id')
+    markdown_template_id = get_markdown_template_id(data)
 
     if can_send_buttons(data, markdown_template_id):
         keyboard = InlineKeyboard(int(data.instance.appid))
