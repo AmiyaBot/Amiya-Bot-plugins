@@ -99,9 +99,12 @@ async def _(data: Message):
 
         return Chain(data).text('自定义昵称已删除')
 
-    r = re.search(r'/?昵称(.*)', data.text_original)
+    r = re.search(r'(/)?昵称(.*)', data.text_original)
     if r:
-        nickname = r.group(1).strip()
+        nickname = r.group(2).strip()
+
+        if not nickname:
+            return Chain(data).text('博士，请使用“昵称 + 文字”的格式修改昵称哦！')
 
         if len(nickname) > 10:
             return Chain(data).text('博士，昵称长度不能超过 10 个字 >.<')

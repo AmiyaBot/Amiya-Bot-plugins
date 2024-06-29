@@ -5,8 +5,20 @@
     "properties": {
         "markdown_template_id": {
             "title": "markdown模板ID",
-            "type": "string",
-            "default": ""
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "bot_id": {
+                        "title": "机器人ID",
+                        "type": "string"
+                    },
+                    "template_id": {
+                        "title": "模板ID",
+                        "type": "string"
+                    }
+                }
+            }
         }
     }
 }
