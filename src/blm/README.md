@@ -16,6 +16,8 @@ model_info字典中的`max-token`更名为`max_token`，使用下划线替代连
 4. **extract_json函数废弃**
 因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
 
+5. 支持了Assistant模式，现在可以使用各大平台提供的AI助手库了。第一版支持ChatGPT的Assistant和千帆AppBuilder的应用（百度AssistantBeta下版本支持）。官方兔兔就在使用本模式，您可以添加官方兔兔并和他聊天试试效果。
+
 # 使用方法
 
 ## 我是兔兔用户
@@ -37,7 +39,7 @@ model_info字典中的`max-token`更名为`max_token`，使用下划线替代连
 
 ```
 pip install httpx
-pip install openai>=1.0.0
+pip install openai>=1.20.0
 ```
 
 此外，OpenAI会时不时更新他们的API策略，所以如果发现插件不能工作，可以先考虑升级OpenAI运行库，方式如下：
@@ -72,6 +74,16 @@ app_id，API Key 和 Secret Key。
 
 不同模型的收费规则和效果不同，请查看百度智能云控制台，需先为模型开启按量付费，否则对应模型不可用，调用时会报错。
 
+### 我是千帆APP用户
+
+请前往 [百度智能云千帆AppBuilder](https://console.bce.baidu.com/ai_apaas/appCenter) 注册并在 [秘钥管理](https://console.bce.baidu.com/ai_apaas/secretKey) 界面创建密钥并在插件配置内填写入工作台秘钥
+
+在 [应用广场](https://console.bce.baidu.com/ai_apaas/appCenter) 挑选一个App，配置并激活。
+
+在 [个人空间](https://console.bce.baidu.com/ai_apaas/personalSpace/app) 界面，你可以看到你创建的应用。复制他的应用ID并在配置项中填写，然后在配置项中给出一个友好的名称。
+
+请注意正确配置该插件是否支持Vision的选择框。
+
 ## 我是兔兔开发者
 
 下面这些函数可以让你调用大语言模型，同时还不必关心模型种类和配置细节。
@@ -91,38 +103,39 @@ if blm_library is not None:
 
 ```python
 
-class BLMFunctionCall:
-    functon_name:str
-    function_schema:Union[str,dict]
-    function:Callable[..., Any]
-
 async def chat_flow(
     prompt: Union[Union[str, dict], List[Union[str, dict]]],
-	model : Optional[Union[str, dict]] = None,
+    model : Optional[Union[str, dict]] = None,
     context_id: Optional[str] = None,
     channel_id: Optional[str] = None,
     functions: Optional[list[BLMFunctionCall]] = None,
     json_mode: Optional[bool] = False,
-    ) -> Optional[str]:
+) -> Optional[str]:
     ...
 
-# 下版本支持
-async def assistant_flow(
-	assistant: str,
-    prompt: Union[str, list],
-    context_id: Optional[str] = None
-    ) -> Optional[str]:
+def assistant_list(self) -> List[dict]:
     ...
 
-# 下版本支持
-async def assistant_create(
-    name:str,
-    instructions:str,
-    model: Optional[Union[str, dict]] = None,
-    functions: Optional[list[BLMFunctionCall]] = None,
-    code_interpreter:bool = false,
-    retrieval: Optional[List[str]] = None
-    ) -> str:
+async def assistant_thread_touch(
+        self,
+        thread_id: str,
+        assistant_id: str
+):
+    ...
+
+async def assistant_thread_create(
+        self,
+        assistant_id: str      
+    ):
+    ...
+
+async def assistant_run(
+    self,
+    thread_id: str,
+    assistant_id: str,
+    messages: Union[dict, List[dict]],
+    channel_id: Optional[str] = None,
+) -> Optional[str]:
     ...
 
 def model_list() -> List[dict]:
@@ -139,9 +152,13 @@ def get_default_model(self) -> dict:
 
 ```
 
+## Chat（对话）工作流
+
+这是大部分AI都支持的模式，以一问一答的形式来与AI对话。
+
 ### chat_flow
 
-Chat工作流，以一问一答的形式，与AI进行交互。
+Chat工作流主函数
 
 #### 参数列表：
 
@@ -222,7 +239,7 @@ ret = await blm.chat_flow(
 ]
 ```
 
-具体返回值会根据用户的配置来确定。如果用户没有配置启动文心一言或者
+具体返回值会根据用户的配置来确定。如果用户没有配置启动文心一言或者ChatGPT等的情况下，该函数会返回空。
 该函数可以用来配合动态配置文件Schema功能，让其他插件可以在自己的插件配置项中展示并让用户选择Model。
 该函数可在函数定义阶段就可用，但是考虑到加载顺序问题，建议不要早于load函数中调用。
 
@@ -295,6 +312,64 @@ UserDefinedName)”这样的结果。你的HardCode就会失效。**
 |------|---------------------|
 | dict | 返回用户配置的默认模型的info字典。 |
 
+## Assistant模式
+
+智能助手模式，部分比较新的AI会支持。特征是不需要自己维护上下文。
+
+### assistant_list
+
+Assistant工作流下，获取系统所有可使用的Assistant的函数
+
+#### 参数说明:
+
+无参数
+
+#### 返回值说明:
+
+| 类型         | 释义                     |
+|------------|------------------------|
+| List[dict] | 返回可用助手的列表，每个助手以字典形式表示。 |
+
+返回值为一个字典数组，范例如下：
+
+```python
+[
+    {"id":"e5d4c73e-2f49-4983-9b76-6af2847397b8","name":"AmiyaBot","model":"QianFan","vision":True}
+]
+```
+
+具体返回值会根据用户的配置来确定。如果用户没有配置启动文心一言或者
+该函数可以用来配合动态配置文件Schema功能，让其他插件可以在自己的插件配置项中展示并让用户选择助手。
+该函数可在函数定义阶段就可用，但是考虑到加载顺序问题，建议不要早于load函数中调用。
+
+特别注意，因为部分API提供商（比如ChatGPT）支持查询助手列表，因此该函数会通过网络加载助手列表。
+所以在兔兔刚刚启动的时候，该函数的返回结果，和后续调用的返回结果可能不同，使用时请注意。
+
+### assistant_thread_create
+
+创建一个对话上下文，ChatGPT叫Thread，文心App叫Conversation。
+一般来说，对话上下文会在服务器端存储和维护。
+
+**TODO**
+
+### assisant_thread_touch
+
+判断一个Thread是否还存在的函数。
+因为各大API提供商都对Thread有生命周期设定，因此一个其他插件存储在自己数据空间里的Thread，可能失效。
+该函数可以返回该Thread是否还能使用的指示，如果Thread无法使用，你需要重新创建一个Thread。
+
+千帆App的Conversation过期时间为7天。
+ChatGPT的Thread过期时间为30不活跃天。
+
+**TODO**
+
+### assistant_run
+
+执行一次助手调用，传递给他用户新增的提问内容，返回字符串格式的AI回复。
+注意，因为各大API提供商都用Thread等维护上下文，因此助手模式每次调用时，**不需要**传递上下文。只需要发送用户的新增内容。
+
+**TODO**
+
 ## Typing
 
 如果你想在你的Python开发时获得ide提示支持，你可以将文件`src/blm/src/common/blm_types.py`复制出来放到你的项目文件夹下然后引用里面的type：
@@ -361,4 +436,5 @@ Logo是用StableDiffusion插件跑出来的。
 |-----|---------------|
 | 1.0 | 初版登录商店        |
 | 1.1 | httpx库现在改为可选。 |
-| 1.2| 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
+| 1.2 | 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
+| 1.2.3 | 引入assistant |

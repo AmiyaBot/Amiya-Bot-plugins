@@ -13,6 +13,8 @@ from ..chat_gpt.chat_gpt_adapter import ChatGPTAdapter
 
 from ..ernie.ernie_adapter import ERNIEAdapter
 
+from ..ernie.qianfan_adapter import QianFanAdapter
+
 from .extract_json import extract_json
 
 from ..functions.core import parse_docstring
@@ -53,6 +55,8 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         )
         self.adapters: List[BLMAdapter] = []
         self.model_map: Dict[str, BLMAdapter] = {}
+        self.assistant_map: Dict[str, BLMAdapter] = {}
+        self.thread_map: Dict[str, BLMAdapter] = {}
         self.functions_registry:Dict[str,BLMFunctionCall] = {}
 
     def install(self):
@@ -66,8 +70,12 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         ernie_config = self.get_config("ERNIE")
         if ernie_config and ernie_config["enable"]:
             self.adapters.append(ERNIEAdapter(self))
+        qianfan_config = self.get_config("QianFan")
+        if qianfan_config and qianfan_config["enable"]:
+            self.adapters.append(QianFanAdapter(self))
 
         self.model_list()
+
 
     def register_blm_function(self, func) -> callable:
         """
@@ -168,43 +176,64 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
             return None
         return await adapter.chat_flow(prompt, model, context_id, channel_id, functions, json_mode)
 
-    async def assistant_flow(
+    def assistant_list(self) -> List[dict]:
+        # 返回的同时，构造ModelMap，方便后续的模型调用
+        assistant_list = []
+        for adapter in self.adapters:
+            adapter_models = adapter.assistant_list()
+            assistant_list.extend(adapter_models)
+            for assistant in adapter_models:
+                self.assistant_map[assistant["id"]] = adapter
+        return assistant_list
+
+    async def assistant_thread_create(
         self,
-        assistant: str,
-        prompt: Union[str, List[str]],
-        context_id: Optional[str] = None,
+        assistant_id: str      
+    ):
+        self.assistant_list()
+
+        if assistant_id not in self.assistant_map.keys():
+            return
+
+        adapter = self.assistant_map[assistant_id]
+        if not adapter:
+            return None
+        thread_id = await adapter.assistant_thread_create(assistant_id)
+        self.thread_map[thread_id] = adapter
+        return thread_id
+
+    async def assistant_thread_touch(
+        self,
+        thread_id: str,
+        assistant_id: str
+    ):
+        self.assistant_list()
+        
+        if assistant_id not in self.assistant_map.keys():
+            return
+
+        adapter = self.assistant_map[assistant_id]
+        if not adapter:
+            return None
+        return await adapter.assistant_thread_touch(thread_id,assistant_id)        
+
+    async def assistant_run(
+        self,
+        thread_id: str,
+        assistant_id: str,
+        messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
     ) -> Optional[str]:
-        if model is None:
-            model = self.get_default_model()
-
-        if isinstance(model, dict):
-            model = model["model_name"]
-
-        adapter = self.model_map[assistant]
+        self.assistant_list()        
+        if assistant_id not in self.assistant_map.keys():
+            return
+        
+        adapter = self.assistant_map[assistant_id]
         if not adapter:
             return None
-        return await adapter.assistant_flow(assistant, prompt, context_id, channel_id)
+        
+        return await adapter.assistant_run(thread_id, assistant_id, messages, channel_id)
 
-    async def assistant_create(
-        self,
-        name: str,
-        instructions: str,
-        model: Optional[Union[str, dict]] = None,
-        functions: Optional[List[BLMFunctionCall]] = None,
-        code_interpreter: bool = False,
-        retrieval: Optional[List[str]] = None,
-    ) -> str:
-        if model is None:
-            model = self.get_default_model()
-        if isinstance(model, dict):
-            model = model["model_name"]
-
-        adapter = self.model_map[model]
-        if not adapter:
-            return None
-        return await adapter.assistant_create(name, instructions, model, functions, code_interpreter, retrieval)
-    
     @property
     def amiyabot_function_calls(self) -> List[BLMFunctionCall]:
         

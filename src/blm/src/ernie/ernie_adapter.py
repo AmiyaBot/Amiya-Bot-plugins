@@ -382,3 +382,28 @@ class ERNIEAdapter(BLMAdapter):
                 ret_str = None
 
         return ret_str
+
+    def assistant_list(self) -> List[dict]:
+        return []
+
+    async def assistant_thread_touch(
+        self,
+        thread_id: str,
+        assistant_id: str
+    ):
+        return True
+
+    async def assistant_thread_create(
+            self,
+            assistant_id: str      
+        ):
+        return None
+    
+    async def assistant_run(
+        self,
+        thread_id: str,
+        assistant_id: str,
+        messages: Union[dict, List[dict]],
+        channel_id: Optional[str] = None,
+    ) -> Optional[str]:
+        return None
