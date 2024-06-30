@@ -39,24 +39,29 @@ class BLMAdapter:
     ) -> Optional[str]:
         ...
 
-    async def assistant_flow(
-        self,
-        assistant: str,
-        prompt: Union[str, List[str]],
-        context_id: Optional[str] = None,
-        channel_id: Optional[str] = None,
-    ) -> Optional[str]:
+    def assistant_list(self) -> List[dict]:
         ...
 
-    async def assistant_create(
+    async def assistant_thread_touch(
+            self,
+            thread_id: str,
+            assistant_id: str
+    ):
+        ...
+
+    async def assistant_thread_create(
+            self,
+            assistant_id: str      
+        ):
+        ...
+    
+    async def assistant_run(
         self,
-        name: str,
-        instructions: str,
-        model: Optional[Union[str, dict]] = None,
-        functions: Optional[List[BLMFunctionCall]] = None,
-        code_interpreter: bool = False,
-        retrieval: Optional[List[str]] = None,
-    ) -> str:
+        thread_id: str,
+        assistant_id: str,
+        messages: Union[dict, List[dict]],
+        channel_id: Optional[str] = None,
+    ) -> Optional[str]:
         ...
 
     def model_list(self) -> List[dict]:

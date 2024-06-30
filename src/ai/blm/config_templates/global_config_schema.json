@@ -36,6 +36,11 @@
                     "description": "可选的一个http或https代理，socks代理不支持",
                     "type": "string"
                 },
+                "enable_assistants":{
+                    "title": "启用Assistant",
+                    "description": "设置后，将提供Assistant给其他调用者。",
+                    "type": "boolean"
+                },
                 "disable_high_cost": {
                     "title": "禁用GPT-4",
                     "description": "设置后，将不会在列表中给其他插件返回GPT-4模型。",
@@ -46,13 +51,7 @@
                     "description": "使用GPT-4模型时的平均每小时调用次数，设为0表示不限。",
                     "type": "number"
                 }
-            },
-            "required": [
-                "api_key",
-                "base_url",
-                "disable_high_cost_quota",
-                "high_cost_quota"
-            ]
+            }
         },
         "ERNIE": {
             "type": "object",
@@ -92,14 +91,48 @@
                     "description": "使用ERNIE-4，ERNIE-8K模型时的平均每小时调用次数，设为0表示不限，所有昂贵模型共享。",
                     "type": "number"
                 }
-            },
-            "required": [
-                "app_id",
-                "api_key",
-                "secret_key",
-                "disable_high_cost_quota",
-                "high_cost_quota"
-            ]
+            }
+        },
+        "QianFan":{
+            "title": "千帆App",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供千帆APP(作为Assistant)。",
+                    "type": "boolean"
+                },
+                "apps": {
+                    "title": "APP",
+                    "description": "由Baidu提供给您的AppId，没有的话请到https://console.bce.baidu.com/ai_apaas/personalSpace/app申请。",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "app_id": {
+                                "title": "APP Id",
+                                "description": "由Baidu提供给您的AppId。",
+                                "type": "string"
+                            },
+                            "app_name":{
+                                "title": "APP名称",
+                                "description": "APP的名称，用于显示在其他插件的列表中。",
+                                "type": "string"
+                            },
+                            "vision_supported":{
+                                "title": "支持视觉",
+                                "description": "该App是否支持视觉。",
+                                "type": "boolean"                            
+                            }
+                        }
+                    }
+                },
+                "api_key": {
+                    "title": "工作台秘钥",
+                    "description": "应用的API Key，没有的话请到https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application申请。",
+                    "type": "string"
+                }
+            }
         },
         "show_log": {
             "title": "调试日志",

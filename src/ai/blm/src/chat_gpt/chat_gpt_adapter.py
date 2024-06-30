@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 import traceback
+import threading
 
 from datetime import datetime
 
@@ -19,6 +20,10 @@ enabled = False
 try:
     import httpx
     from openai import AsyncOpenAI, BadRequestError, RateLimitError
+    from openai.types.beta.threads.text_content_block import TextContentBlock
+    from openai.types.beta.threads.image_url_content_block import ImageURLContentBlock
+    from openai.types.beta.threads.image_file_content_block import ImageFileContentBlock
+    from openai.types.beta.threads.image_url_content_block_param import ImageURLContentBlockParam
 
     enabled = True
     log.info('OpenAI初始化完成')
@@ -35,6 +40,37 @@ class ChatGPTAdapter(BLMAdapter):
         self.plugin: AmiyaBotPluginInstance = plugin
         self.context_holder = {}
         self.query_times = []
+        self.assistant_list_cache = []
+        self.thread_cache = {}
+
+        # 定时任务更新assistant列表,每30分钟一次,立即执行第一次
+        def wrapper():
+            asyncio.run(self.__refresh_api_loop())
+
+        threading.Thread(target=wrapper).start()
+
+    async def __refresh_api_loop(self):
+        while True:
+            await self.__refresh_api()
+            await asyncio.sleep(30 * 60)  # 等待指定的时间间隔
+
+    async def __refresh_api(self):
+        client = await self.get_client()
+        
+        unified_assistants = []
+
+        async for assistant in client.beta.assistants.list():
+            self.debug_log(f"assistant: {assistant}")
+            unified_assistants.append(
+                {
+                    "id": assistant.id,
+                    "name": assistant.name,
+                    "model": assistant.model,
+                    "vision": False
+                }
+            )
+
+        self.assistant_list_cache=unified_assistants
 
     def debug_log(self, msg):
         show_log = self.plugin.get_config("show_log")
@@ -142,6 +178,23 @@ class ChatGPTAdapter(BLMAdapter):
                 }
             )
         return model_list_response
+
+    async def get_client(self) -> AsyncOpenAI:
+        proxy = self.get_config('proxy')
+        async_httpx_client = None
+        if proxy is not None and proxy != "":
+            if proxy.startswith("https://"):
+                proxies = {"http://": proxy, "https://": proxy}
+                async_httpx_client = httpx.AsyncClient(proxies=proxies)
+            elif proxy.startswith("http://"):
+                proxies = {"http://": proxy}
+                async_httpx_client = httpx.AsyncClient(proxies=proxies)
+            else:
+                raise ValueError("无效的代理URL")
+
+        base_url = self.get_config('url')
+        client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url=base_url, http_client=async_httpx_client)
+        return client
 
     async def chat_flow(
         self,
@@ -434,3 +487,125 @@ class ChatGPTAdapter(BLMAdapter):
                 return ret_str
         else:
             return ret_str
+
+    def assistant_list(self) -> List[dict]:
+        enable_assistant = self.get_config("enable_assistants")
+        if enable_assistant is None or enable_assistant != True:
+            return []
+        
+        return self.assistant_list_cache
+    
+    async def assistant_thread_touch(
+        self,
+        thread_id: str,
+        assistant_id: str
+    ):
+        enable_assistant = self.get_config("enable_assistants")
+        if enable_assistant is None or enable_assistant != True:
+            return None
+        
+        # client = await self.get_client()
+        # thread = await client.beta.threads.retrieve(thread_id)
+        # return thread.id
+
+        # 我可以选择从服务器取，但是目前我就是设置一个10天超时
+        timeout = 10 * 24 * 60 * 60
+
+        # 测试环境下，设置一个1分钟的超时
+        # timeout = 60
+
+        if thread_id in self.thread_cache:
+            if time.time() - self.thread_cache[thread_id] < timeout:
+                return thread_id
+            else:
+                self.thread_cache.pop(thread_id, None)
+        
+        return None
+        
+    
+    async def assistant_thread_create(
+            self,
+            assistant_id: str      
+        ):
+        enable_assistant = self.get_config("enable_assistants")
+        if enable_assistant is None or enable_assistant != True:
+            return None
+        
+        client = await self.get_client()
+
+        thread = await client.beta.threads.create()
+
+        #记录时间
+        self.thread_cache[thread.id] = time.time()
+
+        return thread.id
+        
+    async def assistant_run(
+        self,
+        thread_id: str,
+        assistant_id: str,
+        messages: Union[dict, List[dict]],
+        channel_id: Optional[str] = None,
+    ) -> Optional[str]:
+        enable_assistant = self.get_config("enable_assistants")
+        if enable_assistant is None or enable_assistant != True:
+            return None
+        
+        client = await self.get_client()
+
+        if isinstance(messages, dict):
+            messages = [messages]
+        
+        for i in range(len(messages)):
+            if isinstance(messages[i], dict):
+                if "type" not in messages[i]:
+                    raise ValueError("无效的messages")
+                if messages[i]["type"] == "text":
+                    self.debug_log(f"Creating Text Message: thread_id = {thread_id}, role = {messages[i]['role']}, content = {messages[i]['text']}")
+
+                    _ = await client.beta.threads.messages.create(
+                        thread_id=thread_id,
+                        role=messages[i]["role"],
+                        content=messages[i]["text"]
+                    )
+                elif messages[i]["type"] == "image_url":
+                    self.debug_log(f"Creating ImageUrl Message: thread_id = {thread_id}, role = {messages[i]['role']}, content = {messages[i]['image_url']}")
+
+                    part = ImageURLContentBlockParam()
+                    part.image_url=messages[i]["image_url"]
+
+                    _ = await client.beta.threads.messages.create(
+                        thread_id=thread_id,
+                        role=messages[i]["role"],
+                        content=part
+                    )
+                else:
+                    raise ValueError("无效的messages")
+            else:
+                raise ValueError("无效的messages")
+        
+        run = await client.beta.threads.runs.create_and_poll(
+            thread_id=thread_id,
+            assistant_id=assistant_id,
+        )
+
+        if run.status == 'completed': 
+            self.thread_cache[thread_id] = time.time()
+            current_run_id = run.id
+            ret_str = ""
+            # message是倒序的，发现不属于本次run的消息就停止
+            # 用户提供的消息没有run id, 所以读到就会被打断
+            async for message in client.beta.threads.messages.list(
+                thread_id=thread_id
+            ):
+                if message.run_id != current_run_id:
+                    break
+
+                self.debug_log(f"message: {message}")
+                if message.role == "assistant":
+                    for content in message.content:
+                        ret_str += content.text.value
+        else:
+            return None
+
+        return ret_str

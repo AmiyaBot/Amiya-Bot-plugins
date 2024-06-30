@@ -15,5 +15,16 @@
         "disable_high_cost_quota": true,
         "high_cost_quota": 5
     },
+    "QianFan": {
+        "enable": false,
+        "apps": [
+            {
+                "app_id": "12345",
+                "app_name":"测试App",
+                "vision_supported":false
+            }
+        ],
+        "api_key": "12345"
+    },
     "show_log": false
 }
