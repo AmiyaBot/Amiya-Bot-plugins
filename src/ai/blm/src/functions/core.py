@@ -1,7 +1,6 @@
-
-
 import inspect
 import re
+
 
 def parse_docstring(func):
     """
@@ -25,7 +24,7 @@ def parse_docstring(func):
     type_pattern = r':type (\w+): (\w+)'
     params = re.findall(param_pattern, docstring)
     types = dict(re.findall(type_pattern, docstring))
-    
+
     properties = {}
     required = []
     for param, desc in params:
@@ -55,4 +54,3 @@ def parse_docstring(func):
     }
 
     return schema
-

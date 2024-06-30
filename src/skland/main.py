@@ -201,9 +201,11 @@ async def _(data: Message):
             'char_1037_amiya3': '阿米娅医疗',
         }
         char_list = {
-            character_info['charInfoMap'][item['charId']]['name']
-            if item['charId'] not in amiya_promotion
-            else amiya_promotion[item['charId']]: item
+            (
+                character_info['charInfoMap'][item['charId']]['name']
+                if item['charId'] not in amiya_promotion
+                else amiya_promotion[item['charId']]
+            ): item
             for item in character_info['chars']
         }
         if char_name in char_list:
@@ -289,7 +291,11 @@ async def _(data: Message):
         if rec.bilibili_token:
             token = rec.bilibili_token
         else:
-            await data.send(Chain(data).text('您是BiliBili服玩家，还需要提供B服Token才能查询抽卡记录，请发送 “兔兔绑定” 并查看其中关于获取B服Token的相关说明。>.<'))
+            await data.send(
+                Chain(data).text(
+                    '您是BiliBili服玩家，还需要提供B服Token才能查询抽卡记录，请发送 “兔兔绑定” 并查看其中关于获取B服Token的相关说明。>.<'
+                )
+            )
             return
 
     try:
@@ -301,9 +307,9 @@ async def _(data: Message):
             appid = kwer_config['app_id']
             appsecret = kwer_config['app_secret']
             gacha_list, pool_list = await get_gacha_arkgacha_kwer_top(server_name, token, appid, appsecret)
-            info[
-                'copyright'
-            ] = '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
+            info['copyright'] = (
+                '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
+            )
         else:
             gacha_list, pool_list = await get_gacha_official(server_name, token)
             info['copyright'] = '历史数据来自鹰角网络官网'

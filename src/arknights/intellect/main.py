@@ -93,7 +93,10 @@ async def _(data: Message):
                 through = int(time.time()) - info.in_time
                 restored = int(through / 360) + info.cur_num
 
-                text = f'博士，根据上一次记录，您的 {info.full_num} 理智会在 {full_time} 左右回复满\n' f'不计算上限的话，现在已经回复到 {restored} 理智了'
+                text = (
+                    f'博士，根据上一次记录，您的 {info.full_num} 理智会在 {full_time} 左右回复满\n'
+                    f'不计算上限的话，现在已经回复到 {restored} 理智了'
+                )
 
                 return Chain(data).text(text)
             else:

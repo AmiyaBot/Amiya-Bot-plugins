@@ -12,7 +12,11 @@ max_rewards = 30000
 
 
 async def guess_filter(data: Message):
-    return data.text in ArknightsGameData.operators or data.text in [*['不玩了', '结束'], *['下一个', '跳过'], *['线索', '提示']]
+    return data.text in ArknightsGameData.operators or data.text in [
+        *['不玩了', '结束'],
+        *['下一个', '跳过'],
+        *['线索', '提示'],
+    ]
 
 
 async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode: bool):

@@ -36,7 +36,7 @@
                     "description": "可选的一个http或https代理，socks代理不支持",
                     "type": "string"
                 },
-                "enable_assistants":{
+                "enable_assistants": {
                     "title": "启用Assistant",
                     "description": "设置后，将提供Assistant给其他调用者。",
                     "type": "boolean"
@@ -93,7 +93,7 @@
                 }
             }
         },
-        "QianFan":{
+        "QianFan": {
             "title": "千帆App",
             "type": "object",
             "properties": {
@@ -114,15 +114,15 @@
                                 "description": "由Baidu提供给您的AppId。",
                                 "type": "string"
                             },
-                            "app_name":{
+                            "app_name": {
                                 "title": "APP名称",
                                 "description": "APP的名称，用于显示在其他插件的列表中。",
                                 "type": "string"
                             },
-                            "vision_supported":{
+                            "vision_supported": {
                                 "title": "支持视觉",
                                 "description": "该App是否支持视觉。",
-                                "type": "boolean"                            
+                                "type": "boolean"
                             }
                         }
                     }

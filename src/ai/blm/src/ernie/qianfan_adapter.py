@@ -65,28 +65,18 @@ class QianFanAdapter(BLMAdapter):
         if apps is None:
             self.debug_log("fail to get app list. No conf.")
             return []
-        
+
         app_list = []
 
         for app in apps:
             app_id = app["app_id"]
             name = app["app_name"]
             vision = app["vision_supported"]
-            app_list.append({
-                "id": app_id,
-                "name": name,
-                "model": "QianFanApp",
-                "vision": vision
-            })
-
+            app_list.append({"id": app_id, "name": name, "model": "QianFanApp", "vision": vision})
 
         return app_list
 
-    async def assistant_thread_touch(
-            self,
-            thread_id: str,
-        assistant_id: str
-    ):
+    async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
         # 我可以选择从服务器取，但是目前我就是设置一个5天超时
         timeout = 5 * 24 * 60 * 60
 
@@ -95,13 +85,10 @@ class QianFanAdapter(BLMAdapter):
                 return thread_id
             else:
                 self.thread_cache.pop(thread_id, None)
-        
+
         return None
 
-    async def assistant_thread_create(
-            self,
-            assistant_id: str      
-        ):
+    async def assistant_thread_create(self, assistant_id: str):
 
         url = "https://qianfan.baidubce.com/v2/app/conversation"
 
@@ -111,14 +98,9 @@ class QianFanAdapter(BLMAdapter):
             self.debug_log("fail to create thread, no app_key or assistant_id")
             return None
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + app_key
-        }
+        headers = {"Content-Type": "application/json", "Authorization": "Bearer " + app_key}
 
-        data = {
-            "app_id": assistant_id
-        }
+        data = {"app_id": assistant_id}
 
         response_str = ""
 
@@ -128,7 +110,7 @@ class QianFanAdapter(BLMAdapter):
             response_str = await http_requests.post(url, headers=headers, payload=data)
 
             response_json = json.loads(response_str)
-            conv_id =  response_json["conversation_id"]
+            conv_id = response_json["conversation_id"]
 
             self.thread_cache[conv_id] = time.time()
 
@@ -136,7 +118,7 @@ class QianFanAdapter(BLMAdapter):
         except Exception as e:
             self.debug_log(f"fail to create thread, error: {e} \n response: {response_str}")
             return None
-    
+
     async def assistant_run(
         self,
         thread_id: str,
@@ -144,18 +126,13 @@ class QianFanAdapter(BLMAdapter):
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
     ) -> Optional[str]:
-        
         app_key = self.get_config("api_key")
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + app_key
-        }
+        headers = {"Content-Type": "application/json", "Authorization": "Bearer " + app_key}
 
         if isinstance(messages, dict):
             messages = [messages]
-        
-        
+       
         apps = self.get_config("apps")
         if apps is None:
             self.debug_log("fail to get app list. No conf.")
@@ -240,7 +217,7 @@ class QianFanAdapter(BLMAdapter):
             )
 
             response_json = json.loads(response_str)
-            
+
             if "answer" in response_json:
                 self.thread_cache[thread_id] = time.time()
 
@@ -253,7 +230,7 @@ class QianFanAdapter(BLMAdapter):
                 answer = re.sub(r'\*\*', '', answer)
                 
                 return answer
-        
+
         except Exception as e:
             self.debug_log(f"fail to run assistant, error: {e} \n response: {response_str}")
             return None

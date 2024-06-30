@@ -5,18 +5,23 @@
 
 # 新功能
 
-1. 提供了AI Vision（AI视觉）的支持，可以发送图片作为Prompt，该功能目前仅ChatGPT的'gpt-4-vision-preview'模型支持。 开发者可以在`supported_feature`里查找`vision`来确认这类模型。
+1. 提供了AI Vision（AI视觉）的支持，可以发送图片作为Prompt，该功能目前仅ChatGPT的'gpt-4-vision-preview'模型支持。
+   开发者可以在`supported_feature`里查找`vision`来确认这类模型。
 
 2. **max_token参数更名**
-model_info字典中的`max-token`更名为`max_token`，使用下划线替代连字符，从而和其他字段保持一致。
-当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来的1.5版本移除支持，请开发者及时调整代码。
+   model_info字典中的`max-token`更名为`max_token`，使用下划线替代连字符，从而和其他字段保持一致。
+   当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来的1.5版本移除支持，请开发者及时调整代码。
 
-3. 支持json_mode：新增json_mode参数让chatflow返回一个合法json字符串，目前仅gpt-4-1106-preview模型原生支持json_mode，其余模型均为用模拟方式支持json_mode，详情请参考后面章节关于chat_flow的函数原型声明。
+3.
+
+支持json_mode：新增json_mode参数让chatflow返回一个合法json字符串，目前仅gpt-4-1106-preview模型原生支持json_mode，其余模型均为用模拟方式支持json_mode，详情请参考后面章节关于chat_flow的函数原型声明。
 
 4. **extract_json函数废弃**
-因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
+   因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
 
-5. 支持了Assistant模式，现在可以使用各大平台提供的AI助手库了。第一版支持ChatGPT的Assistant和千帆AppBuilder的应用（百度AssistantBeta下版本支持）。官方兔兔就在使用本模式，您可以添加官方兔兔并和他聊天试试效果。
+5.
+
+支持了Assistant模式，现在可以使用各大平台提供的AI助手库了。第一版支持ChatGPT的Assistant和千帆AppBuilder的应用（百度AssistantBeta下版本支持）。官方兔兔就在使用本模式，您可以添加官方兔兔并和他聊天试试效果。
 
 # 使用方法
 
@@ -76,11 +81,13 @@ app_id，API Key 和 Secret Key。
 
 ### 我是千帆APP用户
 
-请前往 [百度智能云千帆AppBuilder](https://console.bce.baidu.com/ai_apaas/appCenter) 注册并在 [秘钥管理](https://console.bce.baidu.com/ai_apaas/secretKey) 界面创建密钥并在插件配置内填写入工作台秘钥
+请前往 [百度智能云千帆AppBuilder](https://console.bce.baidu.com/ai_apaas/appCenter)
+注册并在 [秘钥管理](https://console.bce.baidu.com/ai_apaas/secretKey) 界面创建密钥并在插件配置内填写入工作台秘钥
 
 在 [应用广场](https://console.bce.baidu.com/ai_apaas/appCenter) 挑选一个App，配置并激活。
 
-在 [个人空间](https://console.bce.baidu.com/ai_apaas/personalSpace/app) 界面，你可以看到你创建的应用。复制他的应用ID并在配置项中填写，然后在配置项中给出一个友好的名称。
+在 [个人空间](https://console.bce.baidu.com/ai_apaas/personalSpace/app)
+界面，你可以看到你创建的应用。复制他的应用ID并在配置项中填写，然后在配置项中给出一个友好的名称。
 
 请注意正确配置该插件是否支持Vision的选择框。
 
@@ -105,7 +112,7 @@ if blm_library is not None:
 
 async def chat_flow(
     prompt: Union[Union[str, dict], List[Union[str, dict]]],
-    model : Optional[Union[str, dict]] = None,
+    model: Optional[Union[str, dict]] = None,
     context_id: Optional[str] = None,
     channel_id: Optional[str] = None,
     functions: Optional[list[BLMFunctionCall]] = None,
@@ -113,21 +120,25 @@ async def chat_flow(
 ) -> Optional[str]:
     ...
 
+
 def assistant_list(self) -> List[dict]:
     ...
 
+
 async def assistant_thread_touch(
-        self,
-        thread_id: str,
-        assistant_id: str
+    self,
+    thread_id: str,
+    assistant_id: str
 ):
     ...
 
+
 async def assistant_thread_create(
-        self,
-        assistant_id: str      
-    ):
+    self,
+    assistant_id: str
+):
     ...
+
 
 async def assistant_run(
     self,
@@ -138,14 +149,18 @@ async def assistant_run(
 ) -> Optional[str]:
     ...
 
+
 def model_list() -> List[dict]:
     ...
 
-def get_model(self,model_name:str) -> dict:
+
+def get_model(self, model_name: str) -> dict:
     ...
 
-def get_model_quota_left(self,model_name:str) -> int:
+
+def get_model_quota_left(self, model_name: str) -> int:
     ...
+
 
 def get_default_model(self) -> dict:
     ...
@@ -162,14 +177,14 @@ Chat工作流主函数
 
 #### 参数列表：
 
-| 参数名        | 类型                              | 释义                                                     | 默认值     |
-|------------|---------------------------------|--------------------------------------------------------|---------|
-| prompt     | Union[Union[str, dict], List[Union[str, dict]]],                | 要提交给模型的Prompt，具体格式见下述                                       | 无(不可为空) |
-| model      | Union[str,dict]                 | 选择的模型，既可以是模型的名字，也可以是model_list或get_model返回的dict        | None    |
-| context_id | Optional[str]                   | 如果你需要保持一个对话，请每次都传递相同的context_id，传递None则表示不保存本次Context。 | None    |
-| channel_id | Optional[str]                   | 该次Prompt的ChannelId                                     | None    |
-| functions  | Optional[list[BLMFunctionCall]] | FunctionCall功能，需要模型支持才能生效                              | None    |
-| json_mode  | Optional[bool] | 启用json_mode，要求模型返回的结果为json string  | None    |
+| 参数名        | 类型                                               | 释义                                                     | 默认值     |
+|------------|--------------------------------------------------|--------------------------------------------------------|---------|
+| prompt     | Union[Union[str, dict], List[Union[str, dict]]], | 要提交给模型的Prompt，具体格式见下述                                  | 无(不可为空) |
+| model      | Union[str,dict]                                  | 选择的模型，既可以是模型的名字，也可以是model_list或get_model返回的dict        | None    |
+| context_id | Optional[str]                                    | 如果你需要保持一个对话，请每次都传递相同的context_id，传递None则表示不保存本次Context。 | None    |
+| channel_id | Optional[str]                                    | 该次Prompt的ChannelId                                     | None    |
+| functions  | Optional[list[BLMFunctionCall]]                  | FunctionCall功能，需要模型支持才能生效                              | None    |
+| json_mode  | Optional[bool]                                   | 启用json_mode，要求模型返回的结果为json string                      | None    |
 
 > model可以是字符串，也可以是model_list或get_model返回的dict。在dict的情况下，会访问dict的“model_name”属性来获取模型名称。
 
@@ -179,33 +194,42 @@ Chat工作流主函数
 > id，该参数的唯一目的是为了保存token调用量。我建议插件调用时，能传递channel_id的场景尽量传递，无法获取ChannelId的时候也最好传递自己插件的名字等，用于在计费的时候区分。
 
 > 单个Prompt可以是字符串，也可以是dict。如果他是dict，则他需要满足下面这两种结构中的一种：
+
 ```
 {"type":"text","text":"xxxx"},
 {"type":"image_url","url":"xxxx"}
 ```
-其中，image_url用于支持vision（AI视觉）feature。对于不支持vision的模型，image_url类型的dict会被忽略。
->Prompt参数也支持传递string和dict的任意组合的列表，用来一次性传输多个prompt。
 
->字符串和dict可以混合提供，也就是说下面的代码是可以的：
+其中，image_url用于支持vision（AI视觉）feature。对于不支持vision的模型，image_url类型的dict会被忽略。
+> Prompt参数也支持传递string和dict的任意组合的列表，用来一次性传输多个prompt。
+
+> 字符串和dict可以混合提供，也就是说下面的代码是可以的：
+
 ```python
 ret = await blm.chat_flow(
-    prompt = [
+    prompt=[
         "今天天气如何?",
-        {"type":"text","text":"我希望是个晴天"},
-        {"type":"image_url","url":"http://img.gr/smile.png"}
+        {"type": "text", "text": "我希望是个晴天"},
+        {"type": "image_url", "url": "http://img.gr/smile.png"}
     ],
-    model = "xxxx",
+    model="xxxx",
     ....
 )
 ```
 
-> functions函数是用于FunctionCall功能，需要模型支持。在model_list中，`supported_feature`带有`function_call`的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)。（该功能本版本未实现对接，下个版本会实现对接。）
+> functions函数是用于FunctionCall功能，需要模型支持。在model_list中，`supported_feature`带有`function_call`
+>
+的模型支持这个功能。目前仅ChatGPT支持该功能，具体的功能说明请看[这个文档](https://platform.openai.com/docs/guides/function-calling)
+> 。（该功能本版本未实现对接，下个版本会实现对接。）
 
-> json_mode为True的情况下，接口一定会返回一个json字符串。但是该字符串的格式是不确定的，并不是说prompt要求了什么格式，就会是什么格式，因为这本质上仍然是AIGC。因此使用的时候你需要判断输出Json是否有你想要的字段。
+>
+json_mode为True的情况下，接口一定会返回一个json字符串。但是该字符串的格式是不确定的，并不是说prompt要求了什么格式，就会是什么格式，因为这本质上仍然是AIGC。因此使用的时候你需要判断输出Json是否有你想要的字段。
 所有的模型都可以使用json_mode，但是目前除了gpt-4-1106-preview以外的模型都没有原生支持。其他模型都采用如下的方式模拟输出：
+
 1. 向Prompt拼接一行新的内容：(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。
 2. 将返回值通过extract_json转为json对象。
 3. 将json对象序列化为字符串。
+
 > 因此extract_json函数特化为处理此类任务，现转为private，不再对外提供。
 
 #### 返回值说明:
@@ -232,10 +256,14 @@ ret = await blm.chat_flow(
 
 ```python
 [
-    {"model_name":"gpt-3.5-turbo","type":"low-cost","max_token":2000,"supported_feature":["completion_flow","chat_flow","assistant_flow","function_call"]},
-    {"model_name":"gpt-4","type":"high-cost","max_token":4000,"supported_feature":["completion_flow","chat_flow","assistant_flow","function_call"]]},
-    {"model_name":"ernie-3.5","type":"low-cost","max_token":4000,"supported_feature":["completion_flow","chat_flow"]},
-    {"model_name":"ernie-4","type":"high-cost","max_token":4000,"supported_feature":["completion_flow","chat_flow"]},
+    {"model_name": "gpt-3.5-turbo", "type": "low-cost", "max_token": 2000,
+     "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"]},
+    {"model_name": "gpt-4", "type": "high-cost", "max_token": 4000,
+     "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"]]},
+{"model_name": "ernie-3.5", "type": "low-cost", "max_token": 4000,
+ "supported_feature": ["completion_flow", "chat_flow"]},
+{"model_name": "ernie-4", "type": "high-cost", "max_token": 4000,
+ "supported_feature": ["completion_flow", "chat_flow"]},
 ]
 ```
 
@@ -245,26 +273,28 @@ ret = await blm.chat_flow(
 
 #### 返回字典格式说明：
 
-| 参数名               | 类型   | 释义                                              |
-|-------------------|------|-------------------------------------------------|
-| model_name        | str  | 模型的名称                                           |
-| type              | str  | 模型的类型，如"low-cost"或"high-cost"                   |
+| 参数名               | 类型   | 释义                                                             |
+|-------------------|------|----------------------------------------------------------------|
+| model_name        | str  | 模型的名称                                                          |
+| type              | str  | 模型的类型，如"low-cost"或"high-cost"                                  |
 | max_token         | int  | 模型单次请求支持的最大token数，注意诸如function call等功能也会消耗token，并且prompt也包含在内。 |
-| supported_feature | list | 模型支持的特性列表                                       |
+| supported_feature | list | 模型支持的特性列表                                                      |
 
-**请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(
+*
+
+*请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(
 UserDefinedName)”这样的结果。你的HardCode就会失效。**
 
 目前完整的feature列表如下:
 
-| feature名               | 释义                                              |
-|-------------------| -------------------------------------------------|
-| completion_flow        | 文本补全flow，已废弃                                           |
-| chat_flow              | 一问一答flow，最常用的flow                   |
-| assistant_flow         | 助手flow，一种专用于AI助手的flow |
-| function_call | 函数调用功能，可以让ai决定需要调用的函数     |
-| vision | AI视觉，可以用图片作为Prompt |
-| json_mode | 是否原生而非模拟支持json_mode。 |
+| feature名        | 释义                    |
+|-----------------|-----------------------|
+| completion_flow | 文本补全flow，已废弃          |
+| chat_flow       | 一问一答flow，最常用的flow     |
+| assistant_flow  | 助手flow，一种专用于AI助手的flow |
+| function_call   | 函数调用功能，可以让ai决定需要调用的函数 |
+| vision          | AI视觉，可以用图片作为Prompt    |
+| json_mode       | 是否原生而非模拟支持json_mode。  |
 
 ### get_model
 
@@ -278,8 +308,8 @@ UserDefinedName)”这样的结果。你的HardCode就会失效。**
 
 #### 返回值说明：
 
-| 类型   | 释义               |
-|------|------------------|
+| 类型   | 释义                                    |
+|------|---------------------------------------|
 | dict | 返回对应模型名称的info字典。内容和model_list函数的返回一样。 |
 
 ### get_model_quota_left
@@ -432,9 +462,9 @@ Logo是用StableDiffusion插件跑出来的。
 
 # 版本信息
 
-| 版本  | 变更            |
-|-----|---------------|
-| 1.0 | 初版登录商店        |
-| 1.1 | httpx库现在改为可选。 |
-| 1.2 | 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
-| 1.2.3 | 引入assistant |
+| 版本    | 变更                                                |
+|-------|---------------------------------------------------|
+| 1.0   | 初版登录商店                                            |
+| 1.1   | httpx库现在改为可选。                                     |
+| 1.2   | 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
+| 1.2.3 | 引入assistant                                       |

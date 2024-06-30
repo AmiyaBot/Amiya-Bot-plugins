@@ -25,8 +25,7 @@ class BLMAdapter:
         model: Optional[Union[str, dict]] = None,
         context_id: Optional[str] = None,
         channel_id: Optional[str] = None,
-    ) -> Optional[str]:
-        ...
+    ) -> Optional[str]: ...
 
     async def chat_flow(
         self,
@@ -64,11 +63,9 @@ class BLMAdapter:
         assistant_id: str,
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
-    ) -> Optional[str]:
-        ...
+    ) -> Optional[str]: ...
 
-    def model_list(self) -> List[dict]:
-        ...
+    def model_list(self) -> List[dict]: ...
 
     def get_model(self, model_name: str) -> dict:
         model_dict_list = self.model_list()
@@ -76,12 +73,9 @@ class BLMAdapter:
             if model_dict["model_name"] == model_name:
                 return model_dict
 
-    def get_model_quota_left(self, model_name: str) -> int:
-        ...
+    def get_model_quota_left(self, model_name: str) -> int: ...
 
-    def get_default_model(self) -> dict:
-        ...
+    def get_default_model(self) -> dict: ...
 
     @property
-    def amiyabot_function_calls(self) -> List[BLMFunctionCall]:
-        ...
+    def amiyabot_function_calls(self) -> List[BLMFunctionCall]: ...

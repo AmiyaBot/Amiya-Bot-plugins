@@ -28,7 +28,9 @@ try:
     enabled = True
     log.info('OpenAI初始化完成')
 except ModuleNotFoundError as e:
-    log.info(f'未安装python库openai或版本低于1.0.0或未安装httpx，无法使用ChatGPT模型，错误消息：{e.msg}\n{traceback.format_exc()}')
+    log.info(
+        f'未安装python库openai或版本低于1.0.0或未安装httpx，无法使用ChatGPT模型，错误消息：{e.msg}\n{traceback.format_exc()}'
+    )
     enabled = False
 
 logger = LoggerManager('BLM-ChatGPT')
@@ -56,21 +58,16 @@ class ChatGPTAdapter(BLMAdapter):
 
     async def __refresh_api(self):
         client = await self.get_client()
-        
+
         unified_assistants = []
 
         async for assistant in client.beta.assistants.list():
             self.debug_log(f"assistant: {assistant}")
             unified_assistants.append(
-                {
-                    "id": assistant.id,
-                    "name": assistant.name,
-                    "model": assistant.model,
-                    "vision": False
-                }
+                {"id": assistant.id, "name": assistant.name, "model": assistant.model, "vision": False}
             )
 
-        self.assistant_list_cache=unified_assistants
+        self.assistant_list_cache = unified_assistants
 
     def debug_log(self, msg):
         show_log = self.plugin.get_config("show_log")
@@ -124,7 +121,7 @@ class ChatGPTAdapter(BLMAdapter):
             {
                 "model_name": "gpt-3.5-turbo",
                 "type": "low-cost",
-                "max_token": 2000,                    
+                "max_token": 2000,
                 "max-token": 2000,
                 "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
             },
@@ -136,7 +133,7 @@ class ChatGPTAdapter(BLMAdapter):
                 {
                     "model_name": "gpt-4",
                     "type": "high-cost",
-                    "max_token": 4000,                    
+                    "max_token": 4000,
                     "max-token": 4000,
                     "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
                 }
@@ -145,41 +142,61 @@ class ChatGPTAdapter(BLMAdapter):
                 {
                     "model_name": "gpt-4-1106-preview",
                     "type": "high-cost",
-                    "max_token": 128000,                    
+                    "max_token": 128000,
                     "max-token": 128000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","json_mode"],
+                    "supported_feature": [
+                        "completion_flow",
+                        "chat_flow",
+                        "assistant_flow",
+                        "function_call",
+                        "json_mode",
+                    ],
                 }
             )
             model_list_response.append(
                 {
                     "model_name": "gpt-4-vision-preview",
                     "type": "high-cost",
-                    "max_token": 4096,                    
+                    "max_token": 4096,
                     "max-token": 4096,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow","vision"],
+                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "vision"],
                 }
             )
             model_list_response.append(
                 {
                     "model_name": "gpt-4-turbo",
                     "type": "high-cost",
-                    "max_token": 128000,                    
+                    "max_token": 128000,
                     "max-token": 128000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision","json_mode"],
+                    "supported_feature": [
+                        "completion_flow",
+                        "chat_flow",
+                        "assistant_flow",
+                        "function_call",
+                        "vision",
+                        "json_mode",
+                    ],
                 }
             )
             model_list_response.append(
                 {
                     "model_name": "gpt-4o",
                     "type": "high-cost",
-                    "max_token": 128000,                    
+                    "max_token": 128000,
                     "max-token": 128000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call","vision","json_mode"],
+                    "supported_feature": [
+                        "completion_flow",
+                        "chat_flow",
+                        "assistant_flow",
+                        "function_call",
+                        "vision",
+                        "json_mode",
+                    ],
                 }
             )
         return model_list_response
 
-    async def get_client(self) -> AsyncOpenAI:
+    async def get_client(self):
         proxy = self.get_config('proxy')
         async_httpx_client = None
         if proxy is not None and proxy != "":
@@ -265,7 +282,10 @@ class ChatGPTAdapter(BLMAdapter):
                 if prompt[i]["type"] == "text":
                     prompt[i] = {"role": "user", "content": [{"type": "text", "text": prompt[i]["text"]}]}
                 elif prompt[i]["type"] == "image_url":
-                    prompt[i] = {"role": "user", "content": [{"type": "image_url", "image_url":{"url": prompt[i]["url"]}}]}
+                    prompt[i] = {
+                        "role": "user",
+                        "content": [{"type": "image_url", "image_url": {"url": prompt[i]["url"]}}],
+                    }
                 else:
                     raise ValueError("无效的prompt")
             else:
@@ -297,27 +317,31 @@ class ChatGPTAdapter(BLMAdapter):
                 elif isinstance(exec_prompt[i]["content"], str):
                     pass
 
-
         if json_mode:
             if not model_info["supported_feature"].__contains__("json_mode"):
                 # 非原生支持json_mode时需要拼接prompt
-                exec_prompt.append({"role": "assistant", "content": "(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。"})
+                exec_prompt.append(
+                    {
+                        "role": "assistant",
+                        "content": "(Important!!)Please output the result in pure json format. (重要!!) 请以纯json字符串格式输出结果。",
+                    }
+                )
 
         # combine text message for debuging
         combined_message = ""
         for item in exec_prompt:
-            if isinstance(item["content"] , str):
-                combined_message += item["content"]+"\n"
+            if isinstance(item["content"], str):
+                combined_message += item["content"] + "\n"
             else:
                 if item["content"][0]["type"] == "text":
-                    combined_message += item["content"][0]["text"]+"\n"
+                    combined_message += item["content"][0]["text"] + "\n"
                 elif item["content"][0]["type"] == "image_url":
                     combined_message += f'<img src="{item["content"][0]["image_url"]["url"]}"/>'
-        
+
         try:
             call_param = {}
-            call_param["model"]=model_info["model_name"]
-            call_param["messages"]=exec_prompt
+            call_param["model"] = model_info["model_name"]
+            call_param["messages"] = exec_prompt
 
             if json_mode:
                 if model_info["supported_feature"].__contains__("json_mode"):
@@ -326,8 +350,12 @@ class ChatGPTAdapter(BLMAdapter):
             if model_info["model_name"] == "gpt-4-vision-preview":
                 # 特别的，为vision指定一个4096的max_tokens
                 call_param["max_tokens"] = 4096
-            
-            if  model_info["supported_feature"].__contains__("function_call") and functions is not None and len(functions) > 0:
+
+            if (
+                model_info["supported_feature"].__contains__("function_call")
+                and functions is not None
+                and len(functions) > 0
+            ):
                 # tools = [
                 #     {
                 #         "type": "function",
@@ -350,10 +378,7 @@ class ChatGPTAdapter(BLMAdapter):
                 # ]
                 tools = []
                 for function in functions:
-                    tools.append({
-                        "type": "function",
-                        "function": function.function_schema
-                    })
+                    tools.append({"type": "function", "function": function.function_schema})
                 call_param["tools"] = tools
                 # tool_choice="auto",
                 call_param["tool_choice"] = "auto"
@@ -372,7 +397,9 @@ class ChatGPTAdapter(BLMAdapter):
 
                     for tool_call in tool_calls:
                         function_name = tool_call.function.name
-                        func_call = next((func for func in functions if func.function_schema["name"] == function_name), None)
+                        func_call = next(
+                            (func for func in functions if func.function_schema["name"] == function_name), None
+                        )
                         func_response = None
                         if func_call is not None:
                             function_args = json.loads(tool_call.function.arguments)
@@ -381,7 +408,7 @@ class ChatGPTAdapter(BLMAdapter):
                                 func_response = await func_call.function(**function_args)
                             else:
                                 func_response = func_call.function(**function_args)
-                            
+
                             if func_response is not None:
                                 if not isinstance(func_response, str):
                                     func_response = json.dumps(func_response)
@@ -399,7 +426,9 @@ class ChatGPTAdapter(BLMAdapter):
                                 }
                             )
                         else:
-                            self.debug_log(f"function response: 参数错误，请更换参数后重试。Invalid Parameters。Please change your parameter and try again.")
+                            self.debug_log(
+                                f"function response: 参数错误，请更换参数后重试。Invalid Parameters。Please change your parameter and try again."
+                            )
                             call_param["messages"].append(
                                 {
                                     "tool_call_id": tool_call.id,
@@ -408,7 +437,7 @@ class ChatGPTAdapter(BLMAdapter):
                                     "content": "参数错误，请更换参数后重试。Invalid Parameters。Please change your parameter and try again.",
                                 }
                             )
-                            
+
                     self.debug_log(f"Resend request。")
                     continue
 
@@ -492,18 +521,14 @@ class ChatGPTAdapter(BLMAdapter):
         enable_assistant = self.get_config("enable_assistants")
         if enable_assistant is None or enable_assistant != True:
             return []
-        
+
         return self.assistant_list_cache
-    
-    async def assistant_thread_touch(
-        self,
-        thread_id: str,
-        assistant_id: str
-    ):
+
+    async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
         enable_assistant = self.get_config("enable_assistants")
         if enable_assistant is None or enable_assistant != True:
             return None
-        
+
         # client = await self.get_client()
         # thread = await client.beta.threads.retrieve(thread_id)
         # return thread.id
@@ -519,27 +544,23 @@ class ChatGPTAdapter(BLMAdapter):
                 return thread_id
             else:
                 self.thread_cache.pop(thread_id, None)
-        
+
         return None
-        
-    
-    async def assistant_thread_create(
-            self,
-            assistant_id: str      
-        ):
+
+    async def assistant_thread_create(self, assistant_id: str):
         enable_assistant = self.get_config("enable_assistants")
         if enable_assistant is None or enable_assistant != True:
             return None
-        
+
         client = await self.get_client()
 
         thread = await client.beta.threads.create()
 
-        #记录时间
+        # 记录时间
         self.thread_cache[thread.id] = time.time()
 
         return thread.id
-        
+
     async def assistant_run(
         self,
         thread_id: str,
@@ -550,54 +571,52 @@ class ChatGPTAdapter(BLMAdapter):
         enable_assistant = self.get_config("enable_assistants")
         if enable_assistant is None or enable_assistant != True:
             return None
-        
+
         client = await self.get_client()
 
         if isinstance(messages, dict):
             messages = [messages]
-        
+
         for i in range(len(messages)):
             if isinstance(messages[i], dict):
                 if "type" not in messages[i]:
                     raise ValueError("无效的messages")
                 if messages[i]["type"] == "text":
-                    self.debug_log(f"Creating Text Message: thread_id = {thread_id}, role = {messages[i]['role']}, content = {messages[i]['text']}")
+                    self.debug_log(
+                        f"Creating Text Message: thread_id = {thread_id}, role = {messages[i]['role']}, content = {messages[i]['text']}"
+                    )
 
                     _ = await client.beta.threads.messages.create(
-                        thread_id=thread_id,
-                        role=messages[i]["role"],
-                        content=messages[i]["text"]
+                        thread_id=thread_id, role=messages[i]["role"], content=messages[i]["text"]
                     )
                 elif messages[i]["type"] == "image_url":
-                    self.debug_log(f"Creating ImageUrl Message: thread_id = {thread_id}, role = {messages[i]['role']}, content = {messages[i]['image_url']}")
+                    self.debug_log(
+                        f"Creating ImageUrl Message: thread_id = {thread_id}, role = {messages[i]['role']}, content = {messages[i]['image_url']}"
+                    )
 
                     part = ImageURLContentBlockParam()
-                    part.image_url=messages[i]["image_url"]
+                    part.image_url = messages[i]["image_url"]
 
                     _ = await client.beta.threads.messages.create(
-                        thread_id=thread_id,
-                        role=messages[i]["role"],
-                        content=part
+                        thread_id=thread_id, role=messages[i]["role"], content=part
                     )
                 else:
                     raise ValueError("无效的messages")
             else:
                 raise ValueError("无效的messages")
-        
+
         run = await client.beta.threads.runs.create_and_poll(
             thread_id=thread_id,
             assistant_id=assistant_id,
         )
 
-        if run.status == 'completed': 
+        if run.status == 'completed':
             self.thread_cache[thread_id] = time.time()
             current_run_id = run.id
             ret_str = ""
             # message是倒序的，发现不属于本次run的消息就停止
             # 用户提供的消息没有run id, 所以读到就会被打断
-            async for message in client.beta.threads.messages.list(
-                thread_id=thread_id
-            ):
+            async for message in client.beta.threads.messages.list(thread_id=thread_id):
                 if message.run_id != current_run_id:
                     break
 

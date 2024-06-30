@@ -212,4 +212,6 @@ def save_replace(data: Message, origin, replace, is_global=0):
         in_time=int(time.time()),
         is_global=is_global,
     )
-    return Chain(data).text(f'审核通过！%s将使用 [{replace}] 作为 [{origin}] 的别名' % ('本频道' if not is_global else '全局'))
+    return Chain(data).text(
+        f'审核通过！%s将使用 [{replace}] 作为 [{origin}] 的别名' % ('本频道' if not is_global else '全局')
+    )

@@ -80,7 +80,9 @@ def change_pool(item: Pool, user_id=None):
             if item.pool_name in file:
                 pic.append(os.path.join(root, file))
 
-    text = [f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{item.pool_name}】\n']
+    text = [
+        f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{item.pool_name}】\n'
+    ]
     if item.pickup_6:
         text.append('[[cl ★★★★★★@#FF4343 cle]] %s' % item.pickup_6.replace(',', '、'))
     if item.pickup_5:
@@ -130,7 +132,9 @@ async def _(data: Message):
             if user_info.jade_point >= point_need:
                 await data.send(Chain(data).text(f'寻访凭证剩余{coupon}张，将消耗{point_need}合成玉'))
             else:
-                return reply.text(f'博士，您的寻访资源不够哦~\n寻访凭证剩余{coupon}张\n合成玉剩余{user_info.jade_point}')
+                return reply.text(
+                    f'博士，您的寻访资源不够哦~\n寻访凭证剩余{coupon}张\n合成玉剩余{user_info.jade_point}'
+                )
 
         if times <= 10:
             return gc.detailed_mode(times, coupon_need, point_need)
@@ -152,7 +156,9 @@ async def _(data: Message):
     if user.gacha_break_even > 50:
         break_even_rate -= (user.gacha_break_even - 50) * 2
 
-    return Chain(data).text(f'当前已经抽取了 {user.gacha_break_even} 次而未获得六星干员\n下次抽出六星干员的概率为 {100 - break_even_rate}%')
+    return Chain(data).text(
+        f'当前已经抽取了 {user.gacha_break_even} 次而未获得六星干员\n下次抽出六星干员的概率为 {100 - break_even_rate}%'
+    )
 
 
 @bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)

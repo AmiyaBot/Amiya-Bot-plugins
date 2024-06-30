@@ -17,8 +17,7 @@ from .helper import WeiboUser
 curr_dir = os.path.dirname(__file__)
 
 
-class WeiboPluginInstance(AmiyaBotPluginInstance):
-    ...
+class WeiboPluginInstance(AmiyaBotPluginInstance): ...
 
 
 bot = WeiboPluginInstance(
@@ -206,11 +205,15 @@ async def _(_):
         send = True
         for regex in bot.get_config("block"):
             if re.match(regex, html.unescape(result.html_text)):
-                await send_to_console_channel(Chain().text(f'微博正文触发正则屏蔽，跳过推送\nUSER: {user}\nID: {new_id}'))
+                await send_to_console_channel(
+                    Chain().text(f'微博正文触发正则屏蔽，跳过推送\nUSER: {user}\nID: {new_id}')
+                )
                 send = False
                 break
             if re.search(regex, html.unescape(result.html_text)):
-                await send_to_console_channel(Chain().text(f'微博正文触发搜索屏蔽，跳过推送\nUSER: {user}\nID: {new_id}'))
+                await send_to_console_channel(
+                    Chain().text(f'微博正文触发搜索屏蔽，跳过推送\nUSER: {user}\nID: {new_id}')
+                )
                 send = False
                 break
 

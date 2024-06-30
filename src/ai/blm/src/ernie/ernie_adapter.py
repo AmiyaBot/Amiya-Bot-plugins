@@ -79,35 +79,35 @@ class ERNIEAdapter(BLMAdapter):
                 "type": "low-cost",
                 "max_token": 4000,
                 "max-token": 4000,
-                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
             },
             {
                 "model_name": "ERNIE-Bot-turbo",
                 "type": "low-cost",
-                "max_token": 4000,                
+                "max_token": 4000,
                 "max-token": 4000,
-                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
             },
             {
                 "model_name": "ERNIE-Speed-8K",
                 "type": "low-cost",
-                "max_token": 8000,                
+                "max_token": 8000,
                 "max-token": 8000,
-                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
             },
             {
                 "model_name": "ERNIE-Lite-8K",
                 "type": "low-cost",
-                "max_token": 8000,                
+                "max_token": 8000,
                 "max-token": 8000,
-                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
             },
             {
                 "model_name": "ERNIE-Tiny-8K",
                 "type": "low-cost",
-                "max_token": 8000,                
+                "max_token": 8000,
                 "max-token": 8000,
-                "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
             },
         ]
 
@@ -123,15 +123,15 @@ class ERNIEAdapter(BLMAdapter):
                     "type": ernie_4_cost,
                     "max_token": 4000,
                     "max-token": 4000,
-                    "supported_feature": ["completion_flow", "chat_flow","json_mode"],
+                    "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
                 }
             ),
             {
                 "model_name": "ERNIE-Bot-8K",
                 "type": ernie_4_cost,
-                "max_token": 8000,                
+                "max_token": 8000,
                 "max-token": 8000,
-                "supported_feature": ["completion_flow", "chat_flow","function_call","json_mode"],
+                "supported_feature": ["completion_flow", "chat_flow", "function_call", "json_mode"],
             },
         return model_list_response
 
@@ -225,13 +225,13 @@ class ERNIEAdapter(BLMAdapter):
 
         if isinstance(prompt, str):
             prompt = [prompt]
-        
+
         if isinstance(prompt, dict):
             prompt = [prompt]
 
         def prompt_filter(item):
             if not model_info["supported_feature"].__contains__("vision"):
-                if isinstance(item,dict) and item["type"] == "image_url":
+                if isinstance(item, dict) and item["type"] == "image_url":
                     self.debug_log(f"image_url not supported in {model_info['model_name']}")
                     return False
             return True
@@ -258,7 +258,11 @@ class ERNIEAdapter(BLMAdapter):
         big_prompt = "\n".join(prompt)
 
         if json_mode:
-            big_prompt = big_prompt + "\n" + "(Important!!)Please output the result in json format. (重要!!) 请以json格式输出结果。"
+            big_prompt = (
+                big_prompt
+                + "\n"
+                + "(Important!!)Please output the result in json format. (重要!!) 请以json格式输出结果。"
+            )
 
         prompt = [{"role": "user", "content": big_prompt}]
 
@@ -302,9 +306,9 @@ class ERNIEAdapter(BLMAdapter):
             "ERNIE-Bot": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions",
             "ERNIE-Bot-turbo": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant",
             "ERNIE-Bot-8K": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_bot_8k",
-            "ERNIE-Speed-8K":"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed",
-            "ERNIE-Lite-8K":"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-lite-8k",
-            "ERNIE-Tiny-8K":"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-tiny-8k",
+            "ERNIE-Speed-8K": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed",
+            "ERNIE-Lite-8K": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-lite-8k",
+            "ERNIE-Tiny-8K": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-tiny-8k",
         }
 
         if model not in model_url_map:
@@ -386,19 +390,12 @@ class ERNIEAdapter(BLMAdapter):
     def assistant_list(self) -> List[dict]:
         return []
 
-    async def assistant_thread_touch(
-        self,
-        thread_id: str,
-        assistant_id: str
-    ):
+    async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
         return True
 
-    async def assistant_thread_create(
-            self,
-            assistant_id: str      
-        ):
+    async def assistant_thread_create(self, assistant_id: str):
         return None
-    
+
     async def assistant_run(
         self,
         thread_id: str,
