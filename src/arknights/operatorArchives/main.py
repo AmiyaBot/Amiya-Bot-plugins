@@ -111,7 +111,10 @@ async def operator_archives_voice_func(data: Message):
         return None
 
     if info.voice_key in voices_map:
-        text = f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n' + voices_map[info.voice_key]['voice_text']
+        text = (
+            f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n'
+            + voices_map[info.voice_key]['voice_text']
+        )
         text = text.replace('{@nickname}', data.nickname)
 
         reply = Chain(data).text(text)

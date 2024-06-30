@@ -28,9 +28,11 @@ class WeiboContent:
 class WeiboUser:
     def __init__(self, weibo_id, setting):
         self.headers = {
-            'User-Agent': ua.random
-            if ua
-            else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'User-Agent': (
+                ua.random
+                if ua
+                else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
+            ),
             'Content-Type': 'application/json; charset=utf-8',
             'Referer': f'https://m.weibo.cn/u/{weibo_id}',
             'Accept-Language': 'zh-CN,zh;q=0.9',

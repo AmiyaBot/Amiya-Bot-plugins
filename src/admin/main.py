@@ -80,7 +80,9 @@ async def _(data: Message):
 
 @bot.on_message(keywords=Equal('频道信息'))
 async def _(data: Message):
-    rep = Chain(data, at=False).text(f'用户ID：{data.user_id}\n' f'频道ID：{data.guild_id}\n' f'子频道ID：{data.channel_id}')
+    rep = Chain(data, at=False).text(
+        f'用户ID：{data.user_id}\n' f'频道ID：{data.guild_id}\n' f'子频道ID：{data.channel_id}'
+    )
 
     if data.at_target:
         rep.text('\nAt用户ID：' + ' | '.join(data.at_target))

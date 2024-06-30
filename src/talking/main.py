@@ -7,8 +7,7 @@ from core import AmiyaBotPluginInstance
 curr_dir = os.path.dirname(__file__)
 
 
-class TalkPluginInstance(AmiyaBotPluginInstance):
-    ...
+class TalkPluginInstance(AmiyaBotPluginInstance): ...
 
 
 bot = TalkPluginInstance(

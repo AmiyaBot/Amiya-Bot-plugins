@@ -19,6 +19,7 @@ from .extract_json import extract_json
 
 from ..functions.core import parse_docstring
 
+
 class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
     def __init__(
         self,
@@ -57,7 +58,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         self.model_map: Dict[str, BLMAdapter] = {}
         self.assistant_map: Dict[str, BLMAdapter] = {}
         self.thread_map: Dict[str, BLMAdapter] = {}
-        self.functions_registry:Dict[str,BLMFunctionCall] = {}
+        self.functions_registry: Dict[str, BLMFunctionCall] = {}
 
     def install(self):
         AmiyaBotBLMLibraryTokenConsumeModel.create_table(safe=True)
@@ -76,7 +77,6 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
 
         self.model_list()
 
-
     def register_blm_function(self, func) -> callable:
         """
         装饰器：注册函数以供AI调用。
@@ -91,6 +91,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         :rtype: callable
 
         """
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
@@ -155,7 +156,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         if not adapter:
             return None
         return await adapter.completion_flow(prompt, model, context_id, channel_id)
-    
+
     async def chat_flow(
         self,
         prompt: Union[Union[str, dict], List[Union[str, dict]]],
@@ -186,10 +187,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
                 self.assistant_map[assistant["id"]] = adapter
         return assistant_list
 
-    async def assistant_thread_create(
-        self,
-        assistant_id: str      
-    ):
+    async def assistant_thread_create(self, assistant_id: str):
         self.assistant_list()
 
         if assistant_id not in self.assistant_map.keys():
@@ -202,20 +200,16 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         self.thread_map[thread_id] = adapter
         return thread_id
 
-    async def assistant_thread_touch(
-        self,
-        thread_id: str,
-        assistant_id: str
-    ):
+    async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
         self.assistant_list()
-        
+
         if assistant_id not in self.assistant_map.keys():
             return
 
         adapter = self.assistant_map[assistant_id]
         if not adapter:
             return None
-        return await adapter.assistant_thread_touch(thread_id,assistant_id)        
+        return await adapter.assistant_thread_touch(thread_id, assistant_id)
 
     async def assistant_run(
         self,
@@ -224,24 +218,24 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
     ) -> Optional[str]:
-        self.assistant_list()        
+        self.assistant_list()
         if assistant_id not in self.assistant_map.keys():
             return
-        
+
         adapter = self.assistant_map[assistant_id]
         if not adapter:
             return None
-        
+
         return await adapter.assistant_run(thread_id, assistant_id, messages, channel_id)
 
     @property
     def amiyabot_function_calls(self) -> List[BLMFunctionCall]:
-        
+
         # 从functions_registry扁平化返回数据
         function_calls = []
         for func_name, func in self.functions_registry.items():
             function_calls.append(func)
-        
+
         return function_calls
 
     def extract_json(self, string: str) -> List[Union[Dict[str, Any], List[Any]]]:

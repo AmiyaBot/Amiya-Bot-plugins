@@ -79,8 +79,7 @@ class Enemy:
         return source['m_defined'], integer(source['m_value'])
 
 
-class EnemiesPluginInstance(AmiyaBotPluginInstance):
-    ...
+class EnemiesPluginInstance(AmiyaBotPluginInstance): ...
 
 
 bot = EnemiesPluginInstance(
@@ -161,7 +160,9 @@ async def enemy_query(data: Message):
             init_data = {'search': enemy_name, 'result': {item[0]: item[1] for item in result}}
 
             wait = await data.wait(
-                Chain(data).html(f'{curr_dir}/template/enemyIndex.html', init_data).text('回复【序号】查询对应的敌方单位资料')
+                Chain(data)
+                .html(f'{curr_dir}/template/enemyIndex.html', init_data)
+                .text('回复【序号】查询对应的敌方单位资料')
             )
 
             if wait:

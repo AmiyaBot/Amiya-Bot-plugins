@@ -144,7 +144,7 @@ async def _(data: Message):
 
             if item.text_original:
                 messages.append(item.text_original)
-            
+
             if item.image:
                 images = images + item.image
 
@@ -152,9 +152,9 @@ async def _(data: Message):
 
         if messages:
             command = []
-            command = [{"type":"text","text":prompt + '\n\n'.join(messages)}]
+            command = [{"type": "text", "text": prompt + '\n\n'.join(messages)}]
             if model_obj["supported_feature"].__contains__("vision"):
-                command = command + [{"type":"image_url","url":imgPath} for imgPath in images]
+                command = command + [{"type": "image_url", "url": imgPath} for imgPath in images]
                 images = []
             res = await blm_library.chat_flow(command, model)
             if res:

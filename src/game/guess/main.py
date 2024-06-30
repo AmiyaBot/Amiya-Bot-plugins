@@ -36,9 +36,7 @@ async def _(data: Message):
         '资深': '档案',
     }
     level_text = '\n'.join([f'【{lv}】{ct}猜干员' for lv, ct in level.items()])
-    select_level = (
-        f'博士，请选择难度：\n\n{level_text}\n\n请回复【难度等级】开始游戏。\n所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n详细说明请查看功能菜单'
-    )
+    select_level = f'博士，请选择难度：\n\n{level_text}\n\n请回复【难度等级】开始游戏。\n所有群员均可参与竞猜，游戏一旦开始，将暂停其他功能的使用哦。如果取消请无视本条消息。\n详细说明请查看功能菜单'
 
     choice_chain = Chain(data).text(select_level)
     markdown_template_id = get_markdown_template_id(data)
@@ -140,7 +138,9 @@ async def _(data: Message):
     rewards_rate = (100 + (referee.total_rate if referee.total_rate > -50 else -50)) / 100
     text, reward_list = referee.calc_rank()
 
-    text += f'\n通关速度：{time_rec.total()}\n难度倍率：{level_rate}\n进度倍率：{finish_rate}\n结算倍率：{rewards_rate}\n\n'
+    text += (
+        f'\n通关速度：{time_rec.total()}\n难度倍率：{level_rate}\n进度倍率：{finish_rate}\n结算倍率：{rewards_rate}\n\n'
+    )
 
     for r, l in reward_list.items():
         if r == 0:

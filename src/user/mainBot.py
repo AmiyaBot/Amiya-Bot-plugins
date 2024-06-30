@@ -68,7 +68,10 @@ def sign_in(data: Message, sign_type=0):
             UserGachaInfo.user_id == data.user_id
         ).execute()
 
-        return {'text': f'{"签到成功，" if sign_type else ""}{coupon}张寻访凭证已经送到博士的办公室啦，请博士注意查收哦', 'status': True}
+        return {
+            'text': f'{"签到成功，" if sign_type else ""}{coupon}张寻访凭证已经送到博士的办公室啦，请博士注意查收哦',
+            'status': True,
+        }
 
     if sign_type and info.sign_date == today:
         return {'text': '博士今天已经签到了哦', 'status': False}

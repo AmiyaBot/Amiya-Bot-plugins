@@ -1,50 +1,50 @@
 .main {
-	width: 320px;
-	display: flex;
+    width: 320px;
+    display: flex;
     flex-direction: column;
     justify-content: center; /* 垂直居中对齐 */
     align-items: center; /* 水平居中对齐 */
-	font-family: '微软雅黑';
-	font-size: 14px;
+    font-family: '微软雅黑';
+    font-size: 14px;
 }
 
 .gacha-pool {
-	width: 280px;
-	height: 100%;
-	float: left;
+    width: 280px;
+    height: 100%;
+    float: left;
 }
 
 .gacha-pool > div {
-	width: 100%;
-	float: left;
+    width: 100%;
+    float: left;
 }
 
 .pool-name {
-	height: 30px;
-	line-height: 30px;
-	text-align: center;
-	color: #666;
-	font-size: 20px;
-	margin-top: 10px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    color: #666;
+    font-size: 20px;
+    margin-top: 10px;
 }
 
 .canvas-content {
-	width: 100%;
+    width: 100%;
 }
 
 .canvas-content canvas {
-	margin: 0;
+    margin: 0;
 }
 
 .time-range {
-	height: 20px;
-	line-height: 20px;
-	text-align: center;
-	color: #999;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    color: #999;
 }
 
 .gacha-info {
-	line-height: 24px;
+    line-height: 24px;
 }
 
 .star6-container {
@@ -54,7 +54,7 @@
 }
 
 .star6-block {
-	padding: 5px; /* Adds padding around each block */
+    padding: 5px; /* Adds padding around each block */
     border: 1px solid #ccc; /* Adds a border to each block */
     border-radius: 5px; /* Optional: adds rounded corners */
     text-align: center; /* Centers text inside the block */
@@ -62,53 +62,53 @@
 }
 
 .star6 {
-	background-color: orange;
+    background-color: orange;
 }
 
 .star5 {
-	background-color: gold;
+    background-color: gold;
 }
 
 .star4 {
-	background-color: dodgerblue;
+    background-color: dodgerblue;
 }
 
 .star3 {
-	background-color: gray;
+    background-color: gray;
 }
 
 .star6-text {
-	color: darkorange;
+    color: darkorange;
 }
 
 .star5-text {
-	color: goldenrod;
+    color: goldenrod;
 }
 
 .star4-text {
-	color: dodgerblue;
+    color: dodgerblue;
 }
 
 .star3-text {
-	color: gray;
+    color: gray;
 }
 
 .new {
-	position: relative;
-	left: -9px;
-	top: -12px;
-	font-size: 12px;
-	color: red;
+    position: relative;
+    left: -9px;
+    top: -12px;
+    font-size: 12px;
+    color: red;
 }
 
 .footer {
-	width: 100%;
+    width: 100%;
 }
 
 .copyright {
-    font-family: '微软雅黑'; 
+    font-family: '微软雅黑';
     font-size: 14px;
-	line-height: 14px;
-	margin-top: 10px;
-	text-align: center;
+    line-height: 14px;
+    margin-top: 10px;
+    text-align: center;
 }

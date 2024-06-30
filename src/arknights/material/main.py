@@ -100,9 +100,11 @@ class MaterialData:
                     {
                         **item,
                         **game_data.materials[item['use_material_id']],
-                        'children': cls.find_material_children(item['use_material_id'], material_id)
-                        if item['use_material_id'] != parent_id
-                        else [],
+                        'children': (
+                            cls.find_material_children(item['use_material_id'], material_id)
+                            if item['use_material_id'] != parent_id
+                            else []
+                        ),
                     }
                 )
 

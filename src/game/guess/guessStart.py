@@ -117,7 +117,11 @@ async def guess_start(
         if not stories:
             return GuessResult(answer=data)
 
-        stories = [n for n in stories if n['story_title'] not in ['基础档案', '综合体检测试', '综合性能检测结果', '临床诊断分析']]
+        stories = [
+            n
+            for n in stories
+            if n['story_title'] not in ['基础档案', '综合体检测试', '综合性能检测结果', '临床诊断分析']
+        ]
         story = random.choice(stories)['story_text'].replace(operator.name, 'XXX')
         section = story.split('。')
 
@@ -306,7 +310,9 @@ async def guess_start(
 
                 combo_text = f'{referee.combo_count}连击！'
 
-            reply = Chain(answer, at=False, reference=True).text(f'回答正确！{combo_text}分数+{point}，合成玉+{rewards}')
+            reply = Chain(answer, at=False, reference=True).text(
+                f'回答正确！{combo_text}分数+{point}，合成玉+{rewards}'
+            )
             await data.send(reply)
 
             result.point = point

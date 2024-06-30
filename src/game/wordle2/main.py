@@ -42,7 +42,9 @@ async def _(data: Message):
 
     while True:
         if pool.is_empty:
-            await data.send(Chain(data, at=False).text('竟然把所有干员都猜完了...这可怕的毅力，不愧是巴别塔的恶灵！再来！'))
+            await data.send(
+                Chain(data, at=False).text('竟然把所有干员都猜完了...这可怕的毅力，不愧是巴别塔的恶灵！再来！')
+            )
             pool = OperatorPool()
             await asyncio.sleep(2)
 
