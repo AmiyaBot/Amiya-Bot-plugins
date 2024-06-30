@@ -196,7 +196,8 @@ class QianFanAdapter(BLMAdapter):
                 answer = response_json["answer"]
 
                 # 稍微处理一下
-                answer = re.sub(r'\^\[\d+\]\^', '', answer)
+                answer = re.sub(r'\^(\[\d+\])*\^', '', answer)
+                answer = re.sub(r'\*\*', '', answer)
                 
                 return answer
         
