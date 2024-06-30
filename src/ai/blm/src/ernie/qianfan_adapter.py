@@ -169,7 +169,7 @@ class QianFanAdapter(BLMAdapter):
                         # 将其下载到内存再上传到千帆
                         image_data = await download_async(img_url)
                         if image_data is not None:
-                            self.debug_log(f"download image success, file: {image_data}")
+                            # self.debug_log(f"download image success, file: {image_data}")
 
                             upload_image_url = "https://qianfan.baidubce.com/v2/app/conversation/file/upload"
 
@@ -182,16 +182,21 @@ class QianFanAdapter(BLMAdapter):
                             form_data.add_field('app_id', assistant_id)
                             form_data.add_field('conversation_id', thread_id)
 
-                            self.debug_log(f"Upload image, headers: {upload_img_header}")
+                            # self.debug_log(f"Upload image, headers: {upload_img_header}")
+
+                            file = ""
 
                             async with aiohttp.ClientSession() as session:
                                 async with session.post(upload_image_url, headers=upload_img_header, data=form_data) as response:
                                     file = await response.text()
 
-                            self.debug_log(f"Upload image success, file: {file}")
-                            fileJson = json.loads(file)
-                            if "id" in fileJson.keys():
-                                file_ids.append(fileJson["id"])
+                            # self.debug_log(f"Upload image success, file: {file}")
+                            try:
+                                fileJson = json.loads(file)
+                                if "id" in fileJson.keys():
+                                    file_ids.append(fileJson["id"])                            
+                            except Exception as e:
+                                self.debug_log(f"fail to upload image, error: {e} \n response: {file}")
                 else:
                     raise ValueError("无效的messages")
             else:
