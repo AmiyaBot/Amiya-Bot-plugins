@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 import re
+import aiohttp
 
 from datetime import datetime
 from typing import List, Optional, Union
@@ -11,6 +12,7 @@ from core.util.threadPool import run_in_thread_pool
 
 from amiyabot.log import LoggerManager
 from amiyabot.network.httpRequests import http_requests
+from amiyabot.network.download import download_async
 
 from ..common.blm_types import BLMAdapter, BLMFunctionCall
 from ..common.database import AmiyaBotBLMLibraryMetaStorageModel, AmiyaBotBLMLibraryTokenConsumeModel
@@ -143,8 +145,6 @@ class QianFanAdapter(BLMAdapter):
         channel_id: Optional[str] = None,
     ) -> Optional[str]:
         
-        url = f"https://qianfan.baidubce.com/v2/app/conversation/runs"
-        
         app_key = self.get_config("api_key")
 
         headers = {
@@ -155,7 +155,29 @@ class QianFanAdapter(BLMAdapter):
         if isinstance(messages, dict):
             messages = [messages]
         
+        
+        apps = self.get_config("apps")
+        if apps is None:
+            self.debug_log("fail to get app list. No conf.")
+            return None
+        
+        app = None
+        for a in apps:
+            if a["app_id"] == assistant_id:
+                app = a
+                break
+
+        if app is None:
+            self.debug_log("fail to run assistant, no valid assistant_id")
+            return None
+
         query = ""
+
+        if assistant_id is None or query is None or thread_id is None or app_key is None:
+            self.debug_log("fail to run assistant, no assistant_id, query, thread_id or app_key")
+            return None
+
+        file_ids=[]
 
         for i in range(len(messages)):
             if isinstance(messages[i], dict):
@@ -164,7 +186,35 @@ class QianFanAdapter(BLMAdapter):
                 if messages[i]["type"] == "text":
                     query = query + messages[i]["text"]
                 elif messages[i]["type"] == "image_url":
-                    ...
+                    # 先判断本助手是否支持视觉
+                    if app["vision_supported"]:
+                        img_url = messages[i]["url"]
+                        # 将其下载到内存再上传到千帆
+                        image_data = await download_async(img_url)
+                        if image_data is not None:
+                            self.debug_log(f"download image success, file: {image_data}")
+
+                            upload_image_url = "https://qianfan.baidubce.com/v2/app/conversation/file/upload"
+
+                            upload_img_header = {
+                                "Authorization": "Bearer " + app_key
+                            }
+
+                            form_data = aiohttp.FormData()
+                            form_data.add_field('file', image_data, filename='test.jpg', content_type='image/jpeg')
+                            form_data.add_field('app_id', assistant_id)
+                            form_data.add_field('conversation_id', thread_id)
+
+                            self.debug_log(f"Upload image, headers: {upload_img_header}")
+
+                            async with aiohttp.ClientSession() as session:
+                                async with session.post(upload_image_url, headers=upload_img_header, data=form_data) as response:
+                                    file = await response.text()
+
+                            self.debug_log(f"Upload image success, file: {file}")
+                            fileJson = json.loads(file)
+                            if "id" in fileJson.keys():
+                                file_ids.append(fileJson["id"])
                 else:
                     raise ValueError("无效的messages")
             else:
@@ -174,19 +224,20 @@ class QianFanAdapter(BLMAdapter):
             "app_id": assistant_id,
             "query": query,
             "conversation_id": thread_id,
-            "stream":False
+            "stream":False,
+            'file_ids': file_ids
         }
 
         self.debug_log(f"Data: {data} headers: {headers}")
 
         response_str = ""
-
-        if assistant_id is None or query is None or thread_id is None or app_key is None:
-            self.debug_log("fail to run assistant, no assistant_id, query, thread_id or app_key")
-            return None
         
         try:
-            response_str = await http_requests.post(url, headers=headers, payload=data)
+            response_str = await http_requests.post(
+                url="https://qianfan.baidubce.com/v2/app/conversation/runs",
+                headers=headers,
+                payload=data
+            )
 
             response_json = json.loads(response_str)
             
@@ -194,6 +245,8 @@ class QianFanAdapter(BLMAdapter):
                 self.thread_cache[thread_id] = time.time()
 
                 answer = response_json["answer"]
+
+                self.debug_log(f"response: {response_str}")
 
                 # 稍微处理一下
                 answer = re.sub(r'\^(\[\d+\])*\^', '', answer)

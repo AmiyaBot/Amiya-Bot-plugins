@@ -42,6 +42,9 @@ class BLMAdapter:
     def assistant_list(self) -> List[dict]:
         ...
 
+    def get_assistant(self, assistant_id: str) -> dict:
+        ...
+
     async def assistant_thread_touch(
             self,
             thread_id: str,

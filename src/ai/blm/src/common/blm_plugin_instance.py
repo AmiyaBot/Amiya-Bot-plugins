@@ -186,6 +186,12 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
                 self.assistant_map[assistant["id"]] = adapter
         return assistant_list
 
+    def get_assistant(self, assistant_id: str) -> dict:
+        assistant_dict_list = self.assistant_list()
+        for assistant_dict in assistant_dict_list:
+            if assistant_dict["id"] == assistant_id:
+                return assistant_dict
+
     async def assistant_thread_create(
         self,
         assistant_id: str      
