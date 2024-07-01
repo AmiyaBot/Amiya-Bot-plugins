@@ -5,6 +5,7 @@ from amiyabot.adapters.mirai import MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
+from amiyabot.adapters.tencent.qqGlobal import QQGlobalBotInstance
 
 from core import Chain, Message
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
@@ -295,7 +296,7 @@ async def operator_archives_group_query_1(data: Message):
     source = type(data.instance)
     operator_group = OperatorInfo.operator_group_map[info.group_key]
 
-    if source in [QQGuildBotInstance, QQGroupBotInstance, KOOKBotInstance]:
+    if source in [QQGuildBotInstance, QQGroupBotInstance, QQGlobalBotInstance, KOOKBotInstance]:
         text = f'## {info.group_key}\n'
         for item in operator_group:
             text += f'- {item.name}\n'
@@ -338,14 +339,14 @@ async def operator_archives_group_query_2(data: Message):
     return Chain(data).markdown(text)
 
 
-@bot.on_message(group_id='operator', keywords=['/干员资料', '/干员查询'])
+@bot.on_message(group_id='operator', keywords='/干员查询')
 async def operator_archives_operator_query(data: Message):
-    res = await FuncsVerify.operator(data)
+    res = await FuncsVerify.operator(data, False)
     if res[0]:
         return await operator_func(data, res[2])
 
     wait = await data.wait(Chain(data).text('博士，请输入需要查询的干员名称'), force=True)
     if wait:
-        res = await FuncsVerify.operator(wait, check_amiya=False)
+        res = await FuncsVerify.operator(wait, False)
         if res[0]:
             return await operator_func(wait, res[2])

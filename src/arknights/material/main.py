@@ -213,11 +213,13 @@ class MaterialPluginInstance(AmiyaBotPluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='2.5',
+    version='2.6',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
     document=f'{curr_dir}/README.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
@@ -234,12 +236,16 @@ def update(_):
 
 async def verify(data: Message):
     name = find_most_similar(data.text.replace('材料', '').replace('阿米娅', ''), MaterialData.materials)
-    keyword = any_match(data.text, ['材料'])
+    keyword = any_match(data.text, ['查询', '材料'])
 
     if not keyword and name and remove_punctuation(name) not in remove_punctuation(data.text):
         return False
 
     if name or keyword:
+        if bot.get_config('blockMishap'):
+            if name != data.text and not keyword:
+                return False
+
         return True, (5 if keyword else 1), name
 
     return False
