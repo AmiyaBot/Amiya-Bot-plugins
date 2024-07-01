@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 import time
 import traceback
 import threading
@@ -527,6 +528,7 @@ class ChatGPTAdapter(BLMAdapter):
     async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
         enable_assistant = self.get_config("enable_assistants")
         if enable_assistant is None or enable_assistant != True:
+            self.debug_log(f"assistant disabled")
             return None
 
         # client = await self.get_client()
@@ -567,6 +569,7 @@ class ChatGPTAdapter(BLMAdapter):
         assistant_id: str,
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         enable_assistant = self.get_config("enable_assistants")
         if enable_assistant is None or enable_assistant != True:
@@ -626,5 +629,17 @@ class ChatGPTAdapter(BLMAdapter):
                         ret_str += content.text.value
         else:
             return None
+
+        # 稍微处理一下引用
+        ret_str = re.sub(r'【\d+:\d+†\w+】', '', ret_str)
+
+        if json_mode:
+            json_obj = extract_json(ret_str)
+            if json_obj is not None:
+                ret_str = json.dumps(json_obj)
+            else:
+                ret_str = "[]"
+        
+        self.debug_log(f"assistant_run: {ret_str}")
 
         return ret_str
