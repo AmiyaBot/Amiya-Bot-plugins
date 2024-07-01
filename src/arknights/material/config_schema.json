@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "blockMishap": {
+            "title": "防误触",
+            "description": "打开防误触用户需要添加“查询”关键词或“仅发送名称”才能触发功能",
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

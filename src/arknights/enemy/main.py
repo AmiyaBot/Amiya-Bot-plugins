@@ -84,11 +84,13 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='3.3',
+    version='3.4',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
     document=f'{curr_dir}/README.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
     requirements=[Requirement('amiyabot-arknights-gamedata', official=True)],
 )
 
@@ -110,8 +112,12 @@ async def verify(data: Message):
         else:
             name = find_most_similar(name_char, list(ArknightsGameData.enemies.keys()))
 
-    keyword = any_match(data.text, ['敌人', '敌方'])
+    keyword = any_match(data.text, ['查询', '敌人', '敌方'])
     level = (5 + int(bool(name))) if keyword else 1
+
+    if bot.get_config('blockMishap'):
+        if name != data.text and not keyword:
+            return False
 
     if name == '-':
         name = ''
@@ -128,7 +134,7 @@ async def verify(data: Message):
     return False
 
 
-@bot.on_message(group_id='operator', keywords='/敌方单位', level=5)
+@bot.on_message(keywords='/敌方单位', level=5)
 async def _(data: Message):
     return Chain(data).text('博士，请在指令后面输入需要查询的敌方单位名称')
 

@@ -11,6 +11,12 @@
                     "title": "是否展示召唤物",
                     "type": "boolean",
                     "default": true
+                },
+                "blockMishap": {
+                    "title": "防误触",
+                    "description": "打开防误触用户需要添加“查询”关键词或“仅发送名称”才能触发功能",
+                    "type": "boolean",
+                    "default": false
                 }
             }
         },
@@ -29,12 +35,6 @@
             "title": "关键词匹配设置",
             "type": "object",
             "properties": {
-                "needPrefix": {
-                    "title": "“查询”关键词",
-                    "description": "是否需要添加“查询”关键词触发功能",
-                    "type": "boolean",
-                    "default": false
-                },
                 "similarMode": {
                     "title": "模糊匹配模式",
                     "description": "模糊匹配下，会匹配相似的干员名，如“赛“雷娅",

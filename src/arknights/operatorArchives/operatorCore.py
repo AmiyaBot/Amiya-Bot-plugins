@@ -34,7 +34,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='4.8',
+    version='4.9',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -60,29 +60,32 @@ class FuncsVerify:
     @classmethod
     async def level_up(cls, data: Message):
         info = search_info(data, source_keys=['name'])
+        condition = any_match(data.text, ['精英', '专精', '材料'])
 
-        condition = any_match(data.text, ['精英', '专精'])
-        condition2 = info.name and '材料' in data.text
-
-        return bool(condition or condition2), (6 if condition2 else 2), info
+        return bool(condition), default_level + 3, info
 
     @classmethod
-    async def operator(cls, data: Message, check_amiya: bool = True):
-        info = search_info(data, source_keys=['name'], check_amiya=check_amiya)
+    async def operator(cls, data: Message, block_mishap: bool = False):
+        info = search_info(data, source_keys=['name'])
 
-        if bot.get_config('searchSetting')['needPrefix'] and '查询' not in data.text:
-            return False
+        if block_mishap and bot.get_config('operatorInfo')['blockMishap']:
+            if info.name != data.text and '查询' not in data.text:
+                return False
 
-        return bool(info.name), default_level if info.name != '阿米娅' else 0, info
+        return bool(info.name), default_level, info
 
     @classmethod
     async def group(cls, data: Message):
         info = search_info(data, source_keys=['group_key'])
 
+        if bot.get_config('operatorInfo')['blockMishap']:
+            if info.group_key != data.text and '查询' not in data.text:
+                return False
+
         return bool(info.group_key), default_level + 1, info
 
 
-def search_info(data: Message, source_keys: Optional[list] = None, check_amiya: bool = True):
+def search_info(data: Message, source_keys: Optional[list] = None):
     info_source = {
         'name': OperatorInfo.operator_list + list(OperatorInfo.operator_en_name_map.keys()),
         'skin_key': list(OperatorInfo.skins_map.keys()),
@@ -111,12 +114,6 @@ def search_info(data: Message, source_keys: Optional[list] = None, check_amiya: 
 
                 if info.name not in data.text_words:
                     continue
-
-                if info.name == '阿米娅' and check_amiya:
-                    for item in ['阿米娅', 'amiya']:
-                        t = data.text.lower()
-                        if t.startswith(item) and t.count(item) == 1:
-                            info.name = match_method(data.text.replace(item, ''), info_source[key_name])
 
     return info
 
