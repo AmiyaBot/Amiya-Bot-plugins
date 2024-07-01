@@ -35,14 +35,28 @@ class BLMAdapter:
         channel_id: Optional[str] = None,
         functions: Optional[List[BLMFunctionCall]] = None,
         json_mode: Optional[bool] = False,
-    ) -> Optional[str]: ...
+    ) -> Optional[str]:
+        ...
 
-    def assistant_list(self) -> List[dict]: ...
+    def assistant_list(self) -> List[dict]:
+        ...
 
-    async def assistant_thread_touch(self, thread_id: str, assistant_id: str): ...
+    def get_assistant(self, assistant_id: str) -> dict:
+        ...
 
-    async def assistant_thread_create(self, assistant_id: str): ...
+    async def assistant_thread_touch(
+            self,
+            thread_id: str,
+            assistant_id: str
+    ):
+        ...
 
+    async def assistant_thread_create(
+            self,
+            assistant_id: str      
+        ):
+        ...
+    
     async def assistant_run(
         self,
         thread_id: str,
