@@ -402,5 +402,6 @@ class ERNIEAdapter(BLMAdapter):
         assistant_id: str,
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         return None

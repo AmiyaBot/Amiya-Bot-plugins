@@ -224,6 +224,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         assistant_id: str,
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         self.assistant_list()
         if assistant_id not in self.assistant_map.keys():
@@ -233,7 +234,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         if not adapter:
             return None
 
-        return await adapter.assistant_run(thread_id, assistant_id, messages, channel_id)
+        return await adapter.assistant_run(thread_id, assistant_id, messages, channel_id, json_mode)
 
     @property
     def amiyabot_function_calls(self) -> List[BLMFunctionCall]:

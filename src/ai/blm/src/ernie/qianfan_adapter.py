@@ -72,7 +72,13 @@ class QianFanAdapter(BLMAdapter):
             app_id = app["app_id"]
             name = app["app_name"]
             vision = app["vision_supported"]
-            app_list.append({"id": app_id, "name": name, "model": "QianFanApp", "vision": vision})
+            app_list.append({
+                "id": app_id, 
+                "name": name, 
+                "model": "QianFanApp", 
+                "vision": vision,
+                "max-token": 3000
+            })
 
         return app_list
 
@@ -125,6 +131,7 @@ class QianFanAdapter(BLMAdapter):
         assistant_id: str,
         messages: Union[dict, List[dict]],
         channel_id: Optional[str] = None,
+        json_mode: Optional[bool] = False,
     ) -> Optional[str]:
         app_key = self.get_config("api_key")
 
@@ -234,6 +241,14 @@ class QianFanAdapter(BLMAdapter):
                 answer = re.sub(r'\^(\[\d+\])*\^', '', answer)
                 answer = re.sub(r'\*\*', '', answer)
                 
+                if json_mode:
+                    json_obj = extract_json(answer)
+                    if json_obj is not None:
+                        answer = json.dumps(json_obj)
+                    else:
+                        answer = "[]"
+                    
+
                 return answer
 
         except Exception as e:
