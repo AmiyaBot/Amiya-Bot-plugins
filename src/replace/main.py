@@ -4,7 +4,6 @@ import time
 import shutil
 import asyncio
 
-from amiyabot.adapters.common import text_convert
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.network.httpRequests import http_requests
 from core.database.bot import *
@@ -46,7 +45,7 @@ class ReplacePluginInstance(AmiyaBotPluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -76,7 +75,9 @@ async def _(data: Message, _):
                 continue
             text = text.replace(item.replace, item.origin)
 
-        return text_convert(data, text, data.text)
+        data.set_text(text, True)
+
+        return data
 
 
 @bot.on_message(keywords=['别名'], level=5)

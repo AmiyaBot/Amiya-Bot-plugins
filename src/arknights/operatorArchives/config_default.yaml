@@ -1,10 +1,10 @@
 operatorInfo:
     showToken: true
+    blockMishap: false
 
 operatorSkin:
     showImage: false
 
 searchSetting:
-    needPrefix: false
     similarMode: false
     lengthLimit: 10
