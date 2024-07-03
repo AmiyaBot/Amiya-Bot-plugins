@@ -53,6 +53,39 @@
                 }
             }
         },
+        "GPTAssistant": {
+            "title": "GPT-Assistant",
+            "description": "ChatGPT-Assistant配置",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供ChatGPT Assistant。",
+                    "type": "boolean"
+                },
+                "api_key": {
+                    "title": "API Key",
+                    "description": "由OpenAI提供给您的ApiKey，没有的话请到https://platform.openai.com/account/api-keys申请。",
+                    "type": "string"
+                },
+                "base_url": {
+                    "title": "Url",
+                    "description": "可以填写一个Url作为API的基础路径。该url应该以http开头，结尾不包含斜杠，使用时将会拼接为{base_url}/completion",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "proxy": {
+                    "title": "http代理",
+                    "description": "可选的一个http或https代理，socks代理不支持",
+                    "type": "string"
+                },
+                "thread_timeout": {
+                    "title": "话题超时(秒)",
+                    "description": "多长时间没人说话后，清空当前上下文？",
+                    "type": "number"
+                }
+            }
+        },
         "ERNIE": {
             "type": "object",
             "properties": {
@@ -126,6 +159,11 @@
                             }
                         }
                     }
+                },
+                "thread_timeout": {
+                    "title": "话题超时(秒)",
+                    "description": "多长时间没人说话后，清空当前上下文？",
+                    "type": "number"
                 },
                 "api_key": {
                     "title": "工作台秘钥",
