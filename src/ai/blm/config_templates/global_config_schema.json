@@ -10,6 +10,14 @@
                 "..."
             ]
         },
+        "default_assistant": {
+            "title": "默认助手",
+            "description": "对于那些没有提供助手的调用，你默认选择的助手。如果你在这里看不到你添加的助手，请先保存你的修改，然后刷新控制台。",
+            "type": "string",
+            "enum": [
+                "..."
+            ]
+        },
         "ChatGPT": {
             "title": "ChatGPT",
             "description": "ChatGPT大模型相关的配置",
@@ -35,11 +43,6 @@
                     "title": "http代理",
                     "description": "可选的一个http或https代理，socks代理不支持",
                     "type": "string"
-                },
-                "enable_assistants": {
-                    "title": "启用Assistant",
-                    "description": "设置后，将提供Assistant给其他调用者。",
-                    "type": "boolean"
                 },
                 "disable_high_cost": {
                     "title": "禁用GPT-4",

@@ -100,14 +100,14 @@ class ChatGPTAssistantAdapter(BLMAdapter):
         return client
 
     def assistant_list(self) -> List[dict]:
-        enable_assistant = self.get_config("enable_assistants")
+        enable_assistant = self.get_config("enable")
         if enable_assistant is None or enable_assistant != True:
             return []
 
         return self.assistant_list_cache
 
     async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
-        enable_assistant = self.get_config("enable_assistants")
+        enable_assistant = self.get_config("enable")
         if enable_assistant is None or enable_assistant != True:
             self.debug_log(f"assistant disabled")
             return None
@@ -137,7 +137,7 @@ class ChatGPTAssistantAdapter(BLMAdapter):
         return None
 
     async def assistant_thread_create(self, assistant_id: str):
-        enable_assistant = self.get_config("enable_assistants")
+        enable_assistant = self.get_config("enable")
         if enable_assistant is None or enable_assistant != True:
             return None
 
@@ -160,7 +160,7 @@ class ChatGPTAssistantAdapter(BLMAdapter):
         channel_id: Optional[str] = None,
         json_mode: Optional[bool] = False,
     ) -> Optional[str]:
-        enable_assistant = self.get_config("enable_assistants")
+        enable_assistant = self.get_config("enable")
         if enable_assistant is None or enable_assistant != True:
             return None
 
@@ -216,7 +216,21 @@ class ChatGPTAssistantAdapter(BLMAdapter):
                 if message.role == "assistant":
                     for content in message.content:
                         ret_str += content.text.value
+            
+            # 填充用量数据
+            if run.max_completion_tokens and run.max_prompt_tokens:
+                AmiyaBotBLMLibraryTokenConsumeModel.create(
+                    channel_id=channel_id,
+                    model_name=assistant_id,
+                    exec_id=run.id,
+                    prompt_tokens=int(run.max_prompt_tokens),
+                    completion_tokens=int(run.max_completion_tokens),
+                    total_tokens=int(run.max_prompt_tokens+run.max_completion_tokens),
+                    exec_time=datetime.now(),
+                )
+            
         else:
+            self.debug_log(f"error: run not complete! {run.id}")
             return None
 
         # 稍微处理一下引用

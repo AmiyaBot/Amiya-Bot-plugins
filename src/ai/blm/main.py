@@ -30,6 +30,16 @@ def dynamic_get_global_config_schema_data():
         except KeyError as e:
             log.info(f'Expected keys not found in the JSON structure: {e}')
 
+        assistant_list = bot.assistant_list()
+
+        new_values = ['...']
+        new_values.extend([assistant['name']+"["+assistant["id"]+"]" for assistant in assistant_list])
+
+        try:
+            data['properties']['default_assistant']['enum'] = new_values
+        except KeyError as e:
+            log.info(f'Expected keys not found in the JSON structure: {e}')
+
         return data
     else:
         return f'{curr_dir}/accessories/global_config_default.json'
