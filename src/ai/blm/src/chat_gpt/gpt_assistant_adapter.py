@@ -122,11 +122,7 @@ class ChatGPTAssistantAdapter(BLMAdapter):
         # thread = await client.beta.threads.retrieve(thread_id)
         # return thread.id
 
-        # 我可以选择从服务器取，但是目前我就是设置一个10天超时
-        timeout = 10 * 24 * 60 * 60
-
-        # 测试环境下，设置一个1分钟的超时
-        # timeout = 60
+        timeout = self.get_config("thread_timeout",1800)
 
         if thread_id in self.thread_cache:
             if time.time() - self.thread_cache[thread_id] < timeout:
