@@ -45,7 +45,7 @@ class ReplacePluginInstance(AmiyaBotPluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='2.4',
+    version='2.6',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -75,7 +75,7 @@ async def _(data: Message, _):
                 continue
             text = text.replace(item.replace, item.origin)
 
-        data.set_text(text, True)
+        data.set_text(text, set_original=False)
 
         return data
 
