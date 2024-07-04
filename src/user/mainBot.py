@@ -8,7 +8,7 @@ from amiyabot import GroupConfig
 from amiyabot.network.download import download_async
 
 from core import Message, Chain, AmiyaBotPluginInstance
-from core.util import read_yaml, check_sentence_by_re
+from core.util import read_yaml, check_sentence_by_re, any_match
 from core.database.user import UserInfo, UserGachaInfo
 
 curr_dir = os.path.dirname(__file__)
@@ -28,12 +28,14 @@ class UserPluginInstance(AmiyaBotPluginInstance):
 
 bot = UserPluginInstance(
     name='兔兔互动',
-    version='3.0',
+    version='3.1',
     plugin_id='amiyabot-user',
     plugin_type='official',
     description='包含签到、问候、好感和戳一戳等日常互动',
     document=f'{curr_dir}/README.md',
     instruction=f'{curr_dir}/README_USE.md',
+    global_config_schema=f'{curr_dir}/config_schema.json',
+    global_config_default=f'{curr_dir}/config_default.yaml',
 )
 bot.set_group_config(GroupConfig('user', allow_direct=True))
 
@@ -94,8 +96,21 @@ def talk_time():
         return '晚上'
 
 
-def compose_talk_verify(words, names):
+def check_config(name: str):
+    return bool(bot.get_config(name))
+
+
+def check_keywords(words: list, config_name: str):
     async def verify(data: Message):
+        return bool(any_match(data.text, words)) and check_config(config_name)
+
+    return verify
+
+
+def compose_talk_verify(words: list, names: list, config_name: str):
+    async def verify(data: Message):
+        if not check_config(config_name):
+            return False
         return check_sentence_by_re(data.text, words, names)
 
     return verify
@@ -117,12 +132,4 @@ async def only_name(data: Message):
     if data.image:
         return False
 
-    text = data.text
-
-    for item in bot.prefix_keywords:
-        if item != '阿米娅' or (item == '阿米娅' and text.startswith(item)):
-            text = text.replace(item, '', 1)
-
-    text = re.sub(r'\W', '', text).strip()
-
-    return text == '', 2
+    return (data.text_prefix or data.is_at) and data.text == '', 2

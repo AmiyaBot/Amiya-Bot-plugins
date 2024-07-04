@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "enable_greeting": {
+            "title": "开启问候",
+            "type": "boolean"
+        },
+        "enable_positive": {
+            "title": "开启积极互动",
+            "type": "boolean"
+        },
+        "enable_inactive": {
+            "title": "开启消极互动",
+            "type": "boolean"
+        }
+    }
+}

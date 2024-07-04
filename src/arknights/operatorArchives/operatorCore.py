@@ -34,7 +34,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='5.1',
+    version='5.2',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -72,7 +72,7 @@ class FuncsVerify:
             if info.name != data.text and '查询' not in data.text:
                 return False
 
-        return bool(info.name), default_level + 1, info
+        return bool(info.name), default_level + 4, info
 
     @classmethod
     async def group(cls, data: Message):

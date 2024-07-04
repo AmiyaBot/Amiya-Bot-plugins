@@ -339,7 +339,7 @@ async def operator_archives_group_query_2(data: Message):
     return Chain(data).markdown(text)
 
 
-@bot.on_message(group_id='operator', keywords='/干员查询')
+@bot.on_message(group_id='operator', keywords='/干员查询', level=10)
 async def operator_archives_operator_query(data: Message):
     res = await FuncsVerify.operator(data, False)
     if res[0]:

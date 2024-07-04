@@ -40,55 +40,6 @@ class UserCustom(UserBaseModel):
             return f'{custom.custom_nickname}#{id_suffix}'
 
 
-@bot.on_message(group_id='user', verify=only_name)
-async def echo(data: Message = None):
-    actions = [
-        lambda dt: Chain(dt).text(random.choice(talking.touch)),
-        lambda dt: Chain(dt, at=False).image(random.choice(get_face())),
-    ]
-
-    return random.choice(actions)(data)
-
-
-@bot.on_message(group_id='user', verify=compose_talk_verify(talking.talk.positive, talking.call.positive))
-async def _(data: Message):
-    user: UserInfo = UserInfo.get_user(data.user_id)
-    reply = Chain(data)
-
-    if user.user_mood == 0:
-        text = '阿米娅这次就原谅博士吧，博士要好好对阿米娅哦[face:21]'
-    else:
-        text = random.choice(talking.touch)
-
-    setattr(reply, 'feeling', 5)
-    return reply.text(text, auto_convert=False)
-
-
-@bot.on_message(group_id='user', verify=compose_talk_verify(talking.talk.inactive, talking.call.positive))
-async def _(data: Message):
-    user: UserInfo = UserInfo.get_user(data.user_id)
-    reply = Chain(data)
-    setattr(reply, 'feeling', -5)
-
-    if user.user_mood - 5 <= 0:
-        return reply.text('(阿米娅没有应答...似乎已经生气了...)')
-
-    anger = int((1 - (user.user_mood - 5 if user.user_mood - 5 >= 0 else 0) / 15) * 100)
-
-    return reply.text(f'博士为什么要说这种话，阿米娅要生气了！[face:67]（怒气值：{anger}%）')
-
-
-@bot.on_message(group_id='user', keywords=list(talking.call.inactive), check_prefix=False)
-async def _(data: Message):
-    bad_word = any_match(data.text, list(talking.call.inactive))
-    text = f'哼！Dr. {data.nickname}不许叫人家{bad_word}，不然人家要生气了！'
-
-    reply = Chain(data).text(text)
-    setattr(reply, 'feeling', -5)
-
-    return reply
-
-
 @bot.on_message(group_id='user', keywords=['昵称'], level=10)
 async def _(data: Message):
     if '删除昵称' in data.text_original:
@@ -136,7 +87,86 @@ async def _(data: Message):
         return Chain(data).text('博士，请正确使用指令设置昵称哦~')
 
 
-@bot.on_message(group_id='user', keywords=['早上好', '早安', '中午好', '午安', '下午好', '晚上好'])
+@bot.on_message(group_id='user', verify=only_name)
+async def echo(data: Message = None):
+    actions = [
+        lambda dt: Chain(dt).text(random.choice(talking.touch)),
+        lambda dt: Chain(dt, at=False).image(random.choice(get_face())),
+    ]
+
+    return random.choice(actions)(data)
+
+
+@bot.on_message(
+    group_id='user',
+    verify=compose_talk_verify(talking.talk.positive, talking.call.positive, 'enable_positive'),
+)
+async def _(data: Message):
+    user: UserInfo = UserInfo.get_user(data.user_id)
+    reply = Chain(data)
+
+    if user.user_mood == 0:
+        text = '阿米娅这次就原谅博士吧，博士要好好对阿米娅哦[face:21]'
+    else:
+        text = random.choice(talking.touch)
+
+    setattr(reply, 'feeling', 5)
+    return reply.text(text, auto_convert=False)
+
+
+@bot.on_message(
+    group_id='user',
+    verify=compose_talk_verify(talking.talk.inactive, talking.call.positive, 'enable_inactive'),
+)
+async def _(data: Message):
+    user: UserInfo = UserInfo.get_user(data.user_id)
+    reply = Chain(data)
+    setattr(reply, 'feeling', -5)
+
+    if user.user_mood - 5 <= 0:
+        return reply.text('(阿米娅没有应答...似乎已经生气了...)')
+
+    anger = int((1 - (user.user_mood - 5 if user.user_mood - 5 >= 0 else 0) / 15) * 100)
+
+    return reply.text(f'博士为什么要说这种话，阿米娅要生气了！[face:67]（怒气值：{anger}%）')
+
+
+@bot.on_message(
+    group_id='user',
+    verify=check_keywords(list(talking.call.inactive), 'enable_inactive'),
+    check_prefix=False,
+)
+async def _(data: Message):
+    bad_word = any_match(data.text, list(talking.call.inactive))
+    text = f'哼！Dr. {data.nickname}不许叫人家{bad_word}，不然人家要生气了！'
+
+    reply = Chain(data).text(text)
+    setattr(reply, 'feeling', -5)
+
+    return reply
+
+
+@bot.on_message(
+    group_id='user',
+    verify=check_keywords(['我错了', '对不起', '抱歉'], 'enable_inactive'),
+)
+async def _(data: Message):
+    info: UserInfo = UserInfo.get_user(data.user_id)
+
+    reply = Chain(data)
+    setattr(reply, 'feeling', 5)
+    setattr(reply, 'unlock', True)
+
+    if not info or info.user_mood >= 15:
+        return reply.text('博士为什么要这么说呢，嗯……博士是不是偷偷做了对不起阿米娅的事[face:181]')
+    else:
+        return reply.text('好吧，阿米娅就当博士刚刚是在开玩笑吧，博士要好好对阿米娅哦[face:21]')
+
+
+@bot.on_message(
+    group_id='user',
+    verify=check_keywords(['早上好', '早安', '中午好', '午安', '下午好', '晚上好'], 'enable_greeting'),
+)
 async def _(data: Message):
     hour = talk_time()
     text = ''
@@ -152,23 +182,12 @@ async def _(data: Message):
     return Chain(data).text(text)
 
 
-@bot.on_message(group_id='user', keywords=['晚安'])
+@bot.on_message(
+    group_id='user',
+    verify=check_keywords(['晚安'], 'enable_greeting'),
+)
 async def _(data: Message):
     return Chain(data).text(f'Dr. {data.nickname}，晚安～')
-
-
-@bot.on_message(group_id='user', keywords=['我错了', '对不起', '抱歉'])
-async def _(data: Message):
-    info: UserInfo = UserInfo.get_user(data.user_id)
-
-    reply = Chain(data)
-    setattr(reply, 'feeling', 5)
-    setattr(reply, 'unlock', True)
-
-    if not info or info.user_mood >= 15:
-        return reply.text('博士为什么要这么说呢，嗯……博士是不是偷偷做了对不起阿米娅的事[face:181]')
-    else:
-        return reply.text('好吧，阿米娅就当博士刚刚是在开玩笑吧，博士要好好对阿米娅哦[face:21]')
 
 
 @bot.on_message(group_id='user', keywords=['签到'])
@@ -180,7 +199,7 @@ async def _(data: Message):
     return reply.text(status['text'])
 
 
-@bot.on_message(group_id='user', keywords=['信赖', '关系', '好感', '我的信息', '个人信息'])
+@bot.on_message(group_id='user', keywords=['我的信息'])
 async def _(data: Message):
     return await user_info(data)
 
