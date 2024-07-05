@@ -15,6 +15,13 @@
         "disable_high_cost_quota": true,
         "high_cost_quota": 5
     },
+    "GPTAssistant":{
+        "enable": false,
+        "app_id": "12345",
+        "api_key": "12345",
+        "secret_key": "12345",
+        "thread_timeout":1800
+    },
     "QianFan": {
         "enable": false,
         "apps": [
@@ -24,6 +31,7 @@
                 "vision_supported": false
             }
         ],
+        "thread_timeout":1800,
         "api_key": "12345"
     },
     "show_log": false

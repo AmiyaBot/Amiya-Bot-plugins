@@ -27,6 +27,7 @@ class QianFanAdapter(BLMAdapter):
         super().__init__()
         self.plugin: AmiyaBotPluginInstance = plugin
         self.thread_cache = {}
+        self.thread_assistant_map = {}
 
     def debug_log(self, msg):
         show_log = self.plugin.get_config("show_log")
@@ -83,8 +84,13 @@ class QianFanAdapter(BLMAdapter):
         return app_list
 
     async def assistant_thread_touch(self, thread_id: str, assistant_id: str):
-        # 我可以选择从服务器取，但是目前我就是设置一个5天超时
-        timeout = 5 * 24 * 60 * 60
+        if thread_id not in self.thread_assistant_map.keys():
+            return None
+        
+        if self.thread_assistant_map[thread_id] != assistant_id:
+            return None
+
+        timeout = self.get_config("thread_timeout",1800)
 
         if thread_id in self.thread_cache:
             if time.time() - self.thread_cache[thread_id] < timeout:
@@ -119,6 +125,7 @@ class QianFanAdapter(BLMAdapter):
             conv_id = response_json["conversation_id"]
 
             self.thread_cache[conv_id] = time.time()
+            self.thread_assistant_map[conv_id] = assistant_id
 
             return conv_id
         except Exception as e:

@@ -39,7 +39,7 @@ class BLMAdapter:
         ...
 
     def assistant_list(self) -> List[dict]:
-        ...
+        return []
 
     def get_assistant(self, assistant_id: str) -> dict:
         ...
@@ -66,7 +66,8 @@ class BLMAdapter:
         json_mode: Optional[bool] = False,
     ) -> Optional[str]: ...
 
-    def model_list(self) -> List[dict]: ...
+    def model_list(self) -> List[dict]: 
+        return []
 
     def get_model(self, model_name: str) -> dict:
         model_dict_list = self.model_list()
