@@ -12,16 +12,12 @@
    model_info字典中的`max-token`更名为`max_token`，使用下划线替代连字符，从而和其他字段保持一致。
    当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来的1.5版本移除支持，请开发者及时调整代码。
 
-3.
-
-支持json_mode：新增json_mode参数让chatflow返回一个合法json字符串，目前仅gpt-4-1106-preview模型原生支持json_mode，其余模型均为用模拟方式支持json_mode，详情请参考后面章节关于chat_flow的函数原型声明。
+3. 支持json_mode：新增json_mode参数让chatflow返回一个合法json字符串，目前仅gpt-4-1106-preview模型原生支持json_mode，其余模型均为用模拟方式支持json_mode，详情请参考后面章节关于chat_flow的函数原型声明。
 
 4. **extract_json函数废弃**
    因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
 
-5.
-
-支持了Assistant模式，现在可以使用各大平台提供的AI助手库了。第一版支持ChatGPT的Assistant和千帆AppBuilder的应用（百度AssistantBeta下版本支持）。官方兔兔就在使用本模式，您可以添加官方兔兔并和他聊天试试效果。
+5. 支持了Assistant模式，现在可以使用各大平台提供的AI助手库了。第一版支持ChatGPT的Assistant和千帆AppBuilder的应用（百度AssistantBeta下版本支持）。官方兔兔就在使用本模式，您可以添加官方兔兔并和他聊天试试效果。
 
 # 使用方法
 
@@ -467,4 +463,5 @@ Logo是用StableDiffusion插件跑出来的。
 | 1.0   | 初版登录商店                                            |
 | 1.1   | httpx库现在改为可选。                                     |
 | 1.2   | 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
-| 1.2.3 | 引入assistant                                       |
+| 1.2.3 | 引入assistant  |
+| 1.2.6 | 分开GPT的基础模型部分配置和Assistant配置 |

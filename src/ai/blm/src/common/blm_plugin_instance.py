@@ -10,9 +10,9 @@ from ..common.blm_types import BLMAdapter, BLMFunctionCall
 from ..common.database import AmiyaBotBLMLibraryTokenConsumeModel, AmiyaBotBLMLibraryMetaStorageModel
 
 from ..chat_gpt.chat_gpt_adapter import ChatGPTAdapter
+from ..chat_gpt.gpt_assistant_adapter import ChatGPTAssistantAdapter
 
 from ..ernie.ernie_adapter import ERNIEAdapter
-
 from ..ernie.qianfan_adapter import QianFanAdapter
 
 from .extract_json import extract_json
@@ -68,6 +68,10 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         chatgpt_config = self.get_config("ChatGPT")
         if chatgpt_config and chatgpt_config["enable"]:
             self.adapters.append(ChatGPTAdapter(self))
+        gpt_assistant_config = self.get_config("GPTAssistant")
+        if gpt_assistant_config and gpt_assistant_config["enable"]:
+            self.adapters.append(ChatGPTAssistantAdapter(self))
+
         ernie_config = self.get_config("ERNIE")
         if ernie_config and ernie_config["enable"]:
             self.adapters.append(ERNIEAdapter(self))

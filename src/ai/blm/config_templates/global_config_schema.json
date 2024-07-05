@@ -10,6 +10,14 @@
                 "..."
             ]
         },
+        "default_assistant": {
+            "title": "默认助手",
+            "description": "对于那些没有提供助手的调用，你默认选择的助手。如果你在这里看不到你添加的助手，请先保存你的修改，然后刷新控制台。",
+            "type": "string",
+            "enum": [
+                "..."
+            ]
+        },
         "ChatGPT": {
             "title": "ChatGPT",
             "description": "ChatGPT大模型相关的配置",
@@ -36,11 +44,6 @@
                     "description": "可选的一个http或https代理，socks代理不支持",
                     "type": "string"
                 },
-                "enable_assistants": {
-                    "title": "启用Assistant",
-                    "description": "设置后，将提供Assistant给其他调用者。",
-                    "type": "boolean"
-                },
                 "disable_high_cost": {
                     "title": "禁用GPT-4",
                     "description": "设置后，将不会在列表中给其他插件返回GPT-4模型。",
@@ -49,6 +52,39 @@
                 "high_cost_quota": {
                     "title": "GPT-4限额",
                     "description": "使用GPT-4模型时的平均每小时调用次数，设为0表示不限。",
+                    "type": "number"
+                }
+            }
+        },
+        "GPTAssistant": {
+            "title": "GPT-Assistant",
+            "description": "ChatGPT-Assistant配置",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供ChatGPT Assistant。",
+                    "type": "boolean"
+                },
+                "api_key": {
+                    "title": "API Key",
+                    "description": "由OpenAI提供给您的ApiKey，没有的话请到https://platform.openai.com/account/api-keys申请。",
+                    "type": "string"
+                },
+                "base_url": {
+                    "title": "Url",
+                    "description": "可以填写一个Url作为API的基础路径。该url应该以http开头，结尾不包含斜杠，使用时将会拼接为{base_url}/completion",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "proxy": {
+                    "title": "http代理",
+                    "description": "可选的一个http或https代理，socks代理不支持",
+                    "type": "string"
+                },
+                "thread_timeout": {
+                    "title": "话题超时(秒)",
+                    "description": "多长时间没人说话后，清空当前上下文？",
                     "type": "number"
                 }
             }
@@ -126,6 +162,11 @@
                             }
                         }
                     }
+                },
+                "thread_timeout": {
+                    "title": "话题超时(秒)",
+                    "description": "多长时间没人说话后，清空当前上下文？",
+                    "type": "number"
                 },
                 "api_key": {
                     "title": "工作台秘钥",
