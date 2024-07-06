@@ -90,7 +90,12 @@ class QianFanAdapter(BLMAdapter):
         if self.thread_assistant_map[thread_id] != assistant_id:
             return None
 
-        timeout = self.get_config("thread_timeout",1800)
+        timeout = self.get_config("thread_timeout")
+        if timeout is None:
+            timeout = 1800
+        
+        if timeout > 5 * 24 * 3600:
+            timeout = 5 *24 * 3600
 
         if thread_id in self.thread_cache:
             if time.time() - self.thread_cache[thread_id] < timeout:
