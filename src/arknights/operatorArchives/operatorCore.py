@@ -34,7 +34,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='4.9',
+    version='5.1',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -65,14 +65,14 @@ class FuncsVerify:
         return bool(condition), default_level + 3, info
 
     @classmethod
-    async def operator(cls, data: Message, block_mishap: bool = False):
+    async def operator(cls, data: Message, block_mishap: bool = True):
         info = search_info(data, source_keys=['name'])
 
         if block_mishap and bot.get_config('operatorInfo')['blockMishap']:
             if info.name != data.text and '查询' not in data.text:
                 return False
 
-        return bool(info.name), default_level, info
+        return bool(info.name), default_level + 1, info
 
     @classmethod
     async def group(cls, data: Message):
