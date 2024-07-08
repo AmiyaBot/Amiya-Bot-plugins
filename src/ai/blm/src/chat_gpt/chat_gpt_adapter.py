@@ -184,7 +184,7 @@ class ChatGPTAdapter(BLMAdapter):
             else:
                 raise ValueError("无效的代理URL")
 
-        base_url = self.get_config('url')
+        base_url = self.get_config('base_url')
         client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url=base_url, http_client=async_httpx_client)
         return client
 
@@ -236,7 +236,7 @@ class ChatGPTAdapter(BLMAdapter):
             else:
                 raise ValueError("无效的代理URL")
 
-        base_url = self.get_config('url')
+        base_url = self.get_config('base_url')
         client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url=base_url, http_client=async_httpx_client)
 
         self.debug_log(f"url: {base_url} proxy: {proxy} model: {model_info}")
