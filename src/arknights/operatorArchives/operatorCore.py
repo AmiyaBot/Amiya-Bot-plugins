@@ -6,10 +6,11 @@ from amiyabot import GroupConfig, event_bus
 
 from core import Message, AmiyaBotPluginInstance, Requirement
 from core.util import any_match, find_most_similar, get_index_from_text, remove_punctuation
+from core.resource.arknightsGameData import ArknightsGameData, Operator
 
 from .operatorInfo import OperatorInfo, curr_dir
 
-default_level = 3
+default_level = 8
 
 
 class OperatorPluginInstance(AmiyaBotPluginInstance):
@@ -34,7 +35,7 @@ def update(_):
 
 bot = OperatorPluginInstance(
     name='明日方舟干员资料',
-    version='5.2',
+    version='5.4',
     plugin_id='amiyabot-arknights-operator',
     plugin_type='official',
     description='查询明日方舟干员资料',
@@ -49,6 +50,7 @@ bot.set_group_config(GroupConfig('operator', allow_direct=True))
 
 @dataclass
 class OperatorSearchInfo:
+    char: Optional[Operator] = None
     name: str = ''
     skin_key: str = ''
     group_key: str = ''
@@ -62,17 +64,22 @@ class FuncsVerify:
         info = search_info(data, source_keys=['name'])
         condition = any_match(data.text, ['精英', '专精', '材料'])
 
-        return bool(condition), default_level + 3, info
+        return bool(condition), default_level + 2, info
 
     @classmethod
     async def operator(cls, data: Message, block_mishap: bool = True):
         info = search_info(data, source_keys=['name'])
+        condition = any_match(data.text, ['技能', '召唤物'])
 
+        flag = True
         if block_mishap and bot.get_config('operatorInfo')['blockMishap']:
             if info.name != data.text and '查询' not in data.text:
-                return False
+                flag = bool(condition)
 
-        return bool(info.name), default_level + 4, info
+        if flag:
+            return bool(info.name), default_level - 1, info
+        else:
+            return False
 
     @classmethod
     async def group(cls, data: Message):
@@ -114,6 +121,9 @@ def search_info(data: Message, source_keys: Optional[list] = None):
 
                 if info.name not in data.text_words:
                     continue
+
+    if info.name:
+        info.char = ArknightsGameData.operators[info.name]
 
     return info
 

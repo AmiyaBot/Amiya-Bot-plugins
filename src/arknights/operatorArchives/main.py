@@ -1,7 +1,7 @@
 from typing import Optional
 from amiyabot import ChainBuilder
 from amiyabot.adapters.kook import KOOKBotInstance
-from amiyabot.adapters.mirai import MiraiForwardMessage
+from amiyabot.adapters.mirai import MiraiBotInstance, MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
@@ -246,9 +246,15 @@ async def operator_archives_skill_and_material_func(data: Message):
         info.name = wait.text
 
     if '材料' in data.text:
+        if info.char.rarity <= 2:
+            return Chain(data).text(f'博士，干员{info.name}不需要消耗材料进行升级哦~')
+
         result = await OperatorData.get_level_up_cost(info)
         template = f'{curr_dir}/template/operatorCost.html'
     else:
+        if info.char.rarity <= 2:
+            return Chain(data).text(f'博士，干员{info.name}没有技能哦~')
+
         result = await OperatorData.get_skills_detail(info)
         template = f'{curr_dir}/template/skillsDetail.html'
 
@@ -265,6 +271,9 @@ async def operator_func(data: Message, info: Optional[OperatorSearchInfo] = None
     reply = Chain(data)
 
     if '技能' in data.text:
+        if info.char.rarity <= 2:
+            return Chain(data).text(f'博士，干员{info.name}没有技能哦~')
+
         result = await OperatorData.get_skills_detail(info)
         if result:
             return reply.html(f'{curr_dir}/template/skillsDetail.html', result)
@@ -296,18 +305,18 @@ async def operator_archives_group_query_1(data: Message):
     source = type(data.instance)
     operator_group = OperatorInfo.operator_group_map[info.group_key]
 
-    if source in [QQGuildBotInstance, QQGroupBotInstance, QQGlobalBotInstance, KOOKBotInstance]:
-        text = f'## {info.group_key}\n'
-        for item in operator_group:
-            text += f'- {item.name}\n'
-
-        return Chain(data).markdown(text)
+    if source is MiraiBotInstance:
+        reply = MiraiForwardMessage(data)
 
     elif source is CQHttpBotInstance:
         reply = CQHTTPForwardMessage(data)
 
     else:
-        reply = MiraiForwardMessage(data)
+        text = f'## {info.group_key}\n'
+        for item in operator_group:
+            text += f'- {item.name}\n'
+
+        return Chain(data).markdown(text)
 
     await data.send(Chain(data).text('正在查询，博士请稍等...'))
     await reply.add_message(
@@ -339,7 +348,7 @@ async def operator_archives_group_query_2(data: Message):
     return Chain(data).markdown(text)
 
 
-@bot.on_message(group_id='operator', keywords='/干员查询', level=10)
+@bot.on_message(group_id='operator', keywords='/干员查询', level=default_level + 2)
 async def operator_archives_operator_query(data: Message):
     res = await FuncsVerify.operator(data, False)
     if res[0]:

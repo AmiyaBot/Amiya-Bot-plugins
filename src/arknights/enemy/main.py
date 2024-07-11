@@ -38,6 +38,8 @@ class Enemy:
             'attributes.sleepImmune': {'title': 'sleepImmune', 'value': ''},
             'attributes.frozenImmune': {'title': 'frozenImmune', 'value': ''},
             'attributes.levitateImmune': {'title': 'levitateImmune', 'value': ''},
+            'attributes.disarmedCombatImmune': {'title': 'disarmedCombatImmune', 'value': ''},
+            'attributes.fearedImmune': {'title': 'fearedImmune', 'value': ''},
             'rangeRadius': {'title': 'rangeRadius', 'value': ''},
             'lifePointReduce': {'title': 'lifePointReduce', 'value': ''},
         }
@@ -84,7 +86,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='3.4',
+    version='3.5',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',

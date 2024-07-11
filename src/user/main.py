@@ -199,7 +199,7 @@ async def _(data: Message):
     return reply.text(status['text'])
 
 
-@bot.on_message(group_id='user', keywords=['我的信息'])
+@bot.on_message(group_id='user', keywords=['我的信息', '个人信息'])
 async def _(data: Message):
     return await user_info(data)
 

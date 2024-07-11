@@ -82,6 +82,12 @@
                         <div class="attr" title="浮空免疫" :class="{ on: item.levitateImmune }">
                             <span>{{ item.levitateImmune ? '有' : '无' }}</span>
                         </div>
+                        <div class="attr" title="缴械免疫" :class="{ on: item.disarmedCombatImmune }">
+                            <span>{{ item.disarmedCombatImmune ? '有' : '无' }}</span>
+                        </div>
+                        <div class="attr" title="恐惧免疫" :class="{ on: item.fearedImmune }">
+                            <span>{{ item.fearedImmune ? '有' : '无' }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
