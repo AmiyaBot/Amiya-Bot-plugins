@@ -12,7 +12,7 @@ class TalkPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = TalkPluginInstance(
     name='自定义回复',
-    version='1.5',
+    version='1.6',
     plugin_id='amiyabot-talking',
     plugin_type='official',
     description='可以自定义一问一答的简单对话',
@@ -27,9 +27,7 @@ async def check_talk(data: Message):
     configs: list = bot.get_config('configs')
 
     def set_reply(_item):
-        setattr(data, 'reply_content', _item['reply'])
-        setattr(data, 'is_at_user', _item['is_at'])
-        return True
+        return True, 1, [_item['reply'], _item['is_at']]
 
     for item in configs:
         direct = item.get('direct')
@@ -52,8 +50,8 @@ async def check_talk(data: Message):
 
 @bot.on_message(verify=check_talk, check_prefix=False, allow_direct=True)
 async def _(data: Message):
-    reply: str = getattr(data, 'reply_content')
-    is_at: bool = getattr(data, 'is_at_user')
+    reply: str = data.verify.keypoint[0]
+    is_at: bool = data.verify.keypoint[1]
 
     if os.path.exists(reply):
         return Chain(data, at=is_at).image(reply)
