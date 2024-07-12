@@ -4,12 +4,13 @@ import time
 import shutil
 import asyncio
 
+from requests_html import HTMLSession, HTML
 from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
 from amiyabot.network.httpRequests import http_requests
 from core.database.bot import *
 from core.lib.baiduCloud import BaiduCloud
 from core.resource import remote_config
-from core.util import read_yaml
+from core.util import read_yaml, run_in_thread_pool
 from core import log, Message, Chain, Equal, AmiyaBotPluginInstance
 
 curr_dir = os.path.dirname(__file__)
@@ -20,6 +21,35 @@ if not os.path.exists(config_path):
     shutil.copy(f'{curr_dir}/baiduCloud.yaml', config_path)
 
 baidu = BaiduCloud(read_yaml(config_path))
+
+
+class RealNameDict:
+    data = []
+    update_time: float = 0
+
+    @classmethod
+    async def get_real_name(cls):
+        if not cls.data or time.time() - cls.update_time > 60 * bot.get_config('update_time'):
+            async with log.catch('wiki error:'):
+                url = 'https://prts.wiki/w/%E8%A7%92%E8%89%B2%E7%9C%9F%E5%90%8D'
+                res = await run_in_thread_pool(HTMLSession().get, url)
+                html: HTML = res.html
+
+                data = []
+                for table_elem in html.find('.wikitable'):
+                    trs = table_elem.find('tr')[2:]
+                    for tr in trs:
+                        tds = tr.find('td')
+                        name = tds[1].text
+
+                        for item in tds[2].text.split('\n'):
+                            if item:
+                                data.append((item, name))
+
+                cls.data = data
+                cls.update_time = time.time()
+
+        return cls.data
 
 
 class ReplacePluginInstance(AmiyaBotPluginInstance):
@@ -45,7 +75,7 @@ class ReplacePluginInstance(AmiyaBotPluginInstance):
 
 bot = ReplacePluginInstance(
     name='词语替换',
-    version='2.6',
+    version='2.8',
     plugin_id='amiyabot-replace',
     plugin_type='official',
     description='自动替换指令中的关键词，更易于触发常用功能',
@@ -58,26 +88,30 @@ bot = ReplacePluginInstance(
 
 @bot.message_created
 async def _(data: Message, _):
-    user_replace: List[TextReplace] = TextReplace.select().where(
-        TextReplace.user_id == data.user_id, TextReplace.is_user_only == 1, TextReplace.is_active == 1
-    )
-
     replace: List[TextReplace] = (
         TextReplace.select()
         .where(TextReplace.group_id == data.guild_id, TextReplace.is_active == 1)
         .orwhere(TextReplace.is_global == 1)
     )
 
+    text = data.text
+
     if replace:
-        text = data.text
         for item in reversed(list(replace)):
             if item.origin in text:
                 continue
-            text = text.replace(item.replace, item.origin)
 
-        data.set_text(text, set_original=False)
+            if item.replace in text:
+                text = text.replace(item.replace, item.origin)
 
-        return data
+    if bot.get_config('use_real_name'):
+        real_names = await RealNameDict.get_real_name()
+        for n in real_names:
+            if n[0] in text:
+                text = text.replace(n[0], n[1])
+
+    data.set_text(text, set_original=False)
+    return data
 
 
 @bot.on_message(keywords=['别名'], level=5)

@@ -246,13 +246,13 @@ async def operator_archives_skill_and_material_func(data: Message):
         info.name = wait.text
 
     if '材料' in data.text:
-        if info.char.rarity <= 2:
+        if info.char and info.char.rarity <= 2:
             return Chain(data).text(f'博士，干员{info.name}不需要消耗材料进行升级哦~')
 
         result = await OperatorData.get_level_up_cost(info)
         template = f'{curr_dir}/template/operatorCost.html'
     else:
-        if info.char.rarity <= 2:
+        if info.char and info.char.rarity <= 2:
             return Chain(data).text(f'博士，干员{info.name}没有技能哦~')
 
         result = await OperatorData.get_skills_detail(info)
@@ -271,7 +271,7 @@ async def operator_func(data: Message, info: Optional[OperatorSearchInfo] = None
     reply = Chain(data)
 
     if '技能' in data.text:
-        if info.char.rarity <= 2:
+        if info.char and info.char.rarity <= 2:
             return Chain(data).text(f'博士，干员{info.name}没有技能哦~')
 
         result = await OperatorData.get_skills_detail(info)

@@ -6,6 +6,14 @@
         "is_check": {
             "title": "是否开启文本审核",
             "type": "boolean"
+        },
+        "use_real_name": {
+            "title": "启用干员真名替换",
+            "type": "boolean"
+        },
+        "update_time": {
+            "title": "真名词典刷新间隔（分）",
+            "type": "number"
         }
     }
 }
