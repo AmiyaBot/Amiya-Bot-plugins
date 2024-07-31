@@ -1,5 +1,3 @@
-import asyncio
-
 from core import AmiyaBotPluginInstance, Requirement
 from core.util import TimeRecorder
 from core.database.user import UserInfo
@@ -8,7 +6,7 @@ from .guessStart import *
 
 bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='3.1',
+    version='3.2',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -70,6 +68,8 @@ async def _(data: Message):
     if not choice_level:
         return Chain(choice).text('博士，您没有选择难度哦，游戏取消。')
 
+    event = await data.wait_channel(force=True)
+
     operators = {}
     referee = GuessReferee(markdown_template_id=markdown_template_id)
     curr = None
@@ -94,11 +94,11 @@ async def _(data: Message):
                 text.text('\n').text(referee.calc_rank()[0], auto_convert=False)
 
             await target.send(text)
-            await asyncio.sleep(2)
 
-        result = await guess_start(
+        result, event = await guess_start(
             referee,
             target,
+            event,
             operator,
             level[choice_level],
             choice_level,
@@ -128,6 +128,9 @@ async def _(data: Message):
 
         if end:
             break
+
+    if event:
+        event.close_event()
 
     if referee.round < guess_config.finish_min:
         if result.event:

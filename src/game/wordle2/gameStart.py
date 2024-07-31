@@ -1,7 +1,10 @@
 import os
 import time
 
+from typing import Optional, Tuple
 from amiyabot import Message, Chain
+from amiyabot.builtin.message import MessageStructure
+from amiyabot.builtin.message.waitEvent import ChannelMessagesItem
 from core.database.user import UserInfo
 from core.resource.arknightsGameData import ArknightsGameData, Operator
 
@@ -19,13 +22,18 @@ async def guess_filter(data: Message):
     ]
 
 
-async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode: bool):
+async def game_begin(
+    data: Message,
+    event: ChannelMessagesItem,
+    operator: Operator,
+    prev: Operator,
+    hardcode: bool,
+) -> Tuple[Optional[MessageStructure], Optional[ChannelMessagesItem]]:
     async def send(content: str):
         await data.send(Chain(data, at=False, reference=True).text(content))
 
     process = GuessProcess(operator, prev, hardcode)
 
-    event = None
     time_rec = time.time()
     count_rec = process.count
     alert_step = 0
@@ -35,6 +43,9 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
         if process.display:
             ask = Chain(data, at=False).html(f'{curr_dir}/template/hardcode.html', process.view_data)
             process.display = False
+
+        if event:
+            event.close_event()
 
         event = await data.wait_channel(ask, force=True, clean=True, max_time=5, data_filter=guess_filter)
         if process.count != count_rec:
@@ -47,7 +58,7 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
             over_time = time.time() - time_rec
             if over_time >= 120:
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
-                return None
+                return None, event
             elif over_time >= 110 and alert_step == 2:
                 alert_step = 3
                 await data.send(Chain(data, at=False).text('还剩10秒...>.<'))
@@ -81,14 +92,12 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
         # 跳过
         if data.text in ['下一个', '跳过']:
             await send(f'答案是{operator.name}')
-            event.close_event()
-            break
+            return data, event
 
         # 手动结束游戏
         if data.text in ['不玩了', '结束']:
             await send(f'答案是{operator.name}，游戏结束~')
-            event.close_event()
-            return None
+            return None, event
 
         # 竞猜
         answer = ArknightsGameData.operators[data.text]
@@ -101,13 +110,11 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
             rewards = 300 * (len(process.closed_tags) + 1)
             UserInfo.add_jade_point(data.user_id, rewards, max_rewards)
             await send(f'回答正确！奖励合成玉{rewards}')
-            event.close_event()
-            return data
+            return data, event
         else:
             if process.count >= process.max_count:
                 await data.send(Chain(data, at=False).text(f'机会耗尽，答案是{operator.name}'))
-                event.close_event()
-                return data
+                return data, event
 
             text = f'匹配了{match}个线索'
             if match >= 5:
@@ -127,7 +134,4 @@ async def game_begin(data: Message, operator: Operator, prev: Operator, hardcode
             process.display = True
             continue
 
-    if event:
-        event.close_event()
-
-    return data
+    return data, event

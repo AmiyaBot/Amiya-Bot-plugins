@@ -3,8 +3,9 @@ import copy
 import time
 import random
 
-from typing import Optional
+from typing import Optional, Tuple
 from amiyabot import InlineKeyboard
+from amiyabot.builtin.message import MessageStructure
 from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 from amiyabot.adapters.tencent.qqGlobal import QQGlobalBotInstance
 from core.util import any_match, random_pop, read_yaml
@@ -37,11 +38,12 @@ async def guess_filter(data: Message):
 async def guess_start(
     referee: GuessReferee,
     data: Message,
+    event: ChannelMessagesItem,
     operator: Operator,
     title: str,
     level: str,
     level_rate: int,
-):
+) -> Tuple[GuessResult, Optional[ChannelMessagesItem]]:
     ask = Chain(data, at=False)
     cropper: Optional[ImageCropper] = None
 
@@ -51,13 +53,13 @@ async def guess_start(
     if level == '初级':
         skins = operator.skins()
         if not skins:
-            return GuessResult(answer=data, state=GameState.systemSkip)
+            return GuessResult(answer=data, state=GameState.systemSkip), event
 
         skin = random.choice(skins)
         skin_path = await ArknightsGameDataResource.get_skin_file(skin)
 
         if not skin_path:
-            return GuessResult(answer=data, state=GameState.systemSkip)
+            return GuessResult(answer=data, state=GameState.systemSkip), event
         else:
             cropper = ImageCropper(skin_path)
             ask.image(cropper.crop())
@@ -66,24 +68,24 @@ async def guess_start(
         skills = operator.skills()[0]
 
         if not skills:
-            return GuessResult(answer=data)
+            return GuessResult(answer=data), event
 
         skill = random.choice(skills)
 
         if any_match(skill['skill_name'], ['α', 'β', 'γ', '急救']):
-            return GuessResult(answer=data)
+            return GuessResult(answer=data), event
 
         skill_icon = 'resource/gamedata/skill/%s.png' % skill['skill_icon']
 
         if not os.path.exists(skill_icon):
-            return GuessResult(answer=data)
+            return GuessResult(answer=data), event
 
         ask.image(skill_icon)
 
     if level == '高级':
         voices = operator.voices()
         if not voices:
-            return GuessResult(answer=data)
+            return GuessResult(answer=data), event
 
         voice_type = random.choice(list(operator.cv.keys()))
         type_v = ''
@@ -115,7 +117,7 @@ async def guess_start(
     if level == '资深':
         stories = operator.stories()
         if not stories:
-            return GuessResult(answer=data)
+            return GuessResult(answer=data), event
 
         stories = [
             n
@@ -179,6 +181,9 @@ async def guess_start(
         time_rec = time.time()
         alert_step = 0
 
+    if event:
+        event.close_event()
+
     # 开始竞猜
     while True:
         event = await data.wait_channel(ask, force=True, clean=bool(ask), max_time=5, data_filter=guess_filter)
@@ -192,7 +197,7 @@ async def guess_start(
             if over_time >= 60:
                 await data.send(Chain(data, at=False).text(f'答案是{operator.name}，没有博士回答吗？那游戏结束咯~'))
                 result.state = GameState.systemClose
-                return result
+                return result, event
             elif over_time >= 50 and alert_step == 1:
                 alert_step = 2
                 await data.send(Chain(data, at=False).text('还剩10秒...>.<'))
@@ -208,7 +213,7 @@ async def guess_start(
             await data.send(Chain(answer, at=False, reference=True).text(f'答案是{operator.name}，结算奖励-5%'))
             result.set_rate(answer.user_id, -5)
             result.state = GameState.userSkip
-            return result
+            return result, event
 
         # 获取提示
         if answer.text in guess_keyword.tips:
@@ -278,7 +283,7 @@ async def guess_start(
         if answer.text in guess_keyword.over:
             await data.send(Chain(answer, at=False, reference=True).text(f'答案是{operator.name}，游戏结束~'))
             result.state = GameState.userClose
-            return result
+            return result, event
 
         # 回答问题
         if answer.text == operator.name:
@@ -319,7 +324,7 @@ async def guess_start(
             result.answer = answer
             result.state = GameState.bingo
             result.rewards = rewards
-            return result
+            return result, event
         else:
             reply = Chain(answer, at=False, reference=True)
             reduce = 1
@@ -339,7 +344,7 @@ async def guess_start(
             if count >= max_count:
                 await data.send(reply.text(f'机会耗尽，答案是{operator.name}，结算奖励-5%'))
                 result.set_rate('0', -5)
-                return result
+                return result, event
             else:
                 await data.send(reply.text(f'答案不正确。请再猜猜吧~（{count}/{max_count}）'))
 
