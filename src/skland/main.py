@@ -101,7 +101,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='4.4',
+    version='4.8',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -136,7 +136,12 @@ async def check_user_info(data: Message):
 
     user_info = await bot.get_user_info(token)
     if not user_info:
-        await data.send(Chain(data).text('Token 无效，无法获取信息，请重新绑定 Token。>.<'))
+        await data.send(
+            Chain(data).text(
+                'Token 无效，无法获取信息，请重新绑定 Token。>.<\n'
+                '如遇到一直绑定不成功，请尝试退出森空岛APP重新登录后再获取 Token。'
+            )
+        )
         return None, token
 
     return user_info, token
@@ -342,10 +347,11 @@ async def _(data: Message):
 
 @bot.on_message(group_id='skland', keywords='绑定', allow_direct=True)
 async def _(data: Message):
-    with open(f'{curr_dir}/README_TOKEN.md', mode='r', encoding='utf-8') as md:
-        content = md.read()
-
-    chain = Chain(data).text('博士，请阅读使用说明。').markdown(content)
+    chain = (
+        Chain(data)
+        .text('登录森空岛APP扫描二维码，在帖子获取 Token。')
+        .image(f'{curr_dir}/img/CBA81C37838652151932DF4C2077E3B7.jpg')
+    )
 
     if not isinstance(data.instance, QQGuildBotInstance):
         chain.text(
