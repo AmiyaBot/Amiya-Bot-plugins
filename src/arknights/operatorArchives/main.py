@@ -90,16 +90,18 @@ async def operator_archives_voice_func(data: Message):
     index = get_index(data.text_digits, voices)
 
     if not info.voice_key and index is None:
-        text = f'博士，这是干员{opt.name}的语音列表\n回复【<span style="color: red">序号</span>】查询对应的语音资料\n\n'
-        text += '|标题|标题|标题|\n|----|----|----|\n'
+        text = f'博士，这是干员{opt.name}的{voice_name}语音列表\n请回复【<span style="color: red">序号</span>】查询对应的语音资料\n\n'
+        text += '|序号&标题|内容|\n|----|----|\n'
 
         for i, item in enumerate(voices):
             text += (
-                f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{i + 1}</span>'
-                + item['voice_title']
+                '|<div style="width: 180px"><span style="color: red; padding-right: 5px; font-weight: bold;">%d</span>%s</div>|%s|\n'
+                % (
+                    i + 1,
+                    item['voice_title'],
+                    item['voice_text'].replace('{@nickname}', data.nickname or '博士'),
+                )
             )
-            if (i + 1) % 3 == 0:
-                text += '|\n'
 
         wait = await data.wait(Chain(data).markdown(text))
         if wait:
@@ -116,7 +118,7 @@ async def operator_archives_voice_func(data: Message):
             f'博士，为您找到干员{info.name}的语音档案：\n\n【{info.voice_key}】\n\n'
             + voices_map[info.voice_key]['voice_text']
         )
-        text = text.replace('{@nickname}', data.nickname)
+        text = text.replace('{@nickname}', data.nickname or '博士')
 
         reply = Chain(data).text(text)
 

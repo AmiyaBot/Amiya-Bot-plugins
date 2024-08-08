@@ -103,48 +103,52 @@ class SKLandUser:
             'Sign': generate_sign(data, t, url, self.sign_token),
         }
 
-    async def user_info(self) -> Optional[dict]:
-        url = 'https://zonai.skland.com/api/v1/user/me'
+    async def request_url(self, url: str):
         headers = self.get_headers(url)
         res = await http_requests.get(url, headers=headers)
         if res:
             data = json.loads(res)
+            return data
+
+    async def check(self):
+        data = await self.request_url('https://zonai.skland.com/web/v1/user/check')
+        if data:
+            return data['code'] == 0
+
+    async def refresh_token(self):
+        data = await self.request_url('https://zonai.skland.com/web/v1/auth/refresh')
+        if data:
+            if data['code'] == 0:
+                self.token = data['data']['token']
+                return self.token
+
+    async def user_info(self) -> Optional[dict]:
+        data = await self.request_url('https://zonai.skland.com/api/v1/user/me')
+        if data:
             if data['code'] == 0:
                 return data['data']
 
     async def character_info(self, uid: str) -> Optional[dict]:
-        url = f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}'
-        headers = self.get_headers(url)
-        res = await http_requests.get(url, headers=headers)
-        if res:
-            data = json.loads(res)
+        data = await self.request_url(f'https://zonai.skland.com/api/v1/game/player/info?uid={uid}')
+        if data:
             if data['code'] == 0:
                 return data['data']
 
     async def cultivate_player(self, uid: str) -> Optional[dict]:
-        url = f'https://zonai.skland.com/api/v1/game/cultivate/player?uid={uid}'
-        headers = self.get_headers(url)
-        res = await http_requests.get(url, headers=headers)
-        if res:
-            data = json.loads(res)
+        data = await self.request_url(f'https://zonai.skland.com/api/v1/game/cultivate/player?uid={uid}')
+        if data:
             if data['code'] == 0:
                 return data['data']
 
     async def cultivate_character(self, char_id: str) -> Optional[dict]:
-        url = f'https://zonai.skland.com/api/v1/game/cultivate/character?characterld={char_id}'
-        headers = self.get_headers(url)
-        res = await http_requests.get(url, headers=headers)
-        if res:
-            data = json.loads(res)
+        data = await self.request_url(f'https://zonai.skland.com/api/v1/game/cultivate/character?characterld={char_id}')
+        if data:
             if data['code'] == 0:
                 return data['data']
 
     async def binding(self) -> Optional[dict]:
-        url = f'https://zonai.skland.com/api/v1/game/player/binding'
-        headers = self.get_headers(url)
-        res = await http_requests.get(url, headers=headers)
-        if res:
-            data = json.loads(res)
+        data = await self.request_url('https://zonai.skland.com/api/v1/game/player/binding')
+        if data:
             if data['code'] == 0:
                 return data['data']
 

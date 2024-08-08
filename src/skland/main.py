@@ -33,6 +33,23 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
             return rec.token
 
     @staticmethod
+    async def refresh_token(user_id: str):
+        rec: UserToken = UserToken.get_or_none(user_id=user_id)
+        if rec:
+            user = await skland_api.user(rec.token)
+            if not user:
+                log.warning('森空岛用户获取失败。')
+                return False
+
+            new_token = await user.refresh_token()
+            if new_token:
+                rec.token = new_token
+                rec.save()
+                return True
+
+        return False
+
+    @staticmethod
     async def get_user_info(token: str):
         user = await skland_api.user(token)
         if not user:
@@ -101,7 +118,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='4.8',
+    version='5.0',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -128,7 +145,7 @@ async def is_token_str(data: Message):
     return False
 
 
-async def check_user_info(data: Message):
+async def check_user_info(data: Message, times: int = 1):
     token = await bot.get_token(data.user_id)
     if not token:
         await data.send(Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 查看绑定说明。'))
@@ -136,6 +153,9 @@ async def check_user_info(data: Message):
 
     user_info = await bot.get_user_info(token)
     if not user_info:
+        if times == 1 and await bot.refresh_token(data.user_id):
+            return await check_user_info(data, times + 1)
+
         await data.send(
             Chain(data).text(
                 'Token 无效，无法获取信息，请重新绑定 Token。>.<\n'

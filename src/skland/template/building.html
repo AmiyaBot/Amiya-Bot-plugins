@@ -21,8 +21,8 @@
             干员头像下的进度条为<span class="level">心情值</span>，
             中枢干员会显示一条额外的<span class="level">信赖值</span>；
         </div>
-        <div style="display: flex; align-items: center;">
-            <span class="tag" style="color: #cdfe71;">发电站</span>的进度为无人机恢复进度；
+        <div style="display: flex; align-items: center; margin-top: 20px;">
+            <span class="tag" style="color: #cdfe71; margin-right: 5px;">发电站</span>的进度为无人机恢复进度；
         </div>
     </div>
     <div class="floor">
@@ -118,7 +118,13 @@
                 </div>
                 <div>{{ building.hire.refreshCount }} / 3</div>
             </div>
-            <resident-chars :chars="building.hire.chars" char-width="43px" :max-chars="1"></resident-chars>
+            <div style="display: flex; justify-content: space-between; flex: 2;">
+                <resident-chars :chars="building.hire.chars" char-width="43px" :max-chars="1"></resident-chars>
+                <div class="result">
+                    <div style="font-size: 12px;">公招刷新预计回满时间：</div>
+                    <div style="font-size: 14px;">{{ calcRemain(building.hire.completeWorkTime) }}</div>
+                </div>
+            </div>
         </room>
     </div>
     <div class="floor">
@@ -134,10 +140,10 @@
         <room class="room-normal">
             <div class="normal-title" style="border-color: #f44336">
                 <div>训练室 <span class="level">Lv.{{ building.training.level }}</span></div>
-                <div class="training">{{ building.training.speed * 100 }}%</div>
+                <div class="training">+{{ building.training.speed * 100 - 100 }}%</div>
             </div>
             <div class="rate">
-                <div class="progress normal" style="display: flex; justify-content: flex-end;">
+                <div class="progress normal">
                     <div style="background-color: #f44336;"
                          :style="{ width: (1 - building.training.remainSecs / building.training.remainPoint) * 100 + '%' }"></div>
                 </div>
@@ -189,6 +195,17 @@
     const charMap = {}
     const roomMap = {}
 
+    function calcRemain(t, d = '') {
+        if (t === -1) {
+            return '无计划'
+        }
+        let remain = (t - new Date().getTime() / 1000) / 3600
+        if (remain <= 0) {
+            return '已完成'
+        }
+        return d + remain.toFixed(1) + 'H'
+    }
+
     function avatar(charId) {
         if (charId) {
             return getSkinAvatarUrl(charMap[charId].skinId)
@@ -231,24 +248,25 @@
         },
         template: `
             <room class="room-normal manufactures">
-            <div class="normal-title" style="border-color: #f5c93b;">
-                <div>制造站 <span class="level">Lv.{{ data.level }}</span></div>
-                <div class="speed">{{ (data.speed * 100).toFixed(0) }}%</div>
-            </div>
-            <div class="rate">
-                <div class="progress normal">
-                    <div style="background-color: #f5c93b;"
-                         :style="{ width: data.weight / data.capacity * 100 + '%' }"></div>
+                <div class="normal-title" style="border-color: #f5c93b;">
+                    <div>制造站 <span class="level">Lv.{{ data.level }}</span></div>
+                    <div class="speed">+{{ (data.speed * 100 - 100).toFixed(0) }}%</div>
                 </div>
-                <div>{{ data.weight }} / {{ data.capacity }}</div>
-            </div>
-            <div style="display: flex; flex: 2;">
-                <resident-chars :chars="data.chars" char-width="43px"/>
-                <div class="result">
-                    <div style="font-size: 12px; color: #f5c93b;">{{ formula[data.formulaId] }}</div>
-                    <div style="font-size: 14px;">已生产：{{ data.complete }}</div>
+                <div class="rate">
+                    <div class="progress normal">
+                        <div style="background-color: #f5c93b;"
+                             :style="{ width: data.weight / data.capacity * 100 + '%' }"></div>
+                    </div>
+                    <div>{{ data.weight }} / {{ data.capacity }}</div>
                 </div>
-            </div>
+                <div style="display: flex; flex: 2;">
+                    <resident-chars :chars="data.chars" char-width="43px"/>
+                    <div class="result">
+                        <div style="font-size: 12px; color: #f5c93b;">{{ formula[data.formulaId] }}</div>
+                        <div style="font-size: 12px;">已生产：{{ data.complete }}</div>
+                        <div style="font-size: 12px;">{{ calcRemain(data.completeWorkTime, '预计：') }}</div>
+                    </div>
+                </div>
             </room>
         `
     })
@@ -259,28 +277,28 @@
         },
         template: `
             <room class="room-normal tradings">
-            <div class="normal-title" style="border-color: #5acbfd;">
-                <div>贸易站 <span class="level">Lv.{{ data.level }}</span></div>
-                <div style="font-size: 14px; color: #5acbfd;">
-                    {{ data.strategy == 'O_GOLD' ? '龙门商法' : '开采协力' }}
-                </div>
-            </div>
-            <div class="rate">
-                <div class="progress normal">
-                    <div style="background-color: #5acbfd;"
-                         :style="{ width: data.stock.length / data.stockLimit * 100 + '%' }"></div>
-                </div>
-                <div>{{ data.stock.length }} / {{ data.stockLimit }}</div>
-            </div>
-            <div style="display: flex; flex: 2;">
-                <resident-chars :chars="data.chars" char-width="43px"/>
-                <div class="result">
-                    <div style="font-size: 12px;">订单总价值：</div>
+                <div class="normal-title" style="border-color: #5acbfd;">
+                    <div>贸易站 <span class="level">Lv.{{ data.level }}</span></div>
                     <div style="font-size: 14px; color: #5acbfd;">
-                        {{ count }}
+                        {{ data.strategy == 'O_GOLD' ? '龙门商法' : '开采协力' }}
                     </div>
                 </div>
-            </div>
+                <div class="rate">
+                    <div class="progress normal">
+                        <div style="background-color: #5acbfd;"
+                             :style="{ width: data.stock.length / data.stockLimit * 100 + '%' }"></div>
+                    </div>
+                    <div>{{ data.stock.length }} / {{ data.stockLimit }}</div>
+                </div>
+                <div style="display: flex; flex: 2;">
+                    <resident-chars :chars="data.chars" char-width="43px"/>
+                    <div class="result">
+                        <div style="font-size: 12px;">订单总价值：</div>
+                        <div style="font-size: 14px; color: #5acbfd;">
+                            {{ count }}
+                        </div>
+                    </div>
+                </div>
             </room>
         `,
         computed: {
@@ -300,18 +318,26 @@
         },
         template: `
             <room class="room-normal powers">
-            <div class="normal-title" style="border-color: #cdfe71;">
-                <div>发电站 <span class="level">Lv.{{ data.level }}</span></div>
-                <div class="power">{{ power }}</div>
-            </div>
-            <div class="rate">
-                <div class="progress normal">
-                    <div style="background-color: #cdfe71;"
-                         :style="{ width: labor / data.labor.maxValue * 100 + '%' }"></div>
+                <div class="normal-title" style="border-color: #cdfe71;">
+                    <div>发电站 <span class="level">Lv.{{ data.level }}</span></div>
+                    <div class="power">{{ power }}</div>
                 </div>
-                <div>{{ labor }} / {{ data.labor.maxValue }}</div>
-            </div>
-            <resident-chars :chars="data.chars" char-width="43px" :max-chars="1"/>
+                <div class="rate">
+                    <div class="progress normal">
+                        <div style="background-color: #cdfe71;"
+                             :style="{ width: labor / data.labor.maxValue * 100 + '%' }"></div>
+                    </div>
+                    <div>{{ labor }} / {{ data.labor.maxValue }}</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; flex: 2;">
+                    <resident-chars :chars="data.chars" char-width="43px" :max-chars="1"/>
+                    <div class="result">
+                        <div style="font-size: 12px;">无人机预计回满时间：</div>
+                        <div style="font-size: 14px;">
+                            {{ (data.labor.remainSecs / 3600).toFixed(1) }}H
+                        </div>
+                    </div>
+                </div>
             </room>
         `,
         computed: {
@@ -335,11 +361,11 @@
         },
         template: `
             <room class="room-long">
-            <div class="normal-title">
-                <div>宿舍 <span class="level">Lv.{{ data.level }}</span></div>
-                <div class="comfort">{{ data.comfort }}</div>
-            </div>
-            <resident-chars style="width: 100%; justify-content: space-around;" :chars="data.chars" :max-chars="5"/>
+                <div class="normal-title">
+                    <div>宿舍 <span class="level">Lv.{{ data.level }}</span></div>
+                    <div class="comfort">{{ data.comfort }}</div>
+                </div>
+                <resident-chars style="width: 100%; justify-content: space-around;" :chars="data.chars" :max-chars="5"/>
             </room>
         `
     })
@@ -362,24 +388,24 @@
         },
         template: `
             <div class="resident-chars">
-            <div class="resident-char-item" :style="{ width: charWidth }" v-for="item in charIndexes">
-                <template v-if="item">
-                    <div class="resident-char-item-avatar">
-                        <img :src="avatar(item.charId)" :alt="item.charId">
-                        <div :class="charApClass(item)"></div>
-                    </div>
-                    <div class="progress" style="height: 5px;">
-                        <div :class="charApClass(item)" :style="{ width: charAp(item) + '%' }"></div>
-                    </div>
-                    <div class="progress" style="height: 5px; margin-top: 5px" v-if="showFavor">
-                        <div
-                            :style="{ width: charMap[item.charId].favorPercent / 200 * 100 + '%', background: '#03a9f4' }"></div>
-                    </div>
-                </template>
-                <template v-else>
-                    <div class="empty-char"></div>
-                </template>
-            </div>
+                <div class="resident-char-item" :style="{ width: charWidth }" v-for="item in charIndexes">
+                    <template v-if="item">
+                        <div class="resident-char-item-avatar">
+                            <img :src="avatar(item.charId)" :alt="item.charId">
+                            <div :class="charApClass(item)"></div>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div :class="charApClass(item)" :style="{ width: charAp(item) + '%' }"></div>
+                        </div>
+                        <div class="progress" style="height: 5px; margin-top: 5px" v-if="showFavor">
+                            <div
+                                :style="{ width: charMap[item.charId].favorPercent / 200 * 100 + '%', background: '#03a9f4' }"></div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="empty-char"></div>
+                    </template>
+                </div>
             </div>
         `,
         computed: {
