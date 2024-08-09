@@ -15,7 +15,7 @@ from .database import ChannelRecord
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='2.4',
+    version='2.6',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
@@ -204,7 +204,7 @@ def get_plugin_use_doc(instance, plugin: AmiyaBotPluginInstance):
         doc = plugin.instruction
 
     if public_bot and doc and os.path.isfile(doc):
-        if not instance.bot.private:
+        if not instance.private:
             doc_file = os.path.splitext(os.path.basename(doc))
             doc_public = os.path.join(os.path.dirname(doc), f'{doc_file[0]}-public{doc_file[1]}')
 
