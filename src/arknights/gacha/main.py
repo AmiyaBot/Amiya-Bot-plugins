@@ -14,6 +14,7 @@ from core.database.bot import OperatorConfig, Admin
 
 from .gachaBuilder import GachaBuilder, curr_dir, Pool, PoolSpOperator, bot_caller
 from .box import get_user_box
+from .utils.pool_methods import get_pool_name,get_pool_id
 
 pool_image = 'resource/plugins/gacha/pool'
 create_dir(pool_image)
@@ -47,7 +48,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -77,18 +78,30 @@ def change_pool(item: Pool, user_id=None):
     pic = []
     for root, dirs, files in os.walk(pool_image):
         for file in files:
-            if item.pool_name in file:
+            if get_pool_id(item) in file:
                 pic.append(os.path.join(root, file))
 
     text = [
-        f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{item.pool_name}】\n'
+        f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{get_pool_name(item)}】\n'
     ]
-    if item.pickup_6:
-        text.append('[[cl ★★★★★★@#FF4343 cle]] %s' % item.pickup_6.replace(',', '、'))
-    if item.pickup_5:
-        text.append('[[cl ★★★★★@#FEA63A cle]　] %s' % item.pickup_5.replace(',', '、'))
-    if item.pickup_4:
-        text.append('[[cl ☆☆☆☆@#A288B5 cle]　　] %s' % item.pickup_4.replace(',', '、'))
+
+    '''
+【限定寻访·庆典】-【恶人寥寥】中以下干员出现率上升
+★★★★★★：荒芜拉普兰德 [限定] \ 忍冬（占6★出率的70%）
+★★★★★★：缄默德克萨斯 [限定] \ 缪尔赛思 [限定] \ 塑心 [限定] （在6★剩余出率【30%】中以5倍权值出率提升）
+★★★★★：裁度（占5★出率的50%）
+
+    '''
+    
+    if item.description:
+        text.append(item.description)
+    else:
+        if item.pickup_6:
+            text.append('[[cl ★★★★★★@#FF4343 cle]] %s' % item.pickup_6.replace(',', '、'))
+        if item.pickup_5:
+            text.append('[[cl ★★★★★@#FEA63A cle]　] %s' % item.pickup_5.replace(',', '、'))
+        if item.pickup_4:
+            text.append('[[cl ☆☆☆☆@#A288B5 cle]　　] %s' % item.pickup_4.replace(',', '、'))
 
     return '\n'.join(text), pic[-1] if pic else ''
 
@@ -160,17 +173,18 @@ async def _(data: Message):
         f'当前已经抽取了 {user.gacha_break_even} 次而未获得六星干员\n下次抽出六星干员的概率为 {100 - break_even_rate}%'
     )
 
-
-@bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
-async def _(data: Message):
+async def switch_to_official_pool(data: Message):
     all_pools: List[Pool] = Pool.select()
 
+    # 只保留官方卡池
+    all_pools = [item for item in all_pools if (item.is_official is None or item.is_official)]
+    
     message = data.text
 
     if any_match(message, ['切换', '更换']):
         selected = None
         for item in all_pools:
-            if item.pool_name in data.text_original:
+            if get_pool_id(item) in data.text_original:
                 selected = item
 
         if not selected:
@@ -195,7 +209,7 @@ async def _(data: Message):
     text += '|卡池名称|卡池名称|卡池名称|卡池名称|\n|----|----|----|----|\n'
 
     for index, item in enumerate(all_pools):
-        text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{index + 1}</span> {item.pool_name}'
+        text += f'|<span style="color: red; padding-right: 5px; font-weight: bold;">{index + 1}</span> {get_pool_name(item)}'
         if (index + 1) % 4 == 0:
             text += '|\n'
 
@@ -214,6 +228,31 @@ async def _(data: Message):
             else:
                 return Chain(data).text('博士，要告诉阿米娅准确的卡池序号哦')
 
+async def switch_to_custom_pool(data: Message):
+    all_pools: List[Pool] = Pool.select()
+        
+    # 只保留非官方卡池
+    all_pools = [item for item in all_pools if (item.is_official is not None and not item.is_official)]
+
+    
+    message = data.text
+
+    if any_match(message, ['切换', '更换']):
+        return Chain(data).text('暂不支持自定义卡池')
+    else:
+        return Chain(data).text('请访问 https://diy.amiyabot.com/ 进行自定义卡池设置')
+
+
+@bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
+async def _(data: Message):
+    
+    message = data.text
+
+    if any_match(message, ['趣味']):
+        return await switch_to_custom_pool(data)
+    else:
+        return await switch_to_official_pool(data)
+
 
 @bot.on_message(group_id='gacha', keywords=['box'])
 async def _(data: Message):
@@ -224,6 +263,42 @@ async def _(data: Message):
 
     return Chain(data).image(res)
 
+
+
+@bot.on_message(group_id='gacha', keywords=['概率'])
+async def _(data: Message):
+    try:
+        gc = GachaBuilder(data)
+    except Exception as e:
+        log.error(e)
+        return Chain(data).text('无法初始化卡池')
+    
+    rarity = 0
+    reg_res = re.search(r'(\d+)', data.text)
+    if not reg_res:
+        rarity = 6
+    else:
+        rarity = int(reg_res.group(1))
+
+    pool = gc.gacha_operator_pool[rarity]
+    
+    rates = gc.get_rates()
+
+    rate = str(round(rates[rarity]))
+    text = "当前水位："+str(gc.break_even)+"，"+str(rarity) + "星干员综合出率" + rate + "%，其中：\n"
+
+    total_weight = 0
+    for name in pool:
+        total_weight += pool[name] 
+
+    if total_weight == 0:
+        text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:0%]\n"
+    else:
+        for name in pool:
+            text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:" + str(round( pool[name] * 100 / total_weight ,2)) +  "%]\n"
+
+
+    return Chain(data).text(text)
 
 @bot.on_message(keywords=Equal('同步卡池'))
 async def _(data: Message):
