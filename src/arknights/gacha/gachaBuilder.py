@@ -8,7 +8,8 @@ from core.util import insert_empty
 from core.resource.arknightsGameData import ArknightsGameData
 from .utils.create_gacha_image import create_gacha_image
 from .utils.get_operators import get_operators
-from .utils.pool_methods import get_pool_name
+from .utils.pool_methods import get_pool_name,get_custom_pool,get_official_pool
+from .utils.logger import debug_log
 
 curr_dir = os.path.dirname(__file__)
 
@@ -33,7 +34,12 @@ class GachaBuilder:
         self.data = data
         self.user_gacha: UserGachaInfo = UserGachaInfo.get_or_create(user_id=data.user_id)[0]
 
-        pool: Pool = Pool.get_by_id(self.user_gacha.gacha_pool)
+        if self.user_gacha.use_custom_gacha_pool:
+            debug_log(f'使用自定义寻访池' + str(self.user_gacha.custom_gacha_pool))
+            pool : Pool = get_custom_pool(self.user_gacha.custom_gacha_pool)
+        else:
+            debug_log(f'使用官方寻访池' + str(self.user_gacha.gacha_pool))
+            pool : Pool = get_official_pool(self.user_gacha.gacha_pool)
 
         self.pool = pool
 
@@ -226,9 +232,9 @@ class GachaBuilder:
         for name in pickups.split(','):
             char_weight = 1
             char_name = name
-            if ':' in name:
-                char_weight = int(char_weight.split("|")[1])
-                char_name =char_weight.split("|")[0]
+            if '|' in name:
+                char_weight = int(char_name.split("|")[1])
+                char_name =char_name.split("|")[0]
 
             if char_name not in operator_weights:
                 operator_weights[char_name] = char_weight
@@ -236,12 +242,6 @@ class GachaBuilder:
                 operator_weights[char_name] += char_weight
         
         return operator_weights
-
-    
-    def __get_pool_description(self):
-        if self.pool.pool_description:
-            return self.pool.pool_description
-        return self.pool.pool_name
 
     def continuous_mode(self, times, coupon, point):
         operators = self.start_gacha(times, coupon, point)
@@ -253,7 +253,7 @@ class GachaBuilder:
         purple_pack = 0
         multiple_rainbow = {}
 
-        result = f'阿米娅给博士扔来了{times}张简历，博士细细地检阅着...\n\n【{self.pick_up_name}】\n'
+        result = f'阿米娅给博士扔来了{times}张简历，博士细细地检阅着...\n\n【{self.pool.pool_name}】\n'
 
         for item in operators:
             rarity = item['rarity']
@@ -345,25 +345,18 @@ class GachaBuilder:
 
             result += '%s%s%s\n\n' % (' ' * 15, insert_empty(name, 6, True), star)
 
-            if name in game_data.operators:
-                opt = game_data.operators[name]
-                avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
+            operator_info = self.__get_operator(name)
 
-                if os.path.exists(avatar_path):
-                    icons.append(
-                        {
-                            'path': avatar_path,
-                            'size': icon_size,
-                            'pos': (side_padding, top + offset + icon_size * index),
-                        }
-                    )
-
-                operators_info[name] = {
-                    'portraits': opt.id,
-                    'temp_portraits': f'{curr_dir}/temp/{opt.name}',
-                    'rarity': opt.rarity,
-                    'class': opt.classes_code.lower(),
-                }
+            if operator_info is not None:
+                if operator_info["avatar"] is not None:
+                        icons.append(
+                            {
+                                'path': operator_info["avatar"],
+                                'size': icon_size,
+                                'pos': (side_padding, top + offset + icon_size * index),
+                            }
+                        )
+                operators_info[name] = operator_info
 
         if times == 10:
             result_list = []
@@ -448,7 +441,7 @@ class GachaBuilder:
             if rarity == 6:
                 self.break_even = 0
 
-            operator = self.get_operator(rarity)
+            operator = self.choose_operator(rarity)
 
             operators.append({'rarity': rarity, 'name': operator})
 
@@ -463,7 +456,7 @@ class GachaBuilder:
 
         return operators
     
-    def get_operator(self, rarity):
+    def choose_operator(self, rarity):
         char_pool = self.gacha_operator_pool[rarity]
 
 
@@ -475,48 +468,46 @@ class GachaBuilder:
 
         return chosen_name
 
-
-
-    # def get_operator(self, rarity):
-    #     operator_list = []
-    #     for name, item in self.operator[rarity].items():
-    #         for w in range(item['weight']):
-    #             operator_list.append(name)
-
-    #     if rarity in self.pick_up and self.pick_up[rarity]:
-    #         for name in self.pick_up[rarity]:
-    #             if name in operator_list:
-    #                 operator_list.remove(name)
-
-    #         group = [self.pick_up[rarity]]
-    #         group += [operator_list] * (4 if rarity == 4 else 1)
-
-    #         '''
-    #         特殊卡池类型
-    #             1: 限定
-    #             2: 联合寻访
-    #             3: 前路回响
-    #             4: 中坚寻访
-    #         '''
-    #         special = {
-    #             6: {
-    #                 1: lambda g: g[int((random.randint(1, 100) + 1) / 70)],
-    #                 2: lambda g: g[0],
-    #                 3: lambda g: g[0],
-    #             },
-    #             5: {
-    #                 2: lambda g: g[0],
-    #             },
-    #         }
-
-    #         if rarity in special and self.limit_pool in special[rarity]:
-    #             choice = special[rarity][self.limit_pool](group)
-    #         else:
-    #             choice = random.choice(group)
-
-    #         return random.choice(choice)
-
-    #     return random.choice(operator_list)
+    def __get_operator(self,name):
+        if self.pool.is_official is None or self.pool.is_official:
+            operator_info = None
+            game_data = ArknightsGameData
+            if name in game_data.operators:
+                    opt = game_data.operators[name]
+                    operator_info = {
+                        'portrait': None,
+                        'rarity': opt.rarity,
+                        'class': opt.classes_code.lower(),
+                        'avatar': None
+                    }
+                    portrait_path = f'resource/gamedata/portrait/{opt.id}#1.png'
+                    avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
+                    if os.path.exists(avatar_path):
+                        operator_info["avatar"] = avatar_path
+                    if os.path.exists(portrait_path):
+                        operator_info["portrait"] = portrait_path
+            return operator_info
+        else:
+            if hasattr(self.pool, "custom_operators"):
+                oper_dict = self.pool.custom_operators
+                if name in oper_dict:
+                    opt = oper_dict[name]
+                    operator_info = {
+                        'portrait': None,
+                        'rarity': opt.rarity,
+                        'class': opt.classes_code.lower(),
+                        'avatar': None,
+                        'temp_avatar': None,
+                    }
+                    if opt.portait is not None:
+                        operator_info["portrait"] = opt.portait
+                    if opt.avatar is not None:
+                        operator_info["avatar"] = opt.avatar
+                    return operator_info
+                else:
+                    return None
+            else:
+                return None
 
     def set_box(self, result):
         user_box: OperatorBox = OperatorBox.get_or_create(user_id=self.data.user_id)[0]

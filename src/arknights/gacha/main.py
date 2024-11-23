@@ -2,6 +2,7 @@ import re
 import os
 import json
 import asyncio
+import shutil
 
 from typing import List
 from amiyabot import QQGuildBotInstance, GroupConfig
@@ -12,12 +13,17 @@ from core.resource import remote_config
 from core.database.user import UserInfo, UserGachaInfo
 from core.database.bot import OperatorConfig, Admin
 
-from .gachaBuilder import GachaBuilder, curr_dir, Pool, PoolSpOperator, bot_caller
+from .gachaBuilder import GachaBuilder, curr_dir, Pool, bot_caller
 from .box import get_user_box
-from .utils.pool_methods import get_pool_name,get_pool_id
+from .utils.pool_methods import get_pool_name,get_pool_selector,get_pool_image,get_custom_pool,get_official_pool
+from .utils.logger import debug_log
 
 pool_image = 'resource/plugins/gacha/pool'
 create_dir(pool_image)
+custom_pool = 'resource/amiyabot-arknights-gacha/custom-pools'
+create_dir(custom_pool)
+custom_operator = 'resource/amiyabot-arknights-gacha/custom-operators'
+create_dir(custom_operator)
 
 
 class GachaPluginInstance(AmiyaBotPluginInstance):
@@ -33,7 +39,6 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
                 res = json.loads(res)['data']
 
                 OperatorConfig.delete().execute()
-                PoolSpOperator.delete().execute()
                 Pool.delete().execute()
 
                 OperatorConfig.batch_insert(res['OperatorConfig'])
@@ -44,6 +49,11 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
     def install(self):
         asyncio.create_task(self.sync_pool())
         bot_caller['plugin_instance'] = self
+
+        # 把demo卡池文件复制到自定义卡池文件夹
+        dest_file = f'{custom_pool}/f175f6a942a746b6a0e00b151253955a.json'
+        demo_file = f'{curr_dir}/config/f175f6a942a746b6a0e00b151253955a.json'
+        shutil.copyfile(demo_file, dest_file)
 
 
 bot = GachaPluginInstance(
@@ -72,17 +82,22 @@ def find_once(reg, text):
 
 
 def change_pool(item: Pool, user_id=None):
-    task = UserGachaInfo.update(gacha_pool=item.id).where((UserGachaInfo.user_id == user_id) if user_id else None)
-    task.execute()
 
-    pic = []
-    for root, dirs, files in os.walk(pool_image):
-        for file in files:
-            if get_pool_id(item) in file:
-                pic.append(os.path.join(root, file))
+    if item.is_official is None or item.is_official:
+        task = UserGachaInfo.update(gacha_pool=item.id, use_custom_gacha_pool=False).where((UserGachaInfo.user_id == user_id) if user_id else None)
+        task.execute()
+        pool_name = f'{"【限定】" if item.limit_pool != 0 else ""}【{get_pool_name(item)}】'
+    else:
+        task = UserGachaInfo.update(custom_gacha_pool=get_pool_selector(item), use_custom_gacha_pool=True).where((UserGachaInfo.user_id == user_id) if user_id else None)
+        task.execute()
+        pool_name = f"【趣味】【{get_pool_name(item)}】"
+
+    pic = get_pool_image(item)
+
+    debug_log(f'用户{user_id}切换卡池为{pool_name},pic:{pic}')
 
     text = [
-        f'{"所有" if not user_id else ""}博士的卡池已切换为{"【限定】" if item.limit_pool != 0 else ""}【{get_pool_name(item)}】\n'
+        f'{"所有" if not user_id else ""}博士的卡池已切换为{pool_name}\n'
     ]
 
     '''
@@ -93,8 +108,8 @@ def change_pool(item: Pool, user_id=None):
 
     '''
     
-    if item.description:
-        text.append(item.description)
+    if item.pool_description is not None and item.pool_description != '':
+        text.append(item.pool_description)
     else:
         if item.pickup_6:
             text.append('[[cl ★★★★★★@#FF4343 cle]] %s' % item.pickup_6.replace(',', '、'))
@@ -103,7 +118,7 @@ def change_pool(item: Pool, user_id=None):
         if item.pickup_4:
             text.append('[[cl ☆☆☆☆@#A288B5 cle]　　] %s' % item.pickup_4.replace(',', '、'))
 
-    return '\n'.join(text), pic[-1] if pic else ''
+    return '\n'.join(text), pic if pic else ''
 
 
 @bot.on_message(group_id='gacha', keywords=['抽', '连', '寻访'], level=3)
@@ -184,7 +199,7 @@ async def switch_to_official_pool(data: Message):
     if any_match(message, ['切换', '更换']):
         selected = None
         for item in all_pools:
-            if get_pool_id(item) in data.text_original:
+            if get_pool_selector(item) in data.text_original:
                 selected = item
 
         if not selected:
@@ -229,18 +244,25 @@ async def switch_to_official_pool(data: Message):
                 return Chain(data).text('博士，要告诉阿米娅准确的卡池序号哦')
 
 async def switch_to_custom_pool(data: Message):
-    all_pools: List[Pool] = Pool.select()
-        
-    # 只保留非官方卡池
-    all_pools = [item for item in all_pools if (item.is_official is not None and not item.is_official)]
-
     
     message = data.text
 
     if any_match(message, ['切换', '更换']):
-        return Chain(data).text('暂不支持自定义卡池')
+        pool_selector = re.search(r'custom-[a-zA-Z0-9]+', message.lower())
+        
+        if pool_selector:
+            pool_selector = pool_selector.group().strip()
+            selected = get_custom_pool(pool_selector)
+            if selected:
+                change_res = change_pool(selected, data.user_id)
+                if change_res[1]:
+                    return Chain(data).image(change_res[1]).text_image(change_res[0])
+                return Chain(data).text_image(change_res[0])
+            return Chain(data).text('未找到该趣味卡池，请确认卡池编号填写完整。')
+        else:
+            return Chain(data).text('未找到该趣味卡池，您是不是漏掉了卡池编号开头的“Custom-”？')
     else:
-        return Chain(data).text('请访问 https://diy.amiyabot.com/ 进行自定义卡池设置')
+        return Chain(data).text('请访问 https://diy.amiyabot.com/ 查找和制作自定义卡池')
 
 
 @bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
