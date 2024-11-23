@@ -4,6 +4,7 @@ from typing import List
 from PIL import Image
 from io import BytesIO
 import base64
+import hashlib
 
 from core.database.bot import Pool
 
@@ -12,6 +13,14 @@ from .logger import debug_log
 pool_image = 'resource/plugins/gacha/pool'
 custom_pool = 'resource/amiyabot-arknights-gacha/custom-pools'
 custom_operator = 'resource/amiyabot-arknights-gacha/custom-operators'
+
+class CustomOperator:
+    name = None
+    rarity = None
+    is_limit = None
+    classes_code = None
+    avatar = None
+    portrait = None
 
 def get_pool_name(pool:Pool):
     '''
@@ -47,8 +56,10 @@ def get_pool_image(pool:Pool):
     if pool.is_official == False:
         pool_image_filename = pool.pool_image
         debug_log(f"pool_image_filename: {pool_image_filename}")
-        base_name, _ = os.path.splitext(pool_image_filename)
-        for root, dirs, files in os.walk(os.path.dirname(pool_image_filename)):
+        base_name_with_path, _ = os.path.splitext(pool_image_filename)
+        base_name = os.path.basename(base_name_with_path)
+        dir_name = os.path.dirname(pool_image_filename)
+        for root, dirs, files in os.walk(dir_name):
             for file in files:
                 if base_name in file:
                     pic.append(os.path.join(root, file))
@@ -104,7 +115,7 @@ def save_image_from_base64(image_base64:str, output_file:str):
             for file in files:
                 if base_name in file:
                     debug_log(f"已存在图片文件 {file}，不再保存")
-                    return file
+                    return os.path.join(root, file)
         
         image_data = base64.b64decode(image_base64)
                 
@@ -163,22 +174,38 @@ def get_custom_pool(pool_selector):
             pool.custom_operators = {}
             if "custom_operators" in data:
                 # 遍历并落盘
-                for operator_dict in pool.custom_operators:
-                    operator = {}
-                    operator.name = operator_dict['name']
+                for operator_name in data["custom_operators"]:
+                    operator_dict = data["custom_operators"][operator_name]
+
+                    operator = CustomOperator()
+
+                    operator.name = operator_name
                     operator.rarity = operator_dict['rarity']
                     operator.is_limit = operator_dict['is_limit']
                     operator.classes_code = operator_dict['classes_code']
 
-                    operator_avatar_filename = os.path.join(custom_operator, "Custom"-pool.pool_uuid+"-avatar-"+operator_dict['id'] + ".png")
+                    operator_name_hash = hashlib.md5(operator_name.encode()).hexdigest()
+
+                    operator_avatar_filename = os.path.join(
+                        custom_operator,
+                        f"Custom{pool.pool_uuid}-Operator-{operator_name_hash}-Avatar.png"
+                    )
                     operator_avatar_filename = save_image_from_base64(operator_dict['avatar_raw'], operator_avatar_filename)                    
                     operator.avatar = operator_avatar_filename
 
-                    operator_portait_filename = os.path.join(custom_operator, "Custom"-pool.pool_uuid+"-portrait-"+operator_dict['id'] + ".png")
-                    operator_portait_filename = save_image_from_base64(operator_dict['portrait_raw'], operator_portait_filename)
-                    operator.portait = operator_portait_filename
+                    operator_portrait_filename  = os.path.join(
+                        custom_operator,
+                        f"Custom{pool.pool_uuid}-Operator-{operator_name_hash}-Portrait.png"
+                    )
+                    operator_portrait_filename = save_image_from_base64(operator_dict['portrait_raw'], operator_portrait_filename)
+                    operator.portrait = operator_portrait_filename
 
                     pool.custom_operators[operator.name] = operator
+
+                debug_log("custom_operators_count:" + str(len(pool.custom_operators)))
+                debug_log("they are:")
+                for name, operator in pool.custom_operators.items():
+                    debug_log(f"  - Name: {name}, Rarity: {operator.rarity}, Is Limit: {operator.is_limit}, Class: {operator.classes_code}, Avatar: {operator.avatar}, Portrait: {operator.portrait}")
 
             return pool
     return None

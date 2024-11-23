@@ -347,16 +347,28 @@ class GachaBuilder:
 
             operator_info = self.__get_operator(name)
 
+
             if operator_info is not None:
-                if operator_info["avatar"] is not None:
-                        icons.append(
-                            {
-                                'path': operator_info["avatar"],
-                                'size': icon_size,
-                                'pos': (side_padding, top + offset + icon_size * index),
-                            }
-                        )
+                
+                # icon_file = f'{curr_dir}/gacha/question_mark.png'
+                icon_file = None
+                
+                if "avatar" in operator_info:
+                        if operator_info["avatar"] is not None:
+                            debug_log(f"avatar icon for {name}:" + operator_info["avatar"])
+                            icon_file = operator_info["avatar"]
+                
+                if icon_file is not None:
+                    icons.append(
+                        {
+                            'path': icon_file,
+                            'size': icon_size,
+                            'pos': (side_padding, top + offset + icon_size * index),
+                        }
+                    )
+                    
                 operators_info[name] = operator_info
+                
 
         if times == 10:
             result_list = []
@@ -469,7 +481,14 @@ class GachaBuilder:
         return chosen_name
 
     def __get_operator(self,name):
-        if self.pool.is_official is None or self.pool.is_official:
+        use_official = True
+        if self.pool.is_official == False:
+            if hasattr(self.pool, "custom_operators"):
+                if name in self.pool.custom_operators:
+                    use_official = False
+        
+        if use_official:
+            debug_log(f'使用官方干员数据{name}')
             operator_info = None
             game_data = ArknightsGameData
             if name in game_data.operators:
@@ -483,29 +502,30 @@ class GachaBuilder:
                     portrait_path = f'resource/gamedata/portrait/{opt.id}#1.png'
                     avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
                     if os.path.exists(avatar_path):
+                        debug_log(f'找到干员图标{avatar_path}')
                         operator_info["avatar"] = avatar_path
                     if os.path.exists(portrait_path):
+                        debug_log(f'找到干员肖像{portrait_path}')
                         operator_info["portrait"] = portrait_path
             return operator_info
         else:
-            if hasattr(self.pool, "custom_operators"):
-                oper_dict = self.pool.custom_operators
-                if name in oper_dict:
-                    opt = oper_dict[name]
-                    operator_info = {
-                        'portrait': None,
-                        'rarity': opt.rarity,
-                        'class': opt.classes_code.lower(),
-                        'avatar': None,
-                        'temp_avatar': None,
-                    }
-                    if opt.portait is not None:
-                        operator_info["portrait"] = opt.portait
-                    if opt.avatar is not None:
-                        operator_info["avatar"] = opt.avatar
-                    return operator_info
-                else:
-                    return None
+            debug_log(f'使用自定义干员数据{name}')
+            oper_dict = self.pool.custom_operators
+            if name in oper_dict:
+                opt = oper_dict[name]
+                operator_info = {
+                    'portrait': None,
+                    'rarity': opt.rarity,
+                    'class': opt.classes_code.lower(),
+                    'avatar': None
+                }
+                if opt.portrait is not None:
+                    debug_log(f'找到干员肖像{opt.portrait}')
+                    operator_info["portrait"] = opt.portrait
+                if opt.avatar is not None:
+                    debug_log(f'找到干员图标{opt.avatar}')
+                    operator_info["avatar"] = opt.avatar
+                return operator_info
             else:
                 return None
 
