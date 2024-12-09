@@ -8,6 +8,18 @@
             "description": "打开防误触用户需要添加“查询”关键词或“仅发送名称”才能触发功能",
             "type": "boolean",
             "default": false
+        },
+        "searchSetting": {
+            "title": "关键词匹配设置",
+            "type": "object",
+            "properties": {
+                "lengthLimit": {
+                    "title": "句子单词数量限制",
+                    "description": "当句子的单词数量超过限制时，不触发功能",
+                    "type": "integer",
+                    "default": 5
+                }
+            }
         }
     }
 }

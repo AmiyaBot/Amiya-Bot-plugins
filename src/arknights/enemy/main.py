@@ -86,7 +86,7 @@ class EnemiesPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = EnemiesPluginInstance(
     name='明日方舟敌方单位查询',
-    version='3.5',
+    version='3.6',
     plugin_id='amiyabot-arknights-enemy',
     plugin_type='official',
     description='查询明日方舟敌方单位资料',
@@ -98,6 +98,10 @@ bot = EnemiesPluginInstance(
 
 
 async def verify(data: Message):
+    limit_length = bot.get_config('searchSetting')['lengthLimit']
+    if len(data.text_words) > int(limit_length):
+        return False
+
     name = ''
     name_char = ''
     r = re.search(r'(/)?(敌[人|方])?(单位)?(资料)?(.*)', data.text)
