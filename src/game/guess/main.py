@@ -6,7 +6,7 @@ from .guessStart import *
 
 bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='3.2',
+    version='3.3',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -57,18 +57,16 @@ async def _(data: Message):
             ],
             keyboard=keyboard,
         )
-
-    choice = await data.wait(choice_chain, force=True)
-
-    if not choice:
+    event = await data.wait_channel(choice_chain, force=True)
+    if not event:
         return None
 
+    choice = event.message
     choice_level = any_match(choice.text, list(level.keys()))
 
     if not choice_level:
+        event.close_event()
         return Chain(choice).text('博士，您没有选择难度哦，游戏取消。')
-
-    event = await data.wait_channel(force=True)
 
     operators = {}
     referee = GuessReferee(markdown_template_id=markdown_template_id)
