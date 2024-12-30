@@ -26,7 +26,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
             if Pool.get_or_none():
                 return False
 
-        res = await http_requests.get(remote_config.remote.console + '/pool/getPool')
+        res = await http_requests.get(remote_config.remote.plugin + '/api/v1/gacha')
         if res:
             async with log.catch('pool sync error:'):
                 res = json.loads(res)['data']
