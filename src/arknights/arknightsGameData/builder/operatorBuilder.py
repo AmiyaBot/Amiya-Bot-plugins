@@ -120,10 +120,12 @@ class OperatorImpl(Operator):
     def tokens(self):
         token_list = []
 
-        if self.data.get('tokenKey') and self.data['tokenKey'] in Collection.tokens_map:
-            token_list.append(Collection.tokens_map[self.data['tokenKey']])
+        if self.data.get('displayTokenDict'):
+            for key in self.data['displayTokenDict'].keys():
+                if key in Collection.tokens_map:
+                    token_list.append(Collection.tokens_map[key])
 
-        if self.data['skills']:
+        if self.data.get('skills'):
             for item in self.data['skills']:
                 if item['overrideTokenKey'] and item['overrideTokenKey'] in Collection.tokens_map:
                     token_list.append(Collection.tokens_map[item['overrideTokenKey']])

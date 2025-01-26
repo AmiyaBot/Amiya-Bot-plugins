@@ -44,8 +44,8 @@ async def game_begin(
             ask = Chain(data, at=False).html(f'{curr_dir}/template/hardcode.html', process.view_data)
             process.display = False
 
-        if event:
-            event.close_event()
+        # if event:
+        #     event.close_event()
 
         event = await data.wait_channel(ask, force=True, clean=True, max_time=5, data_filter=guess_filter)
         if process.count != count_rec:

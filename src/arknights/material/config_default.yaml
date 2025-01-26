@@ -1,1 +1,4 @@
 blockMishap: false
+
+searchSetting:
+    lengthLimit: 5

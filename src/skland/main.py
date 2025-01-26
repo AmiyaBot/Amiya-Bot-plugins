@@ -118,7 +118,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='5.0',
+    version='5.1',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -159,7 +159,8 @@ async def check_user_info(data: Message, times: int = 1):
         await data.send(
             Chain(data).text(
                 'Token 无效，无法获取信息，请重新绑定 Token。>.<\n'
-                '如遇到一直绑定不成功，请尝试退出森空岛APP重新登录后再获取 Token。'
+                '如遇到一直绑定不成功，请尝试退出森空岛APP重新登录后再获取 Token。\n'
+                '（若多次失败，则可能森空岛数据暂时无法访问，请等待修复）'
             )
         )
         return None, token
