@@ -2,6 +2,7 @@
 import os
 from io import BytesIO
 from PIL import Image, ImageDraw
+from .logger import debug_log
 
 
 curr_dir = os.path.dirname(__file__)
@@ -23,7 +24,9 @@ def create_gacha_image(result: list):
 
         portrait = item['portrait']
 
-        if os.path.exists(portrait):
+        debug_log(f"item is {item}")
+
+        if portrait and os.path.exists(portrait):
             img = Image.open(portrait).convert('RGBA')
 
             radio = 252 / img.size[1]

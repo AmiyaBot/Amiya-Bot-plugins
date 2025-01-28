@@ -18,11 +18,15 @@ from .box import get_user_box
 from .utils.pool_methods import get_pool_name,get_pool_selector,get_pool_image,get_custom_pool,get_official_pool
 from .utils.logger import debug_log
 
+
 pool_image = 'resource/plugins/gacha/pool'
+custom_pool = 'resource/plugins/gacha/custom-pools'
+custom_pool_image = 'resource/plugins/gacha/custom-pool-images'
+custom_operator = 'resource/plugins/gacha/custom-pool-operators'
+
 create_dir(pool_image)
-custom_pool = 'resource/amiyabot-arknights-gacha/custom-pools'
 create_dir(custom_pool)
-custom_operator = 'resource/amiyabot-arknights-gacha/custom-operators'
+create_dir(custom_pool_image)
 create_dir(custom_operator)
 
 
@@ -58,7 +62,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='2.5',
+    version='2.5.1',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -99,14 +103,6 @@ def change_pool(item: Pool, user_id=None):
     text = [
         f'{"所有" if not user_id else ""}博士的卡池已切换为{pool_name}\n'
     ]
-
-    '''
-【限定寻访·庆典】-【恶人寥寥】中以下干员出现率上升
-★★★★★★：荒芜拉普兰德 [限定] \ 忍冬（占6★出率的70%）
-★★★★★★：缄默德克萨斯 [限定] \ 缪尔赛思 [限定] \ 塑心 [限定] （在6★剩余出率【30%】中以5倍权值出率提升）
-★★★★★：裁度（占5★出率的50%）
-
-    '''
     
     if item.pool_description is not None and item.pool_description != '':
         text.append(item.pool_description)
@@ -262,7 +258,7 @@ async def switch_to_custom_pool(data: Message):
         else:
             return Chain(data).text('未找到该趣味卡池，您是不是漏掉了卡池编号开头的“Custom-”？')
     else:
-        return Chain(data).text('请访问 https://diy.amiyabot.com/ 查找和制作自定义卡池')
+        return Chain(data).text('请访问 diy.amiyabot.com 查找和制作自定义卡池')
 
 
 @bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
@@ -286,7 +282,7 @@ async def _(data: Message):
     return Chain(data).image(res)
 
 
-
+# for debug use
 @bot.on_message(group_id='gacha', keywords=['概率'])
 async def _(data: Message):
     try:
@@ -295,32 +291,47 @@ async def _(data: Message):
         log.error(e)
         return Chain(data).text('无法初始化卡池')
     
+    rates = gc.get_rates()
+
     rarity = 0
     reg_res = re.search(r'(\d+)', data.text)
     if not reg_res:
-        rarity = 6
+        # 输出rarity_range
+        rates = gc.get_rates()
+
+
+        total_weight = 0
+        for i in range(1, 7):
+            total_weight += rates[i]
+            
+        text = "当前水位："+str(gc.break_even)+"，各星级干员综合出率共计"+str(total_weight)+"：\n"
+
+        for i in range(1, 7):
+            text += str(i) + "星干员综合出率" + str(round(rates[i],2)) + "%\n"
+
+        return Chain(data).text(text)
+
     else:
         rarity = int(reg_res.group(1))
 
-    pool = gc.gacha_operator_pool[rarity]
-    
-    rates = gc.get_rates()
+        pool = gc.gacha_operator_pool[rarity]
+        
 
-    rate = str(round(rates[rarity]))
-    text = "当前水位："+str(gc.break_even)+"，"+str(rarity) + "星干员综合出率" + rate + "%，其中：\n"
+        rate = str(round(rates[rarity]))
+        text = "当前水位："+str(gc.break_even)+"，"+str(rarity) + "星干员综合出率" + rate + "%，其中：\n"
 
-    total_weight = 0
-    for name in pool:
-        total_weight += pool[name] 
-
-    if total_weight == 0:
-        text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:0%]\n"
-    else:
+        total_weight = 0
         for name in pool:
-            text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:" + str(round( pool[name] * 100 / total_weight ,2)) +  "%]\n"
+            total_weight += pool[name] 
+
+        if total_weight == 0:
+            text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:0%]\n"
+        else:
+            for name in pool:
+                text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:" + str(round( pool[name] * 100 / total_weight ,2)) +  "%]\n"
 
 
-    return Chain(data).text(text)
+        return Chain(data).text(text)
 
 @bot.on_message(keywords=Equal('同步卡池'))
 async def _(data: Message):

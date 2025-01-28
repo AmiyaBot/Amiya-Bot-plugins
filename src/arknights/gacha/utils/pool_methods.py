@@ -11,8 +11,9 @@ from core.database.bot import Pool
 from .logger import debug_log
 
 pool_image = 'resource/plugins/gacha/pool'
-custom_pool = 'resource/amiyabot-arknights-gacha/custom-pools'
-custom_operator = 'resource/amiyabot-arknights-gacha/custom-operators'
+custom_pool = 'resource/plugins/gacha/custom-pools'
+custom_pool_image = 'resource/plugins/gacha/custom-pool-images'
+custom_operator = 'resource/plugins/gacha/custom-pool-operators'
 
 class CustomOperator:
     name = None
@@ -165,10 +166,12 @@ def get_custom_pool(pool_selector):
 
                 if "pool_image_raw" in data:
                     # 将pool_image_raw的base64转成jpg落盘，注意原图可能为png或bmp
-                    pool_image_filename = os.path.join(pool_image,"Custom-" + pool.pool_uuid + "-PoolImage.png")
+                    pool_image_filename = os.path.join(custom_pool_image,"Custom-" + pool.pool_uuid + "-PoolImage.png")
                     # 如果文件不存在，就保存
                     pool_image_filename = save_image_from_base64(data["pool_image_raw"], pool_image_filename)
                     pool.pool_image = pool_image_filename
+                if "pool_image" in data:
+                    pool.pool_image = data["pool_image"]
             # 额外处理custom_operators
             debug_log("pool name:" + pool.pool_name)
             pool.custom_operators = {}

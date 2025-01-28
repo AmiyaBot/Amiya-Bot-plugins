@@ -93,19 +93,24 @@ class GachaBuilder:
 
         if rarity == 6:
             if pool.pickup_6_rate is None:
-                if pool.limit_pool == 0:
-                    return 0.5
-                if pool.limit_pool == 1:
-                    return 0.7
-                if pool.limit_pool == 2:
-                    return 1
-                if pool.limit_pool == 3:
-                    return 1
-                if pool.limit_pool == 4:
-                    return 1
-                if pool.limit_pool == 5:
-                    return 1
+                if pool.is_official is None or pool.is_official is True:
+                    debug_log(f'calc 6 rate with None: pool.limit_pool:{pool.limit_pool}')
+                    if pool.limit_pool == 0:
+                        return 0.5
+                    if pool.limit_pool == 1:
+                        return 0.7
+                    if pool.limit_pool == 2:
+                        return 1
+                    if pool.limit_pool == 3:
+                        return 1
+                    if pool.limit_pool == 4:
+                        return 1
+                    if pool.limit_pool == 5:
+                        return 1
+                # 非官方卡池不写概率默认70% up
+                debug_log(f'calc 6 rate with pool.is_official:{pool.is_official}, set to 0.7')
                 return 0.7
+            debug_log(f'calc 6 rate with:{pool.pickup_6_rate}')
             return pool.pickup_6_rate
         if rarity == 5:
             if pool.limit_pool == 2:
@@ -148,6 +153,8 @@ class GachaBuilder:
         将两个weight集合加上fillin合并归一化
         
         '''
+
+        debug_log(f'weight_pickups:{len(weight_pickup)}, weight_special:{len(weight_special)}, up_rate:{up_rate}, fillin:{len(fillin)}')
 
         final_weight = {}
         
@@ -354,9 +361,9 @@ class GachaBuilder:
                 icon_file = None
                 
                 if "avatar" in operator_info:
-                        if operator_info["avatar"] is not None:
-                            debug_log(f"avatar icon for {name}:" + operator_info["avatar"])
-                            icon_file = operator_info["avatar"]
+                    if operator_info["avatar"] is not None:
+                        debug_log(f"avatar icon for {name}:" + operator_info["avatar"])
+                        icon_file = operator_info["avatar"]
                 
                 if icon_file is not None:
                     icons.append(
@@ -366,7 +373,7 @@ class GachaBuilder:
                             'pos': (side_padding, top + offset + icon_size * index),
                         }
                     )
-                    
+
                 operators_info[name] = operator_info
                 
 
@@ -421,15 +428,20 @@ class GachaBuilder:
         if self.break_even > 50:
             break_even_rate += (self.break_even - 50) * 2
 
-        # 6星概率提高，其他星级概率降低，从低到高挨个扣除，直到6星概率达到100%
+
+        # 计算水位提升量
+        shift_up_amount = break_even_rate - rates[6]        
+        rates[6] = break_even_rate
+
+        # 6星概率提高，其他星级概率降低，从低到高挨个扣除，直到break_even_rate扣完
         for i in range(1, 5):
-            if break_even_rate >= rates[i]:
-                break_even_rate -= rates[i]
+            if shift_up_amount >= rates[i]:
+                shift_up_amount -= rates[i]
                 rates[i] = 0
             else:
-                rates[i] -= break_even_rate
-                break        
-        
+                rates[i] -= shift_up_amount
+                break
+
         return rates
 
     def start_gacha(self, times, coupon, point):
@@ -502,10 +514,10 @@ class GachaBuilder:
                     portrait_path = f'resource/gamedata/portrait/{opt.id}#1.png'
                     avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
                     if os.path.exists(avatar_path):
-                        debug_log(f'找到干员图标{avatar_path}')
+                        debug_log(f'找到官方干员图标{avatar_path}')
                         operator_info["avatar"] = avatar_path
                     if os.path.exists(portrait_path):
-                        debug_log(f'找到干员肖像{portrait_path}')
+                        debug_log(f'找到官方干员肖像{portrait_path}')
                         operator_info["portrait"] = portrait_path
             return operator_info
         else:
@@ -520,10 +532,10 @@ class GachaBuilder:
                     'avatar': None
                 }
                 if opt.portrait is not None:
-                    debug_log(f'找到干员肖像{opt.portrait}')
+                    debug_log(f'找到自定义干员肖像{opt.portrait}')
                     operator_info["portrait"] = opt.portrait
                 if opt.avatar is not None:
-                    debug_log(f'找到干员图标{opt.avatar}')
+                    debug_log(f'找到自定义干员图标{opt.avatar}')
                     operator_info["avatar"] = opt.avatar
                 return operator_info
             else:

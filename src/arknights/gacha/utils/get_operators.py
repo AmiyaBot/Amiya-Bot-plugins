@@ -2,6 +2,7 @@
 
 
 from core.resource.arknightsGameData import ArknightsGameData
+from .logger import debug_log
 
 def get_operators(classic_only: bool = False):
     opts = []
@@ -14,6 +15,8 @@ def get_operators(classic_only: bool = False):
         else:
             classic_opt = item.is_classic and item.rarity >= 5
             if (not item.limit and not item.unavailable and not classic_opt):
+                if "预备干员" in item.name:
+                    debug_log(f"预备干员: {item}")
                 opts.append(item)
 
     return opts
