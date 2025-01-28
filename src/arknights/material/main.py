@@ -213,7 +213,7 @@ class MaterialPluginInstance(AmiyaBotPluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='2.6',
+    version='2.7',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
@@ -235,6 +235,10 @@ def update(_):
 
 
 async def verify(data: Message):
+    limit_length = bot.get_config('searchSetting')['lengthLimit']
+    if len(data.text_words) > int(limit_length):
+        return False
+
     name = find_most_similar(data.text.replace('材料', '').replace('阿米娅', ''), MaterialData.materials)
     keyword = any_match(data.text, ['查询', '材料'])
 

@@ -107,8 +107,11 @@ class SKLandUser:
         headers = self.get_headers(url)
         res = await http_requests.get(url, headers=headers)
         if res:
-            data = json.loads(res)
-            return data
+            try:
+                data = json.loads(res)
+                return data
+            except Exception as e:
+                log.warning(repr(e))
 
     async def check(self):
         data = await self.request_url('https://zonai.skland.com/web/v1/user/check')

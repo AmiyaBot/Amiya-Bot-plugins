@@ -8,7 +8,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = AmiyaBotPluginInstance(
     name='大帝的CYPHER挑战',
-    version='2.3',
+    version='2.4',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -29,18 +29,19 @@ async def _(data: Message):
         '请选择难度：\n\n【普通】\n【硬核】'
     )
 
-    choice = await data.wait(Chain(data).text(main_text), force=True)
-    if not choice:
+    event = await data.wait_channel(Chain(data).text(main_text), force=True)
+    if not event:
         return None
+
+    choice = event.message
     choice_level = any_match(choice.text, ['普通', '硬核'])
     if not choice_level:
+        event.close_event()
         return Chain(choice).text('博士，您没有选择难度哦，游戏取消。')
 
     pool = OperatorPool()
     prev = None
     hardcode = choice_level == '硬核'
-
-    event = await data.wait_channel(force=True)
 
     while True:
         if pool.is_empty:

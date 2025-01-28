@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='3.3',
+    version='3.4',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',

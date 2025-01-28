@@ -22,7 +22,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='3.1',
+    version='3.2',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
@@ -235,7 +235,7 @@ async def _(_):
             data.text(f'来自 {result.user_name} 的最新微博\n\n{html.unescape(result.html_text)}')
 
             if isinstance(instance.instance, QQGuildBotInstance):
-                if not instance.private:
+                if not instance.instance.private:
                     for url in result.pics_urls:
                         data.image(url=url)
                 else:
