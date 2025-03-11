@@ -1,48 +1,33 @@
 import asyncio
+from datetime import datetime
 import json
-import re
 import time
 import traceback
-import threading
-
-from datetime import datetime
-
 from typing import List, Optional, Union
 
-from core import AmiyaBotPluginInstance, log
+from openai import AsyncOpenAI, BadRequestError, RateLimitError
+
+from core import AmiyaBotPluginInstance
+from core.util.threadPool import run_in_thread_pool
 
 from amiyabot.log import LoggerManager
+from amiyabot.network.httpRequests import http_requests
 
-from ..common.database import AmiyaBotBLMLibraryTokenConsumeModel
 from ..common.blm_types import BLMAdapter, BLMFunctionCall
+from ..common.database import AmiyaBotBLMLibraryMetaStorageModel, AmiyaBotBLMLibraryTokenConsumeModel
+from ..common.quota_check import QuotaController
+
 from ..common.extract_json import extract_json
 
-enabled = False
-try:
-    import httpx
-    from openai import AsyncOpenAI, BadRequestError, RateLimitError
-    from openai.types.beta.threads.text_content_block import TextContentBlock
-    from openai.types.beta.threads.image_url_content_block import ImageURLContentBlock
-    from openai.types.beta.threads.image_file_content_block import ImageFileContentBlock
-    from openai.types.beta.threads.image_url_content_block_param import ImageURLContentBlockParam
-
-    enabled = True
-    log.info('OpenAI初始化完成')
-except ModuleNotFoundError as e:
-    log.info(
-        f'未安装python库openai或版本低于1.0.0或未安装httpx，无法使用ChatGPT模型，错误消息：{e.msg}\n{traceback.format_exc()}'
-    )
-    enabled = False
-
-logger = LoggerManager('BLM-ChatGPT')
+logger = LoggerManager('DEEPSEEK')
 
 
-class ChatGPTAdapter(BLMAdapter):
+class DeepSeekAdapter(BLMAdapter):
     def __init__(self, plugin):
         super().__init__()
         self.plugin: AmiyaBotPluginInstance = plugin
         self.context_holder = {}
-        self.query_times = []
+        self.quota_checker : QuotaController = QuotaController(logger,plugin)
 
     def debug_log(self, msg):
         show_log = self.plugin.get_config("show_log")
@@ -50,119 +35,35 @@ class ChatGPTAdapter(BLMAdapter):
             logger.info(f'{msg}')
 
     def get_config(self, key):
-        chatgpt_config = self.plugin.get_config("ChatGPT")
-        if chatgpt_config and chatgpt_config["enable"] and key in chatgpt_config:
-            return chatgpt_config[key]
+        model_config = self.plugin.get_config("DeepSeek")
+        if model_config and model_config["enable"] and key in model_config:
+            return model_config[key]
         return None
 
-    def __quota_check(self, peek: bool = False) -> int:
-        query_per_hour = self.get_config('high_cost_quota')
-
-        if query_per_hour is None or query_per_hour <= 0:
-            return 100000
-
-        current_time = time.time()
-        hour_ago = current_time - 3600  # 3600秒代表一小时
-
-        # 移除一小时前的查询记录
-        self.query_times = [t for t in self.query_times if t > hour_ago]
-
-        current_query_times = len(self.query_times)
-
-        if current_query_times < query_per_hour:
-            # 如果过去一小时内的查询次数小于限制，则允许查询
-            if not peek:
-                self.query_times.append(current_time)
-            self.debug_log(f"quota check success, query times: {current_query_times} > {query_per_hour}")
-            return query_per_hour - current_query_times
-        else:
-            # 否则拒绝查询
-            self.debug_log(f"quota check failed, query times: {current_query_times} >= {query_per_hour}")
-            return 0
-
     def get_model_quota_left(self, model_name: str) -> int:
-        model_info = self.get_model(model_name)
-        if model_info is None:
-            return 0
-        if model_info["type"] == "low-cost":
-            return 100000000
-        if model_info["type"] == "high-cost":
-            # 根据__quota_check来计算
-            return self.__quota_check(peek=True)
-        return 0
+        # 根据__quota_check来计算
+        return self.quota_checker.check(peek=True)
 
     def model_list(self) -> List[dict]:
         model_list_response = [
             {
-                "model_name": "gpt-3.5-turbo",
+                "display_name": "DeepSeek-V3",
+                "model_name": "deepseek-chat",
                 "type": "low-cost",
-                "max_token": 2000,
-                "max-token": 2000,
-                "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
+                "max_token": 4000,
+                "max-token": 4000,
+                "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
             },
+            {
+                "display_name": "DeepSeek-R1",
+                "model_name": "deepseek-reasoner",
+                "type": "low-cost",
+                "max_token": 4000,
+                "max-token": 4000,
+                "supported_feature": ["completion_flow", "chat_flow"],
+            }
         ]
-        disable_high_cost = self.get_config("disable_high_cost")
-        # self.debug_log(f"disable_high_cost: {disable_high_cost}")
-        if disable_high_cost != True:
-            model_list_response.append(
-                {
-                    "model_name": "gpt-4",
-                    "type": "high-cost",
-                    "max_token": 4000,
-                    "max-token": 4000,
-                    "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"],
-                }
-            )
-            model_list_response.append(
-                {
-                    "model_name": "gpt-4-turbo",
-                    "type": "high-cost",
-                    "max_token": 128000,
-                    "max-token": 128000,
-                    "supported_feature": [
-                        "completion_flow",
-                        "chat_flow",
-                        "assistant_flow",
-                        "function_call",
-                        "vision",
-                        "json_mode",
-                    ],
-                }
-            )
-            model_list_response.append(
-                {
-                    "model_name": "gpt-4o",
-                    "type": "high-cost",
-                    "max_token": 128000,
-                    "max-token": 128000,
-                    "supported_feature": [
-                        "completion_flow",
-                        "chat_flow",
-                        "assistant_flow",
-                        "function_call",
-                        "vision",
-                        "json_mode",
-                    ],
-                }
-            )
         return model_list_response
-
-    async def get_client(self):
-        proxy = self.get_config('proxy')
-        async_httpx_client = None
-        if proxy is not None and proxy != "":
-            if proxy.startswith("https://"):
-                proxies = {"http://": proxy, "https://": proxy}
-                async_httpx_client = httpx.AsyncClient(proxies=proxies)
-            elif proxy.startswith("http://"):
-                proxies = {"http://": proxy}
-                async_httpx_client = httpx.AsyncClient(proxies=proxies)
-            else:
-                raise ValueError("无效的代理URL")
-
-        base_url = self.get_config('base_url')
-        client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url=base_url, http_client=async_httpx_client)
-        return client
 
     async def chat_flow(
         self,
@@ -173,8 +74,6 @@ class ChatGPTAdapter(BLMAdapter):
         functions: Optional[List[BLMFunctionCall]] = None,
         json_mode: Optional[bool] = False,
     ) -> Optional[str]:
-        if not enabled:
-            return None
 
         # self.debug_log(f'chat_flow received: {prompt} {model} {context_id} {channel_id} {functions}')
         self.debug_log(f'chat_flow received prompt: {prompt}')
@@ -197,25 +96,12 @@ class ChatGPTAdapter(BLMAdapter):
         if model_info["type"] == "high-cost":
             quota = self.__quota_check()
             if quota <= 0:
-                self.debug_log(f"quota check failed, fallback to gpt-3.5-turbo {quota}")
-                model_info = self.get_model("gpt-3.5-turbo")
+                self.debug_log('quota not enough')
+                return None
 
-        proxy = self.get_config('proxy')
-        async_httpx_client = None
-        if proxy is not None and proxy != "":
-            if proxy.startswith("https://"):
-                proxies = {"http://": proxy, "https://": proxy}
-                async_httpx_client = httpx.AsyncClient(proxies=proxies)
-            elif proxy.startswith("http://"):
-                proxies = {"http://": proxy}
-                async_httpx_client = httpx.AsyncClient(proxies=proxies)
-            else:
-                raise ValueError("无效的代理URL")
+        client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url="https://api.deepseek.com")
 
-        base_url = self.get_config('base_url')
-        client = AsyncOpenAI(api_key=self.get_config('api_key'), base_url=base_url, http_client=async_httpx_client)
-
-        self.debug_log(f"url: {base_url} proxy: {proxy} model: {model_info}")
+        self.debug_log(f"model: {model_info}")
 
         if isinstance(prompt, str):
             prompt = [prompt]
@@ -251,7 +137,7 @@ class ChatGPTAdapter(BLMAdapter):
             if not model_info["supported_feature"].__contains__("vision"):
                 if isinstance(item["content"], dict) and item["content"][0]["type"] == "image_url":
                     self.debug_log(f"image_url not supported in {model_info['model_name']}")
-                    return False
+                    return False          
             return True
 
         prompt = list(filter(prompt_filter, prompt))
@@ -278,16 +164,20 @@ class ChatGPTAdapter(BLMAdapter):
                     }
                 )
 
-        # combine text message for debuging
-        combined_message = ""
-        for item in exec_prompt:
-            if isinstance(item["content"], str):
-                combined_message += item["content"] + "\n"
-            else:
-                if item["content"][0]["type"] == "text":
-                    combined_message += item["content"][0]["text"] + "\n"
-                elif item["content"][0]["type"] == "image_url":
-                    combined_message += f'<img src="{item["content"][0]["image_url"]["url"]}"/>'
+        # deepseek-reasoner does not support successive user or assistant message
+        if model_info["model_name"] == "deepseek-reasoner":
+            # 连续的user或者assistant消息会被合并
+            formated_exec_prompt = []
+            for i in range(len(exec_prompt)):
+                if i == 0:
+                    formated_exec_prompt.append(exec_prompt[i])
+                else:
+                    if exec_prompt[i]["role"] == exec_prompt[i - 1]["role"]:
+                        formated_exec_prompt[-1]["content"] += "\n" + exec_prompt[i]["content"]
+                    else:
+                        formated_exec_prompt.append(exec_prompt[i])
+            
+            exec_prompt = formated_exec_prompt
 
         try:
             call_param = {}
@@ -298,35 +188,11 @@ class ChatGPTAdapter(BLMAdapter):
                 if model_info["supported_feature"].__contains__("json_mode"):
                     call_param["response_format"] = {"type": "json_object"}
 
-            if model_info["model_name"] == "gpt-4-vision-preview":
-                # 特别的，为vision指定一个4096的max_tokens
-                call_param["max_tokens"] = 4096
-
             if (
                 model_info["supported_feature"].__contains__("function_call")
                 and functions is not None
                 and len(functions) > 0
             ):
-                # tools = [
-                #     {
-                #         "type": "function",
-                #         "function": {
-                #             "name": "get_current_weather",
-                #             "description": "Get the current weather in a given location",
-                #             "parameters": {
-                #                 "type": "object",
-                #                 "properties": {
-                #                     "location": {
-                #                         "type": "string",
-                #                         "description": "The city and state, e.g. San Francisco, CA",
-                #                     },
-                #                     "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                #                 },
-                #                 "required": ["location"],
-                #             },
-                #         },
-                #     }
-                # ]
                 tools = []
                 for function in functions:
                     tools.append({"type": "function", "function": function.function_schema})
@@ -396,38 +262,31 @@ class ChatGPTAdapter(BLMAdapter):
 
         except RateLimitError as e:
             self.debug_log(f"RateLimitError: {e}")
-            self.debug_log(f'Chatgpt Raw: \n{combined_message}')
+            self.debug_log(f"Exception traceback:\n{traceback.format_exc()}")
+            self.debug_log(f'DEEPSEEK Raw Request: \n{exec_prompt}')
             return None
         except BadRequestError as e:
             self.debug_log(f"BadRequestError: {e}")
-            self.debug_log(f'Chatgpt Raw: \n{combined_message}')
+            self.debug_log(f"Exception traceback:\n{traceback.format_exc()}")
+            self.debug_log(f'DEEPSEEK Raw Request: \n{exec_prompt}')
             return None
         except Exception as e:
             self.debug_log(f"Exception: {e}")
-            self.debug_log(f'Chatgpt Raw: \n{combined_message}')
+            self.debug_log(f"Exception traceback:\n{traceback.format_exc()}")
+            self.debug_log(f'DEEPSEEK Raw Request: \n{exec_prompt}')
             return None
 
         text: str = completions.choices[0].message.content
+        # 判断是否有reasoning_content这个属性
+        reason_text : str= None
+        if hasattr(completions.choices[0].message, "reasoning_content"):
+            reason_text = completions.choices[0].message.reasoning_content
+            self.debug_log(f'Reasoning Content{reason_text}')
+        else:
+            self.debug_log('No Reasoning Content')
         # role: str = completions.choices[0].message.role
 
-        self.debug_log(f'{model_info["model_name"]} Raw: \n{combined_message}\n------------------------\n{text}')
-
-        # 出于调试目的，写入请求数据
-        formatted_file_timestamp = time.strftime('%Y%m%d', time.localtime(time.time()))
-        sent_file = f'{self.cache_dir}/CHATGPT.{channel_id}.{formatted_file_timestamp}.txt'
-        with open(sent_file, 'a', encoding='utf-8') as file:
-            file.write('-' * 20)
-            formatted_timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-            file.write(f'{formatted_timestamp} {model_info["model_name"]}')
-            file.write('-' * 20)
-            file.write('\n')
-            all_contents = combined_message
-            file.write(f'{all_contents}')
-            file.write('\n')
-            file.write('-' * 20)
-            file.write('\n')
-            file.write(f'{text}')
-            file.write('\n')
+        self.debug_log(f'{model_info["model_name"]} Raw: \n{exec_prompt}\n------------------------\n{completions.choices[0].message}')
 
         id = completions.id
         usage = completions.usage
@@ -455,15 +314,25 @@ class ChatGPTAdapter(BLMAdapter):
         if json_mode:
             self.debug_log(f"json_mode enabled in {model_info['model_name']}")
 
-            if model_info["supported_feature"].__contains__("json_mode"):
-                return ret_str
-            else:
+            if not model_info["supported_feature"].__contains__("json_mode"):
                 self.debug_log(f"json_mode not supported in {model_info['model_name']}, extracting from:\n{text}")
                 json_obj = extract_json(ret_str)
                 if json_obj is not None:
                     ret_str = json.dumps(json_obj)
                 else:
                     ret_str = None
-                return ret_str
-        else:
+            
+            if self.get_config("deep_think") == True:
+                self.debug_log(f'deep_think enabled: {reason_text}')
+                if reason_text is not None:
+                    ret_str["reasoning_content"] = reason_text
+
             return ret_str
+        else:
+            if self.get_config("deep_think") == True:
+                self.debug_log(f'deep_think enabled: {reason_text}')
+                if reason_text is not None:                
+                    ret_str = f"({reason_text.strip()})\n{ret_str}"
+
+            return ret_str
+
