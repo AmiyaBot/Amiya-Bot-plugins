@@ -14,6 +14,7 @@ from ..chat_gpt.gpt_assistant_adapter import ChatGPTAssistantAdapter
 
 from ..ernie.ernie_adapter import ERNIEAdapter
 from ..ernie.qianfan_adapter import QianFanAdapter
+from ..deepseek.deekseek_adapter import DeepSeekAdapter
 
 from .extract_json import extract_json
 
@@ -78,6 +79,10 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         qianfan_config = self.get_config("QianFan")
         if qianfan_config and qianfan_config["enable"]:
             self.adapters.append(QianFanAdapter(self))
+
+        deepseek_config = self.get_config("DeepSeek")
+        if deepseek_config and deepseek_config["enable"]:
+            self.adapters.append(DeepSeekAdapter(self))
 
         self.model_list()
 

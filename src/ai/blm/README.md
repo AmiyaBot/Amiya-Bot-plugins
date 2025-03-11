@@ -3,21 +3,27 @@
 为其他插件提供大语音模型（ChatGPT，文心一言等）调用库。
 如果您有什么使用上的问题，欢迎在最下方的链接处反馈。
 
+官方QQ群兔兔使用的是本插件的Assistant模式，您可以添加官方兔兔并和他聊天试试效果。
+
 # 新功能
 
-1. 提供了AI Vision（AI视觉）的支持，可以发送图片作为Prompt，该功能目前仅ChatGPT的'gpt-4-vision-preview'模型支持。
-   开发者可以在`supported_feature`里查找`vision`来确认这类模型。
+1. 支持DeepSeek
 
-2. **max_token参数更名**
+2. 新增 `display_name`
+   由于模型千奇百怪的名称，model_info字典中新增了 `display_name-name` 字段，用于显示给用户的友好模型名称。
+
+3. **type** 参数即将废弃
+    由于AI的发展，仅凭价格就区分AI能力的时代过去了，因此Type参数将在不确定的未来废弃。
+    未来所有新模型，均会标记为low-cost
+    后续开发者在生成配置和使用模型时，请将功能的选择权显式交给用户。
+    例如，你现在的设计是，提供一个选择模型配置项，在使用GPT-3.5等low-cost模型时采用一套prompt，使用GPT-4o时用另一套prompt，现在你应该改为，提供两个配置项，一个选择模型，一个选择prompt。
+
+4. **max_token参数更名**
    model_info字典中的`max-token`更名为`max_token`，使用下划线替代连字符，从而和其他字段保持一致。
    当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来的1.5版本移除支持，请开发者及时调整代码。
 
-3. 支持json_mode：新增json_mode参数让chatflow返回一个合法json字符串，目前仅gpt-4-1106-preview模型原生支持json_mode，其余模型均为用模拟方式支持json_mode，详情请参考后面章节关于chat_flow的函数原型声明。
-
-4. **extract_json函数废弃**
+5. **extract_json函数废弃**
    因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
-
-5. 支持了Assistant模式，现在可以使用各大平台提供的AI助手库了。第一版支持ChatGPT的Assistant和千帆AppBuilder的应用（百度AssistantBeta下版本支持）。官方兔兔就在使用本模式，您可以添加官方兔兔并和他聊天试试效果。
 
 # 使用方法
 
@@ -31,19 +37,23 @@
 
 有些配置项需要重启兔兔以后才能生效，比如切换文心一言或ChatGPT的状态等，如遇到问题，请重启兔兔。
 
-该lib需要OpenAI Python库>=1.0.0版本，您的机器上可能安装了旧版的库，请进行升级。
-如果您遇到了：ImportError: cannot import name 'AsyncOpenAI' from 'openai' 等错误，那就是因为您没有lib或lib过低。
+
+### 我是DeepSeek用户
 
 ### 我是ChatGPT用户
 
 如果你是ChatGPT用户，那你首先需要科学上网，然后你还需要通过代码部署兔兔，并安装必要的库
+
 
 ```
 pip install httpx
 pip install openai>=1.20.0
 ```
 
-此外，OpenAI会时不时更新他们的API策略，所以如果发现插件不能工作，可以先考虑升级OpenAI运行库，方式如下：
+此外，OpenAI会时不时更新他们的API策略，所以如果发现插件不能工作，可以先考虑升级OpenAI运行库，
+如果您遇到了：ImportError: cannot import name 'AsyncOpenAI' from 'openai' 等错误，那就是因为您没有lib或lib过低。
+
+升级方式如下：
 
 ```
 pip install --upgrade openai
@@ -256,10 +266,10 @@ json_mode为True的情况下，接口一定会返回一个json字符串。但是
      "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"]},
     {"model_name": "gpt-4", "type": "high-cost", "max_token": 4000,
      "supported_feature": ["completion_flow", "chat_flow", "assistant_flow", "function_call"]]},
-{"model_name": "ernie-3.5", "type": "low-cost", "max_token": 4000,
- "supported_feature": ["completion_flow", "chat_flow"]},
-{"model_name": "ernie-4", "type": "high-cost", "max_token": 4000,
- "supported_feature": ["completion_flow", "chat_flow"]},
+    {"model_name": "ernie-3.5", "type": "low-cost", "max_token": 4000,
+    "supported_feature": ["completion_flow", "chat_flow"]},
+    {"model_name": "ernie-4", "type": "high-cost", "max_token": 4000,
+    "supported_feature": ["completion_flow", "chat_flow"]},
 ]
 ```
 
@@ -276,9 +286,7 @@ json_mode为True的情况下，接口一定会返回一个json字符串。但是
 | max_token         | int  | 模型单次请求支持的最大token数，注意诸如function call等功能也会消耗token，并且prompt也包含在内。 |
 | supported_feature | list | 模型支持的特性列表                                                      |
 
-*
-
-*请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(
+** 请不要在代码中hardcode模型的名称，在当前版本中，系统会返回诸如ernie-4这样的模型名，但是在未来版本，本插件会支持用户配置两个ChatGPT，三个文心一言这样的设置。届时在返回模型时，就会出现“ERNIE-4(
 UserDefinedName)”这样的结果。你的HardCode就会失效。**
 
 目前完整的feature列表如下:
@@ -364,7 +372,7 @@ Assistant工作流下，获取系统所有可使用的Assistant的函数
 ]
 ```
 
-具体返回值会根据用户的配置来确定。如果用户没有配置启动文心一言或者
+具体返回值会根据用户的配置来确定。如果用户没有对应配置，则会返回空数组。
 该函数可以用来配合动态配置文件Schema功能，让其他插件可以在自己的插件配置项中展示并让用户选择助手。
 该函数可在函数定义阶段就可用，但是考虑到加载顺序问题，建议不要早于load函数中调用。
 
@@ -374,7 +382,7 @@ Assistant工作流下，获取系统所有可使用的Assistant的函数
 ### assistant_thread_create
 
 创建一个对话上下文，ChatGPT叫Thread，文心App叫Conversation。
-一般来说，对话上下文会在服务器端存储和维护。
+一般来说，对话上下文会在服务器端存储和维护。但是兔兔开发者不需要考虑这个细节。
 
 **TODO**
 
@@ -465,3 +473,4 @@ Logo是用StableDiffusion插件跑出来的。
 | 1.2   | 引入vision、json_mode；移除extract_json；修改max-token标识符名 |
 | 1.2.3 | 引入assistant  |
 | 1.2.6 | 分开GPT的基础模型部分配置和Assistant配置 |
+| 1.3.0 | 删除了一些GPT不再提供的模型。新增DeepSeek支持 |
