@@ -128,7 +128,9 @@ class OperatorImpl(Operator):
         if self.data.get('skills'):
             for item in self.data['skills']:
                 if item['overrideTokenKey'] and item['overrideTokenKey'] in Collection.tokens_map:
-                    token_list.append(Collection.tokens_map[item['overrideTokenKey']])
+                    token_id = Collection.tokens_map[item['overrideTokenKey']]
+                    if token_id not in token_list:
+                        token_list.append(token_id)
 
         return [
             {

@@ -20,8 +20,8 @@ icon_size = 34
 line_height = 16
 side_padding = 10
 
-yituliu_t3 = 'https://ark.yituliu.cn/backend/stage/t3?expCoefficient=0.625'
-yituliu_t2 = 'https://ark.yituliu.cn/backend/stage/t2?expCoefficient=0.625'
+yituliu_t3 = 'https://backend.yituliu.cn/stage/t3?expCoefficient=0.625'
+yituliu_t2 = 'https://backend.yituliu.cn/stage/t2?expCoefficient=0.625'
 
 
 @table
@@ -213,7 +213,7 @@ class MaterialPluginInstance(AmiyaBotPluginInstance):
 
 bot = MaterialPluginInstance(
     name='明日方舟材料物品查询',
-    version='2.7',
+    version='2.8',
     plugin_id='amiyabot-arknights-material',
     plugin_type='official',
     description='查询明日方舟材料和物品资料',
