@@ -1,4 +1,7 @@
 {
+    "DeepSeek":{
+        "enable": false
+    },
     "ChatGPT": {
         "enable": false,
         "api_key": "12345",

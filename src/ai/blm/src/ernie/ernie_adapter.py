@@ -125,14 +125,16 @@ class ERNIEAdapter(BLMAdapter):
                     "max-token": 4000,
                     "supported_feature": ["completion_flow", "chat_flow", "json_mode"],
                 }
-            ),
-            {
-                "model_name": "ERNIE-Bot-8K",
-                "type": ernie_4_cost,
-                "max_token": 8000,
-                "max-token": 8000,
-                "supported_feature": ["completion_flow", "chat_flow", "function_call", "json_mode"],
-            },
+            )
+            model_list_response.append(
+                {
+                    "model_name": "ERNIE-Bot-8K",
+                    "type": ernie_4_cost,
+                    "max_token": 8000,
+                    "max-token": 8000,
+                    "supported_feature": ["completion_flow", "chat_flow", "function_call", "json_mode"],
+                }
+            )
         return model_list_response
 
     async def __get_access_token(self, channel_id):
