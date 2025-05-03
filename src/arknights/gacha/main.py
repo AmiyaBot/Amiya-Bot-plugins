@@ -273,7 +273,7 @@ async def _(data: Message):
     
     message = data.text
 
-    if any_match(message, ['趣味']):
+    if any_match(message, ['趣味']) and False: # 暂时隐藏趣味卡池功能
         return await switch_to_custom_pool(data)
     else:
         return await switch_to_official_pool(data)
@@ -290,7 +290,7 @@ async def _(data: Message):
 
 
 # for debug use
-@bot.on_message(group_id='gacha', keywords=['概率'])
+@bot.on_message(group_id='gacha', keywords=['获取当前抽卡概率'])
 async def _(data: Message):
     try:
         gc = GachaBuilder(data)
