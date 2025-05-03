@@ -18,6 +18,33 @@
                 "..."
             ]
         },
+        "DeepSeek": {
+            "title": "DeepSeek",
+            "description": "\"赛博珍珠港\"",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供DeepSeek模型列表。",
+                    "type": "boolean"
+                },
+                "api_key": {
+                    "title": "API Key",
+                    "description": "应用的API Key，没有的话请到https://platform.deepseek.com/api_keys申请。",
+                    "type": "string"
+                },
+                "deep_think": {
+                    "title": "启用深度思考",
+                    "description": "启用后，将同时提供思考。",
+                    "type": "boolean"
+                },
+                "high_cost_quota": {
+                    "title": "模型限额",
+                    "description": "平均每小时调用次数，设为0表示不限。",
+                    "type": "number"
+                }
+            }
+        },
         "ChatGPT": {
             "title": "ChatGPT",
             "description": "ChatGPT大模型相关的配置",
@@ -90,6 +117,8 @@
             }
         },
         "ERNIE": {
+            "title": "文心一言",
+            "description": "提供文心一言支持",
             "type": "object",
             "properties": {
                 "enable": {

@@ -4,7 +4,7 @@ import json
 import asyncio
 import shutil
 
-from typing import List
+from typing import List, Tuple
 from amiyabot import QQGuildBotInstance, GroupConfig
 from amiyabot.network.httpRequests import http_requests
 from core import log, Message, Chain, Equal, AmiyaBotPluginInstance
@@ -85,8 +85,7 @@ def find_once(reg, text):
     return ''
 
 
-def change_pool(item: Pool, user_id=None):
-
+def change_pool(item: Pool, user_id=None) -> Tuple[str, str]:
     if item.is_official is None or item.is_official:
         task = UserGachaInfo.update(gacha_pool=item.id, use_custom_gacha_pool=False).where((UserGachaInfo.user_id == user_id) if user_id else None)
         task.execute()
@@ -211,10 +210,14 @@ async def switch_to_official_pool(data: Message):
                 if bool(Admin.get_or_none(account=data.user_id)):
                     all_people = '所有人' in data.text
 
-            change_res = change_pool(selected, data.user_id if not all_people else None)
-            if change_res[1]:
-                return Chain(data).image(change_res[1]).text_image(change_res[0])
-            return Chain(data).text_image(change_res[0])
+            change_text, change_img = change_pool(selected, data.user_id if not all_people else None)
+            chain = Chain(data)
+            if selected.pool_image:
+                chain.image(url=selected.pool_image)
+            elif change_img:
+                chain.image(change_img)
+            chain.text_image(change_text)
+            return chain
 
     text = '博士，这是可更换的卡池列表：\n\n'
     text += '|卡池名称|卡池名称|卡池名称|卡池名称|\n|----|----|----|----|\n'
@@ -232,10 +235,14 @@ async def switch_to_official_pool(data: Message):
         if r:
             index = int(r.group(1)) - 1
             if 0 <= index < len(all_pools):
-                change_res = change_pool(all_pools[index], data.user_id)
-                if change_res[1]:
-                    return Chain(data).image(change_res[1]).text_image(change_res[0])
-                return Chain(data).text_image(change_res[0])
+                change_text, change_img = change_pool(selected, data.user_id if not all_people else None)
+                chain = Chain(data)
+                if selected.pool_image:
+                    chain.image(url=selected.pool_image)
+                elif change_img:
+                    chain.image(change_img)
+                chain.text_image(change_text)
+                return chain
             else:
                 return Chain(data).text('博士，要告诉阿米娅准确的卡池序号哦')
 
