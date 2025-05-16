@@ -8,7 +8,7 @@ from .gameStart import game_begin, curr_dir
 
 bot = AmiyaBotPluginInstance(
     name='大帝的CYPHER挑战',
-    version='2.4',
+    version='2.5',
     plugin_id='amiyabot-game-wordle2',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -54,6 +54,10 @@ async def _(data: Message):
         await data.send(Chain(data, at=False).text('题目准备中...共有10次机会竞猜！'))
 
         operator = pool.pick_one()
+
+        if '预备干员' in operator.name:
+            continue
+
         if not hardcode:
             if not prev:
                 prev = pool.pick_one()

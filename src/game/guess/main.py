@@ -6,7 +6,7 @@ from .guessStart import *
 
 bot = AmiyaBotPluginInstance(
     name='兔兔猜干员',
-    version='3.3',
+    version='3.4',
     plugin_id='amiyabot-game-guess',
     plugin_type='official',
     description='干员竞猜小游戏，可获得合成玉',
@@ -83,6 +83,9 @@ async def _(data: Message):
             operators = copy.deepcopy(ArknightsGameData.operators)
 
         operator = operators.pop(random.choice(list(operators.keys())))
+
+        if '预备干员' in operator.name:
+            continue
 
         if curr != referee.round:
             curr = referee.round
