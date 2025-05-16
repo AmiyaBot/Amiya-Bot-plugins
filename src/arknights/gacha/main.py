@@ -62,7 +62,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='2.5.2',
+    version='2.7',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -190,9 +190,10 @@ async def switch_to_official_pool(data: Message):
     all_pools = [item for item in all_pools if (item.is_official is None or item.is_official)]
     
     message = data.text
+    all_people = False
+    selected = None
 
     if any_match(message, ['切换', '更换']):
-        selected = None
         for item in all_pools:
             if get_pool_selector(item) in data.text_original:
                 selected = item
@@ -205,7 +206,6 @@ async def switch_to_official_pool(data: Message):
                     selected = all_pools[index]
 
         if selected:
-            all_people = False
             if type(data.instance) is QQGuildBotInstance:
                 if bool(Admin.get_or_none(account=data.user_id)):
                     all_people = '所有人' in data.text
@@ -235,6 +235,7 @@ async def switch_to_official_pool(data: Message):
         if r:
             index = int(r.group(1)) - 1
             if 0 <= index < len(all_pools):
+                selected = all_pools[index]
                 change_text, change_img = change_pool(selected, data.user_id if not all_people else None)
                 chain = Chain(data)
                 if selected.pool_image:
