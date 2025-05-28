@@ -9,7 +9,11 @@ from amiyabot.database import *
 from core import Message, Chain, AmiyaBotPluginInstance, Requirement
 from core.util import snake_case_to_pascal_case, integer
 from core.database.user import UserBaseModel
-from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource, ArknightsConfig
+from core.resource.arknightsGameData import (
+    ArknightsGameData,
+    ArknightsGameDataResource,
+    ArknightsConfig,
+)
 
 from .api import SKLandAPI, log
 from .tools import *
@@ -56,7 +60,17 @@ class SKLandPluginInstance(AmiyaBotPluginInstance):
             log.warning('森空岛用户获取失败。')
             return None
 
-        return await user.user_info()
+        binding = await user.binding()
+        if not binding:
+            log.warning('森空岛绑定信息获取失败。')
+            return None
+        uid_dict = {}
+        for app in binding['list']:
+            if 'defaultUid' in app and app['defaultUid']:
+                uid_dict[app['appCode']] = app['defaultUid']
+            else:
+                uid_dict[app['appCode']] = app['bindingList'][0]['uid'] if app['bindingList'] else None
+        return uid_dict
 
     @staticmethod
     async def get_character_info(token: str, uid: str):
@@ -118,7 +132,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='5.1',
+    version='5.2',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',
@@ -129,6 +143,7 @@ bot = SKLandPluginInstance(
     global_config_schema=f'{curr_dir}/config_templates/global_config_schema.json',
 )
 bot.set_group_config(GroupConfig('skland', allow_direct=True))
+skland_api.set_bot(bot)
 
 
 async def is_token_str(data: Message):
@@ -148,11 +163,13 @@ async def is_token_str(data: Message):
 async def check_user_info(data: Message, times: int = 1):
     token = await bot.get_token(data.user_id)
     if not token:
-        await data.send(Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 查看绑定说明。'))
+        await data.send(
+            Chain(data).text('博士，您尚未绑定 Token，请发送 “兔兔绑定” 查看绑定说明。')
+        )
         return None, None
 
-    user_info = await bot.get_user_info(token)
-    if not user_info:
+    uid_dict = await bot.get_user_info(token)
+    if not uid_dict:
         if times == 1 and await bot.refresh_token(data.user_id):
             return await check_user_info(data, times + 1)
 
@@ -165,38 +182,53 @@ async def check_user_info(data: Message, times: int = 1):
         )
         return None, token
 
-    return user_info, token
+    return uid_dict, token
 
 
 @bot.on_message(group_id='skland', keywords=['我的游戏信息', '森空岛'], level=5)
 async def _(data: Message):
-    user_info, token = await check_user_info(data)
-    if not user_info:
+    uid_dict, token = await check_user_info(data)
+    if not uid_dict:
         return
+    if 'arknights' not in uid_dict:
+        return Chain(data).text(
+            '博士，当前森空岛账号未绑定明日方舟，请前往森空岛APP绑定明日方舟账号。'
+        )
 
     await data.send(Chain(data).text('开始获取并生成游戏信息，请稍后...'))
 
-    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+    character_info = await bot.get_character_info(token, uid_dict['arknights'])
     character_info['backgroundImage'] = await ArknightsGameDataResource.get_skin_file(
-        {'skin_id': character_info['status']['secretary']['charId'] + '#1'}, encode_url=True
+        {'skin_id': character_info['status']['secretary']['charId'] + '#1'},
+        encode_url=True,
     )
 
     return (
         Chain(data, chain_builder=WaitALLRequestsDone())
-        .html(f'{curr_dir}/template/userInfo.html', character_info, width=800, height=400, render_time=1000)
+        .html(
+            f'{curr_dir}/template/userInfo.html',
+            character_info,
+            width=800,
+            height=400,
+            render_time=1000,
+        )
         .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。')
     )
 
 
 @bot.on_message(group_id='skland', keywords=['我的仓库'], level=5)
 async def _(data: Message):
-    user_info, token = await check_user_info(data)
-    if not user_info:
+    uid_dict, token = await check_user_info(data)
+    if not uid_dict:
         return
+    if 'arknights' not in uid_dict:
+        return Chain(data).text(
+            '博士，当前森空岛账号未绑定明日方舟，请前往森空岛APP绑定明日方舟账号。'
+        )
 
     await data.send(Chain(data).text('开始获取并生成仓库信息，请稍后...'))
 
-    cultivate_data = await bot.get_cultivate_player(token, user_info['gameStatus']['uid'])
+    cultivate_data = await bot.get_cultivate_player(token, uid_dict['arknights'])
 
     result = []
     for item in cultivate_data['items']:
@@ -205,20 +237,26 @@ async def _(data: Message):
 
     return (
         Chain(data, chain_builder=WaitALLRequestsDone())
-        .html(f'{curr_dir}/template/warehouse.html', result, width=1140, render_time=1000)
+        .html(
+            f'{curr_dir}/template/warehouse.html', result, width=1140, render_time=1000
+        )
         .text('博士，森空岛数据可能与游戏内数据存在一点延迟，请以游戏内实际数据为准。')
     )
 
 
 @bot.on_message(group_id='skland', keywords=['我的干员', '练度'], level=5)
 async def _(data: Message):
-    user_info, token = await check_user_info(data)
-    if not user_info:
+    uid_dict, token = await check_user_info(data)
+    if not uid_dict:
         return
+    if 'arknights' not in uid_dict:
+        return Chain(data).text(
+            '博士，当前森空岛账号未绑定明日方舟，请前往森空岛APP绑定明日方舟账号。'
+        )
 
     await data.send(Chain(data).text('开始获取并生成干员练度信息，请稍后...'))
 
-    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+    character_info = await bot.get_character_info(token, uid_dict['arknights'])
 
     char_name = get_longest(data.text, ArknightsGameData.operators.keys())
     if char_name:
@@ -242,8 +280,13 @@ async def _(data: Message):
                 for item in character_info['skins']
                 if item['id'].startswith(char['charId'])
             }
-            equips = {item['id']: {**character_info['equipmentInfoMap'][item['id']], **item} for item in char['equip']}
-            skin_file = await ArknightsGameDataResource.get_skin_file({'skin_id': char['skinId']})
+            equips = {
+                item['id']: {**character_info['equipmentInfoMap'][item['id']], **item}
+                for item in char['equip']
+            }
+            skin_file = await ArknightsGameDataResource.get_skin_file(
+                {'skin_id': char['skinId']}
+            )
             result = {
                 'user': character_info['status'],
                 'char': char,
@@ -264,7 +307,9 @@ async def _(data: Message):
                     for lv, attrs in enumerate(module['detail']['phases']):
                         module_attr = {}
                         for attr in attrs['attributeBlackboard']:
-                            module_attr[snake_case_to_pascal_case(attr['key'])] = integer(attr['value'])
+                            module_attr[snake_case_to_pascal_case(attr['key'])] = (
+                                integer(attr['value'])
+                            )
 
                         result['charModules'][module['uniEquipId']][lv] = module_attr
 
@@ -287,30 +332,39 @@ async def _(data: Message):
 
 @bot.on_message(group_id='skland', keywords=['我的基建'], level=5)
 async def _(data: Message):
-    user_info, token = await check_user_info(data)
-    if not user_info:
+    uid_dict, token = await check_user_info(data)
+    if not uid_dict:
         return
+    if 'arknights' not in uid_dict:
+        return Chain(data).text('博士，当前森空岛账号未绑定明日方舟，请前往森空岛APP绑定明日方舟账号。')
 
     await data.send(Chain(data).text('开始获取并生成基建信息，请稍后...'))
 
-    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+    character_info = await bot.get_character_info(token, uid_dict['arknights'])
 
     return Chain(data, chain_builder=WaitALLRequestsDone()).html(
-        f'{curr_dir}/template/building.html', character_info, width=1800, height=800, render_time=1000
+        f'{curr_dir}/template/building.html',
+        character_info,
+        width=1800,
+        height=800,
+        render_time=1000,
     )
 
 
 @bot.on_message(group_id='skland', keywords=['抽卡记录'], level=5)
 async def _(data: Message):
-    user_info, token = await check_user_info(data)
-    if not user_info:
+    uid_dict, token = await check_user_info(data)
+    if not uid_dict:
         return
+    if 'arknights' not in uid_dict:
+        return Chain(data).text(
+            '博士，当前森空岛账号未绑定明日方舟，请前往森空岛APP绑定明日方舟账号。'
+        )
 
-    # map: dict = UserInfo.get_meta_value(data.user_id, 'amiyabot_query_gacha')
     if not token:
         return
 
-    server_name, _ = await bot.get_server_type(token, user_info['gameStatus']['uid'])
+    server_name, _ = await bot.get_server_type(token, uid_dict['arknights'])
 
     if server_name == 'bilibili服':
         rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
@@ -332,7 +386,9 @@ async def _(data: Message):
         if kwer_config['enable']:
             appid = kwer_config['app_id']
             appsecret = kwer_config['app_secret']
-            gacha_list, pool_list = await get_gacha_arkgacha_kwer_top(server_name, token, appid, appsecret)
+            gacha_list, pool_list = await get_gacha_arkgacha_kwer_top(
+                server_name, token, appid, appsecret
+            )
             info['copyright'] = (
                 '历史数据来自鹰角网络官网<br/>以及<span style="color: blue;">https://arkgacha.kwer.top/</span><br/>感谢Bilibili@呱行次比猫'
             )
@@ -341,28 +397,39 @@ async def _(data: Message):
             info['copyright'] = '历史数据来自鹰角网络官网'
 
         if not gacha_list:
-            return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
+            return Chain(data).text(
+                '呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<'
+            )
 
         info['list'] = gacha_list
         log.info(f'info: {info}')
         return Chain(data).html(f'{curr_dir}/template/gacha.html', info, width=320)
     except Exception as e:
         log.error(e)
-        return Chain(data).text('呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<')
+        return Chain(data).text(
+            '呜呜……出错了……可能是因为Token失效，请重新绑定 Token。>.<'
+        )
 
 
 @bot.on_message(group_id='skland', keywords=['我的进度', '我的关卡'], level=5)
 async def _(data: Message):
-    user_info, token = await check_user_info(data)
-    if not user_info:
+    uid_dict, token = await check_user_info(data)
+    if not uid_dict:
         return
+    if 'arknights' not in uid_dict:
+        return Chain(data).text(
+            '博士，当前森空岛账号未绑定明日方舟，请前往森空岛APP绑定明日方舟账号。'
+        )
 
     await data.send(Chain(data).text('开始获取并生成关卡进度信息，请稍后...'))
 
-    character_info = await bot.get_character_info(token, user_info['gameStatus']['uid'])
+    character_info = await bot.get_character_info(token, uid_dict['arknights'])
 
     return Chain(data, chain_builder=WaitALLRequestsDone()).html(
-        f'{curr_dir}/template/progress.html', character_info, width=1200, render_time=1000
+        f'{curr_dir}/template/progress.html',
+        character_info,
+        width=1200,
+        render_time=1000,
     )
 
 
@@ -387,13 +454,19 @@ async def _(data: Message):
     return chain
 
 
-@bot.on_message(group_id='skland', verify=is_token_str, check_prefix=False, allow_direct=True)
+@bot.on_message(
+    group_id='skland', verify=is_token_str, check_prefix=False, allow_direct=True
+)
 async def _(data: Message):
     if not data.is_direct:
         await data.recall()
         await data.send(Chain(data).text('博士，请注意保护您的敏感信息！>.<'))
 
     token = data.verify.keypoint
+
+    binding = await bot.get_binding(token)
+    if not binding:
+        return Chain(data).text('Token 无效，请重新获取 Token。>.<')
 
     rec: UserToken = UserToken.get_or_none(user_id=data.user_id)
     if rec:

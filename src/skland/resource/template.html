@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        window._smConf = {{config}};
+        window._smReadyFuncs = [
+            function () {
+                // 获取did元素
+                var didElement = document.querySelector('.did');
+                // 修改did元素的内容
+                didElement.innerHTML = window.SMSdk.getDeviceId();
+            }
+        ];
+    </script>
+    <script src="./fp.min.js"></script>
+    <title>测试</title>
+</head>
+<body>
+    <div class="did"></div>
+</html>

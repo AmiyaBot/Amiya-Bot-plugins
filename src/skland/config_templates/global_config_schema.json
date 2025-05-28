@@ -2,6 +2,23 @@
     "title": "GlobalConfig",
     "type": "object",
     "properties": {
+        "skland": {
+            "title": "Skland",
+            "description": "Skland相关配置",
+            "type": "object",
+            "properties": {
+                "web_timestamp": {
+                    "title": "Web时间戳",
+                    "description": "是否启用Web时间戳",
+                    "type": "boolean"
+                },
+                "timestamp_delay": {
+                    "title": "时间戳延迟",
+                    "description": "时间戳延迟(秒)，用于修正时间戳偏差, 仅在关闭Web时间戳时生效",
+                    "type": "number"
+                }
+            }
+        },
         "arkgacha_kwer_top": {
             "title": "arkgacha.kwer.top",
             "description": "从arkgacha.kwer.top而不是官网获取数据",

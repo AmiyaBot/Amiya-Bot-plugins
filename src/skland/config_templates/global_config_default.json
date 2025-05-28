@@ -1,4 +1,8 @@
 {
+    "skland": {
+        "web_timestamp": false,
+        "timestamp_delay": 2
+    },
     "arkgacha_kwer_top": {
         "enable": false,
         "app_id": "",

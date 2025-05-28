@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='3.5',
+    version='3.6',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -286,7 +286,10 @@ def init_stages():
         if not item['name']:
             continue
 
-        level_data = JsonData.get_json_data((item['levelId'] or 'no_level').lower(), folder='levels')
+        try:
+            level_data = JsonData.get_json_data((item['levelId'] or 'no_level').lower(), folder='levels')
+        except Exception:
+            continue
 
         level = ''
         if '#f#' in stage_id:
