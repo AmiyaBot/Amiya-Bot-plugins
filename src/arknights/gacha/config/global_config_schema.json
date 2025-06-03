@@ -6,6 +6,11 @@
             "title": "十连显示干员名称",
             "description": "在十连时，在消息里同时显示抽到的干员的名称。",
             "type": "boolean"
+        },
+        "allow_custom_pool": {
+            "title": "趣味抽卡",
+            "description": "允许用户切换到自定义卡池并抽卡。",
+            "type": "boolean"
         }
     },
     "required": [
