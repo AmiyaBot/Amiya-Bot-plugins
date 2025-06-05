@@ -15,6 +15,7 @@ custom_pool = 'resource/plugins/gacha/custom-pools'
 custom_pool_image = 'resource/plugins/gacha/custom-pool-images'
 custom_operator = 'resource/plugins/gacha/custom-pool-operators'
 
+
 class CustomOperator:
     name = None
     rarity = None
@@ -23,22 +24,25 @@ class CustomOperator:
     avatar = None
     portrait = None
 
-def get_pool_name(pool:Pool):
+
+def get_pool_name(pool: Pool):
     '''
     获取池子的用于显示给用户的名字
     '''
     return pool.pool_name
 
-def get_pool_id(pool:Pool):
+
+def get_pool_id(pool: Pool):
     '''
     获取池子的Id(用于存入UserGacha)
     '''
     if pool.is_official is None or pool.is_official:
         return pool.id
     else:
-        return "Custom-"+pool.pool_uuid
+        return "Custom-" + pool.pool_uuid
 
-def get_pool_selector(pool:Pool):
+
+def get_pool_selector(pool: Pool):
     '''
     获取用于聊天中选择池子的关键字
     对于官方池子，是池子的名字
@@ -48,7 +52,8 @@ def get_pool_selector(pool:Pool):
         return pool.pool_name
     return "Custom-" + pool.pool_uuid
 
-def get_pool_image(pool:Pool):
+
+def get_pool_image(pool: Pool):
     '''
     获取卡池的题头图片
     '''
@@ -75,6 +80,7 @@ def get_pool_image(pool:Pool):
     else:
         return None
 
+
 def copy_props(pool, data: dict):
     pool.pool_uuid = data.get("pool_uuid", None)
     pool.pool_name = data.get("pool_name", None)
@@ -100,12 +106,13 @@ def copy_props(pool, data: dict):
     pool.pickup_1_rate = data.get("pickup_1_rate", None)
     pool.pickup_s_1 = data.get("pickup_s_1", None)
     pool.version = data.get("version", None)
-    
+
 
 def get_official_pool(pool_id):
     return Pool.get_by_id(pool_id)
 
-def save_image_from_base64(image_base64:str, output_file:str):
+
+def save_image_from_base64(image_base64: str, output_file: str):
     try:
         # 首先移除output_file的扩展名，然后检测磁盘是否有任何图片文件与其匹配
         base_name_with_path, _ = os.path.splitext(output_file)  # 带路径的 base_name
@@ -117,19 +124,19 @@ def save_image_from_base64(image_base64:str, output_file:str):
                 if base_name in file:
                     debug_log(f"已存在图片文件 {file}，不再保存")
                     return os.path.join(root, file)
-        
+
         image_data = base64.b64decode(image_base64)
-                
+
         # 尝试打开图片数据
         image = Image.open(BytesIO(image_data))
         debug_log(f"图片格式为: {image.format}")
-        
+
         # 确定图片的实际扩展名
         actual_extension = image.format.lower()
-        
+
         # 替换 output_file 的扩展名为图片的实际格式
         output_file = os.path.join(dir_name, f"{base_name}.{actual_extension}")
-        
+
         # 保存图片到指定路径
         image.save(output_file)
         debug_log(f"图片已保存为 {output_file}")
@@ -152,10 +159,10 @@ def get_custom_pool(pool_selector):
         file_path = os.path.join(custom_pool, pool_id_str + '.json')
         if not os.path.exists(file_path):
             # 下载先不做
-            debug_log("require download!"+file_path)
+            debug_log("require download!" + file_path)
             return None
         else:
-            debug_log("read from json!"+file_path)
+            debug_log("read from json!" + file_path)
             # 从json文件中读取
             pool = Pool()
             pool.is_official = False
@@ -166,7 +173,7 @@ def get_custom_pool(pool_selector):
 
                 if "pool_image_raw" in data:
                     # 将pool_image_raw的base64转成jpg落盘，注意原图可能为png或bmp
-                    pool_image_filename = os.path.join(custom_pool_image,"Custom-" + pool.pool_uuid + "-PoolImage.png")
+                    pool_image_filename = os.path.join(custom_pool_image, "Custom-" + pool.pool_uuid + "-PoolImage.png")
                     # 如果文件不存在，就保存
                     pool_image_filename = save_image_from_base64(data["pool_image_raw"], pool_image_filename)
                     pool.pool_image = pool_image_filename
@@ -190,17 +197,19 @@ def get_custom_pool(pool_selector):
                     operator_name_hash = hashlib.md5(operator_name.encode()).hexdigest()
 
                     operator_avatar_filename = os.path.join(
-                        custom_operator,
-                        f"Custom{pool.pool_uuid}-Operator-{operator_name_hash}-Avatar.png"
+                        custom_operator, f"Custom{pool.pool_uuid}-Operator-{operator_name_hash}-Avatar.png"
                     )
-                    operator_avatar_filename = save_image_from_base64(operator_dict['avatar_raw'], operator_avatar_filename)                    
+                    operator_avatar_filename = save_image_from_base64(
+                        operator_dict['avatar_raw'], operator_avatar_filename
+                    )
                     operator.avatar = operator_avatar_filename
 
-                    operator_portrait_filename  = os.path.join(
-                        custom_operator,
-                        f"Custom{pool.pool_uuid}-Operator-{operator_name_hash}-Portrait.png"
+                    operator_portrait_filename = os.path.join(
+                        custom_operator, f"Custom{pool.pool_uuid}-Operator-{operator_name_hash}-Portrait.png"
                     )
-                    operator_portrait_filename = save_image_from_base64(operator_dict['portrait_raw'], operator_portrait_filename)
+                    operator_portrait_filename = save_image_from_base64(
+                        operator_dict['portrait_raw'], operator_portrait_filename
+                    )
                     operator.portrait = operator_portrait_filename
 
                     pool.custom_operators[operator.name] = operator
@@ -208,7 +217,9 @@ def get_custom_pool(pool_selector):
                 debug_log("custom_operators_count:" + str(len(pool.custom_operators)))
                 debug_log("they are:")
                 for name, operator in pool.custom_operators.items():
-                    debug_log(f"  - Name: {name}, Rarity: {operator.rarity}, Is Limit: {operator.is_limit}, Class: {operator.classes_code}, Avatar: {operator.avatar}, Portrait: {operator.portrait}")
+                    debug_log(
+                        f"  - Name: {name}, Rarity: {operator.rarity}, Is Limit: {operator.is_limit}, Class: {operator.classes_code}, Avatar: {operator.avatar}, Portrait: {operator.portrait}"
+                    )
 
             return pool
     return None

@@ -15,7 +15,7 @@ from core.database.bot import OperatorConfig, Admin
 
 from .gachaBuilder import GachaBuilder, curr_dir, Pool, bot_caller
 from .box import get_user_box
-from .utils.pool_methods import get_pool_name,get_pool_selector,get_pool_image,get_custom_pool,get_official_pool
+from .utils.pool_methods import get_pool_name, get_pool_selector, get_pool_image, get_custom_pool, get_official_pool
 from .utils.logger import debug_log
 
 
@@ -62,7 +62,7 @@ class GachaPluginInstance(AmiyaBotPluginInstance):
 
 bot = GachaPluginInstance(
     name='明日方舟模拟抽卡',
-    version='2.7',
+    version='2.8',
     plugin_id='amiyabot-arknights-gacha',
     plugin_type='official',
     description='明日方舟抽卡模拟，可自由切换卡池',
@@ -87,11 +87,15 @@ def find_once(reg, text):
 
 def change_pool(item: Pool, user_id=None) -> Tuple[str, str]:
     if item.is_official is None or item.is_official:
-        task = UserGachaInfo.update(gacha_pool=item.id, use_custom_gacha_pool=False).where((UserGachaInfo.user_id == user_id) if user_id else None)
+        task = UserGachaInfo.update(gacha_pool=item.id, use_custom_gacha_pool=False).where(
+            (UserGachaInfo.user_id == user_id) if user_id else None
+        )
         task.execute()
         pool_name = f'{"【限定】" if item.limit_pool != 0 else ""}【{get_pool_name(item)}】'
     else:
-        task = UserGachaInfo.update(custom_gacha_pool=get_pool_selector(item), use_custom_gacha_pool=True).where((UserGachaInfo.user_id == user_id) if user_id else None)
+        task = UserGachaInfo.update(custom_gacha_pool=get_pool_selector(item), use_custom_gacha_pool=True).where(
+            (UserGachaInfo.user_id == user_id) if user_id else None
+        )
         task.execute()
         pool_name = f"【趣味】【{get_pool_name(item)}】"
 
@@ -99,10 +103,8 @@ def change_pool(item: Pool, user_id=None) -> Tuple[str, str]:
 
     debug_log(f'用户{user_id}切换卡池为{pool_name},pic:{pic}')
 
-    text = [
-        f'{"所有" if not user_id else ""}博士的卡池已切换为{pool_name}\n'
-    ]
-    
+    text = [f'{"所有" if not user_id else ""}博士的卡池已切换为{pool_name}\n']
+
     if item.pool_description is not None and item.pool_description != '':
         text.append(item.pool_description)
     else:
@@ -183,12 +185,13 @@ async def _(data: Message):
         f'当前已经抽取了 {user.gacha_break_even} 次而未获得六星干员\n下次抽出六星干员的概率为 {100 - break_even_rate}%'
     )
 
+
 async def switch_to_official_pool(data: Message):
     all_pools: List[Pool] = Pool.select()
 
     # 只保留官方卡池
     all_pools = [item for item in all_pools if (item.is_official is None or item.is_official)]
-    
+
     message = data.text
     all_people = False
     selected = None
@@ -247,13 +250,14 @@ async def switch_to_official_pool(data: Message):
             else:
                 return Chain(data).text('博士，要告诉阿米娅准确的卡池序号哦')
 
+
 async def switch_to_custom_pool(data: Message):
-    
+
     message = data.text
 
     if any_match(message, ['切换', '更换']):
         pool_selector = re.search(r'custom-[a-zA-Z0-9]+', message.lower())
-        
+
         if pool_selector:
             pool_selector = pool_selector.group().strip()
             selected = get_custom_pool(pool_selector)
@@ -271,10 +275,10 @@ async def switch_to_custom_pool(data: Message):
 
 @bot.on_message(group_id='gacha', keywords=['卡池', '池子'], level=5)
 async def _(data: Message):
-    
+
     message = data.text
 
-    if any_match(message, ['趣味']) and False: # 暂时隐藏趣味卡池功能
+    if any_match(message, ['趣味']) and False:  # 暂时隐藏趣味卡池功能
         return await switch_to_custom_pool(data)
     else:
         return await switch_to_official_pool(data)
@@ -298,7 +302,7 @@ async def _(data: Message):
     except Exception as e:
         log.error(e)
         return Chain(data).text('无法初始化卡池')
-    
+
     rates = gc.get_rates()
 
     rarity = 0
@@ -307,15 +311,14 @@ async def _(data: Message):
         # 输出rarity_range
         rates = gc.get_rates()
 
-
         total_weight = 0
         for i in range(1, 7):
             total_weight += rates[i]
-            
-        text = "当前水位："+str(gc.break_even)+"，各星级干员综合出率共计"+str(total_weight)+"：\n"
+
+        text = "当前水位：" + str(gc.break_even) + "，各星级干员综合出率共计" + str(total_weight) + "：\n"
 
         for i in range(1, 7):
-            text += str(i) + "星干员综合出率" + str(round(rates[i],2)) + "%\n"
+            text += str(i) + "星干员综合出率" + str(round(rates[i], 2)) + "%\n"
 
         return Chain(data).text(text)
 
@@ -323,23 +326,30 @@ async def _(data: Message):
         rarity = int(reg_res.group(1))
 
         pool = gc.gacha_operator_pool[rarity]
-        
 
         rate = str(round(rates[rarity]))
-        text = "当前水位："+str(gc.break_even)+"，"+str(rarity) + "星干员综合出率" + rate + "%，其中：\n"
+        text = "当前水位：" + str(gc.break_even) + "，" + str(rarity) + "星干员综合出率" + rate + "%，其中：\n"
 
         total_weight = 0
         for name in pool:
-            total_weight += pool[name] 
+            total_weight += pool[name]
 
         if total_weight == 0:
             text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:0%]\n"
         else:
             for name in pool:
-                text += "[" + name + "，权重：" + str(round(pool[name], 2)) + "，占比:" + str(round( pool[name] * 100 / total_weight ,2)) +  "%]\n"
-
+                text += (
+                    "["
+                    + name
+                    + "，权重："
+                    + str(round(pool[name], 2))
+                    + "，占比:"
+                    + str(round(pool[name] * 100 / total_weight, 2))
+                    + "%]\n"
+                )
 
         return Chain(data).text(text)
+
 
 @bot.on_message(keywords=Equal('同步卡池'))
 async def _(data: Message):

@@ -8,7 +8,7 @@ from core.util import insert_empty
 from core.resource.arknightsGameData import ArknightsGameData
 from .utils.create_gacha_image import create_gacha_image
 from .utils.get_operators import get_operators
-from .utils.pool_methods import get_pool_name,get_custom_pool,get_official_pool
+from .utils.pool_methods import get_pool_name, get_custom_pool, get_official_pool
 from .utils.logger import debug_log
 
 curr_dir = os.path.dirname(__file__)
@@ -29,6 +29,7 @@ class PoolSpOperator(BotBaseModel):
     classes: str = CharField()
     image: str = CharField()
 
+
 class GachaBuilder:
     def __init__(self, data: Message):
         self.data = data
@@ -36,10 +37,10 @@ class GachaBuilder:
 
         if self.user_gacha.use_custom_gacha_pool:
             debug_log(f'使用自定义寻访池' + str(self.user_gacha.custom_gacha_pool))
-            pool : Pool = get_custom_pool(self.user_gacha.custom_gacha_pool)
+            pool: Pool = get_custom_pool(self.user_gacha.custom_gacha_pool)
         else:
             debug_log(f'使用官方寻访池' + str(self.user_gacha.gacha_pool))
-            pool : Pool = get_official_pool(self.user_gacha.gacha_pool)
+            pool: Pool = get_official_pool(self.user_gacha.gacha_pool)
 
         self.pool = pool
 
@@ -59,19 +60,49 @@ class GachaBuilder:
             rarity = item.rarity
             name = item.name
             fillin_operators[rarity].append(name)
-        
+
         # 按顺序获取干员并计算weight
 
         gacha_operator_pool = {}
-        gacha_operator_pool[6] = self.__get_gacha(self.__get_weight(pool.pickup_6),self.__get_weight(pool.pickup_s),self.__get_pickup_rate(pool,6),fillin_operators[6])
-        gacha_operator_pool[5] = self.__get_gacha(self.__get_weight(pool.pickup_5),self.__get_weight(pool.pickup_s_5),self.__get_pickup_rate(pool,5),fillin_operators[5])
-        gacha_operator_pool[4] = self.__get_gacha(self.__get_weight(pool.pickup_4),self.__get_weight(pool.pickup_s_4),self.__get_pickup_rate(pool,4),fillin_operators[4])
-        gacha_operator_pool[3] = self.__get_gacha(self.__get_weight(pool.pickup_3),self.__get_weight(pool.pickup_s_3),self.__get_pickup_rate(pool,3),fillin_operators[3])
-        gacha_operator_pool[2] = self.__get_gacha(self.__get_weight(pool.pickup_2),self.__get_weight(pool.pickup_s_2),self.__get_pickup_rate(pool,2),fillin_operators[2])
-        gacha_operator_pool[1] = self.__get_gacha(self.__get_weight(pool.pickup_1),self.__get_weight(pool.pickup_s_1),self.__get_pickup_rate(pool,1),fillin_operators[1])
-        
+        gacha_operator_pool[6] = self.__get_gacha(
+            self.__get_weight(pool.pickup_6),
+            self.__get_weight(pool.pickup_s),
+            self.__get_pickup_rate(pool, 6),
+            fillin_operators[6],
+        )
+        gacha_operator_pool[5] = self.__get_gacha(
+            self.__get_weight(pool.pickup_5),
+            self.__get_weight(pool.pickup_s_5),
+            self.__get_pickup_rate(pool, 5),
+            fillin_operators[5],
+        )
+        gacha_operator_pool[4] = self.__get_gacha(
+            self.__get_weight(pool.pickup_4),
+            self.__get_weight(pool.pickup_s_4),
+            self.__get_pickup_rate(pool, 4),
+            fillin_operators[4],
+        )
+        gacha_operator_pool[3] = self.__get_gacha(
+            self.__get_weight(pool.pickup_3),
+            self.__get_weight(pool.pickup_s_3),
+            self.__get_pickup_rate(pool, 3),
+            fillin_operators[3],
+        )
+        gacha_operator_pool[2] = self.__get_gacha(
+            self.__get_weight(pool.pickup_2),
+            self.__get_weight(pool.pickup_s_2),
+            self.__get_pickup_rate(pool, 2),
+            fillin_operators[2],
+        )
+        gacha_operator_pool[1] = self.__get_gacha(
+            self.__get_weight(pool.pickup_1),
+            self.__get_weight(pool.pickup_s_1),
+            self.__get_pickup_rate(pool, 1),
+            fillin_operators[1],
+        )
+
         self.gacha_operator_pool = gacha_operator_pool
-        
+
         self.break_even = self.user_gacha.gacha_break_even
         self.rarity_range = {6: 2, 5: 8, 4: 50, 3: 40, 2: 0, 1: 0}
         '''
@@ -81,9 +112,9 @@ class GachaBuilder:
         5 星 8% 区间为 91 ~ 98
         6 星 2% 区间为 99 ~ 100
         '''
-        
+
     @staticmethod
-    def __get_pickup_rate(pool:Pool, rarity:int):
+    def __get_pickup_rate(pool: Pool, rarity: int):
 
         # 针对旧版本池子的特殊处理
         # limit_pool = 2 联合行动 的五星六星都只会出up干员
@@ -136,32 +167,33 @@ class GachaBuilder:
             return pool.pickup_1_rate
 
     @staticmethod
-    def __is_classic_only(pool:Pool):
+    def __is_classic_only(pool: Pool):
         if pool.is_classicOnly is True:
             return True
-        
+
         if pool.limit_pool == 4:
             return True
-        
+
         return False
 
     @staticmethod
-    def __get_gacha(weight_pickup,weight_special,up_rate,fillin):
-        
+    def __get_gacha(weight_pickup, weight_special, up_rate, fillin):
         '''
 
         将两个weight集合加上fillin合并归一化
-        
+
         '''
 
-        debug_log(f'weight_pickups:{len(weight_pickup)}, weight_special:{len(weight_special)}, up_rate:{up_rate}, fillin:{len(fillin)}')
+        debug_log(
+            f'weight_pickups:{len(weight_pickup)}, weight_special:{len(weight_special)}, up_rate:{up_rate}, fillin:{len(fillin)}'
+        )
 
         final_weight = {}
-        
-        if up_rate > 1 :
+
+        if up_rate > 1:
             up_rate = 1
-        
-        if up_rate < 0 :
+
+        if up_rate < 0:
             up_rate = 0
 
         # 因为浮点数精度问题，这里把权重放大10000倍
@@ -179,9 +211,9 @@ class GachaBuilder:
             char_weight = weight_pickup_dict[char_name]
             if char_weight < 0:
                 char_weight = 0
-                
+
             weight_pickup_total += char_weight
-        
+
         if weight_pickup_total == 0:
             for char_name in weight_pickup_dict:
                 final_weight[char_name] = 0
@@ -190,47 +222,46 @@ class GachaBuilder:
                 char_weight = weight_pickup_dict[char_name]
                 if char_weight < 0:
                     char_weight = 0
-                
+
                 final_weight[char_name] = up_rate * scale_up_factor * char_weight / weight_pickup_total
 
         # 然后填充special和fillin
         weight_special_shallow_copy = {}
         for char_name in weight_special:
             weight_special_shallow_copy[char_name] = weight_special[char_name]
-        
+
         for char_name in fillin:
             if char_name in weight_special_shallow_copy:
                 weight_special_shallow_copy[char_name] += 1
             else:
                 weight_special_shallow_copy[char_name] = 1
-            
+
         weight_fillin_total = 0
         for char_name in weight_special_shallow_copy:
             char_weight = weight_special_shallow_copy[char_name]
-            if char_weight <0:
+            if char_weight < 0:
                 char_weight = 0
-                
+
             # 一个干员一旦已经Pickup，fillin的概率就完全失效
             if char_name not in final_weight:
                 weight_fillin_total += char_weight
-        
-        if weight_fillin_total != 0:        
+
+        if weight_fillin_total != 0:
             for char_name in weight_special_shallow_copy:
                 char_weight = weight_special_shallow_copy[char_name]
-                if char_weight <0:
+                if char_weight < 0:
                     char_weight = 0
-                
+
                 weight_to_add = (1 - up_rate) * scale_up_factor * char_weight / weight_fillin_total
-                
+
                 # 一个干员一旦已经Pickup，fillin的概率就完全失效
                 if char_name not in final_weight:
                     final_weight[char_name] = weight_to_add
-        
+
         return final_weight
 
-
     @staticmethod
-    def __get_weight(pickups:Union[CharField, str]):
+    def __get_weight(pickups: Union[CharField, str]):
         operator_weights = {}
 
         if pickups is None:
@@ -241,13 +272,13 @@ class GachaBuilder:
             char_name = name
             if '|' in name:
                 char_weight = int(char_name.split("|")[1])
-                char_name =char_name.split("|")[0]
+                char_name = char_name.split("|")[0]
 
             if char_name not in operator_weights:
                 operator_weights[char_name] = char_weight
             else:
                 operator_weights[char_name] += char_weight
-        
+
         return operator_weights
 
     def continuous_mode(self, times, coupon, point):
@@ -354,17 +385,16 @@ class GachaBuilder:
 
             operator_info = self.__get_operator(name)
 
-
             if operator_info is not None:
-                
+
                 # icon_file = f'{curr_dir}/gacha/question_mark.png'
                 icon_file = None
-                
+
                 if "avatar" in operator_info:
                     if operator_info["avatar"] is not None:
                         debug_log(f"avatar icon for {name}:" + operator_info["avatar"])
                         icon_file = operator_info["avatar"]
-                
+
                 if icon_file is not None:
                     icons.append(
                         {
@@ -375,7 +405,6 @@ class GachaBuilder:
                     )
 
                 operators_info[name] = operator_info
-                
 
         if times == 10:
             result_list = []
@@ -428,9 +457,8 @@ class GachaBuilder:
         if self.break_even > 50:
             break_even_rate += (self.break_even - 50) * 2
 
-
         # 计算水位提升量
-        shift_up_amount = break_even_rate - rates[6]        
+        shift_up_amount = break_even_rate - rates[6]
         rates[6] = break_even_rate
 
         # 6星概率提高，其他星级概率降低，从低到高挨个扣除，直到break_even_rate扣完
@@ -445,7 +473,6 @@ class GachaBuilder:
         return rates
 
     def start_gacha(self, times, coupon, point):
-
         '''
         抽卡核心函数，continuous_mode和detailed_mode的实际逻辑位置。
         '''
@@ -454,7 +481,7 @@ class GachaBuilder:
 
         for i in range(0, times):
             self.break_even += 1
-            
+
             rates = self.get_rates()
 
             rates_keys = list(rates.keys())
@@ -479,10 +506,9 @@ class GachaBuilder:
             self.set_box(operators)
 
         return operators
-    
+
     def choose_operator(self, rarity):
         char_pool = self.gacha_operator_pool[rarity]
-
 
         names = list(char_pool.keys())
         weights = list(char_pool.values())
@@ -492,33 +518,33 @@ class GachaBuilder:
 
         return chosen_name
 
-    def __get_operator(self,name):
+    def __get_operator(self, name):
         use_official = True
         if self.pool.is_official == False:
             if hasattr(self.pool, "custom_operators"):
                 if name in self.pool.custom_operators:
                     use_official = False
-        
+
         if use_official:
             debug_log(f'使用官方干员数据{name}')
             operator_info = None
             game_data = ArknightsGameData
             if name in game_data.operators:
-                    opt = game_data.operators[name]
-                    operator_info = {
-                        'portrait': None,
-                        'rarity': opt.rarity,
-                        'class': opt.classes_code.lower(),
-                        'avatar': None
-                    }
-                    portrait_path = f'resource/gamedata/portrait/{opt.id}#1.png'
-                    avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
-                    if os.path.exists(avatar_path):
-                        debug_log(f'找到官方干员图标{avatar_path}')
-                        operator_info["avatar"] = avatar_path
-                    if os.path.exists(portrait_path):
-                        debug_log(f'找到官方干员肖像{portrait_path}')
-                        operator_info["portrait"] = portrait_path
+                opt = game_data.operators[name]
+                operator_info = {
+                    'portrait': None,
+                    'rarity': opt.rarity,
+                    'class': opt.classes_code.lower(),
+                    'avatar': None,
+                }
+                portrait_path = f'resource/gamedata/portrait/{opt.id}#1.png'
+                avatar_path = f'resource/gamedata/avatar/{opt.id}#1.png'
+                if os.path.exists(avatar_path):
+                    debug_log(f'找到官方干员图标{avatar_path}')
+                    operator_info["avatar"] = avatar_path
+                if os.path.exists(portrait_path):
+                    debug_log(f'找到官方干员肖像{portrait_path}')
+                    operator_info["portrait"] = portrait_path
             return operator_info
         else:
             debug_log(f'使用自定义干员数据{name}')
@@ -529,7 +555,7 @@ class GachaBuilder:
                     'portrait': None,
                     'rarity': opt.rarity,
                     'class': opt.classes_code.lower(),
-                    'avatar': None
+                    'avatar': None,
                 }
                 if opt.portrait is not None:
                     debug_log(f'找到自定义干员肖像{opt.portrait}')
@@ -561,6 +587,3 @@ class GachaBuilder:
         box_res = '|'.join([':'.join([str(i) for i in item]) for n, item in box_map.items()])
 
         OperatorBox.update(operator=box_res).where(OperatorBox.user_id == self.data.user_id).execute()
-
-
-

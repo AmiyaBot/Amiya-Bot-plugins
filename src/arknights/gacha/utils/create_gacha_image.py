@@ -1,4 +1,3 @@
-
 import os
 from io import BytesIO
 from PIL import Image, ImageDraw
@@ -6,6 +5,7 @@ from .logger import debug_log
 
 
 curr_dir = os.path.dirname(__file__)
+
 
 def create_gacha_image(result: list):
     image = Image.open(f'{curr_dir}/../gacha/bg.png')
