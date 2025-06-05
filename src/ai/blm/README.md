@@ -474,3 +474,4 @@ Logo是用StableDiffusion插件跑出来的。
 | 1.2.3 | 引入assistant  |
 | 1.2.6 | 分开GPT的基础模型部分配置和Assistant配置 |
 | 1.3.0 | 删除了一些GPT不再提供的模型。新增DeepSeek支持 |
+| 1.4.0 | 新增OpenAI兼容模型 |

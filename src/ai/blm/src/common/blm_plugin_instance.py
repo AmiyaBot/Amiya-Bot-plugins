@@ -15,6 +15,9 @@ from ..chat_gpt.gpt_assistant_adapter import ChatGPTAssistantAdapter
 from ..ernie.ernie_adapter import ERNIEAdapter
 from ..ernie.qianfan_adapter import QianFanAdapter
 from ..deepseek.deekseek_adapter import DeepSeekAdapter
+from ..openai_compatible.openai_compatible_adapter import OpenAICompatibleAdapter
+
+from ..mcp.mcp_client_manager import MCPClientManager
 
 from .extract_json import extract_json
 
@@ -83,6 +86,14 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         deepseek_config = self.get_config("DeepSeek")
         if deepseek_config and deepseek_config["enable"]:
             self.adapters.append(DeepSeekAdapter(self))
+
+        openai_compatible_config = self.get_config("OpenAISDKCompatible")
+        if openai_compatible_config and openai_compatible_config["enable"]:
+            self.adapters.append(OpenAICompatibleAdapter(self))
+
+        mcp_config = self.get_config("MCP")
+        if mcp_config and mcp_config["enable"]:
+            self.mcp_manager = MCPClientManager(self)
 
         self.model_list()
 

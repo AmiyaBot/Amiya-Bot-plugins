@@ -1,4 +1,8 @@
 {
+    "OpenAISDKCompatible": {
+        "enable": false,
+        "models":[]
+    },
     "DeepSeek":{
         "enable": false
     },
