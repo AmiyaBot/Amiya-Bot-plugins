@@ -1,12 +1,12 @@
 import json
 import os
-from typing import List
 from PIL import Image
 from io import BytesIO
 import base64
 import hashlib
 
 from core.database.bot import Pool
+from core.database.user import UserGachaInfo
 
 from .logger import debug_log
 
@@ -109,7 +109,11 @@ def copy_props(pool, data: dict):
 
 
 def get_official_pool(pool_id):
-    return Pool.get_by_id(pool_id)
+    try:
+        return Pool.get_by_id(pool_id)
+    except:
+        # 无法找到卡池，大概率为卡池同步后被删除
+        return None
 
 
 def save_image_from_base64(image_base64: str, output_file: str):
@@ -223,3 +227,14 @@ def get_custom_pool(pool_selector):
 
             return pool
     return None
+
+
+def change_to_latest_pool(user_id: str) -> Pool:
+    '''
+    切换到最新的官方卡池
+    '''
+    # 获取最新的官方卡池
+    latest_pool = Pool.select().where(Pool.is_official == True).order_by(Pool.id.desc()).first()
+    # 更新用户的gacha_pool
+    UserGachaInfo.update(gacha_pool=latest_pool.id).where(UserGachaInfo.user_id == user_id).execute()
+    return latest_pool
