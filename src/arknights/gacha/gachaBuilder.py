@@ -8,7 +8,7 @@ from core.util import insert_empty
 from core.resource.arknightsGameData import ArknightsGameData
 from .utils.create_gacha_image import create_gacha_image
 from .utils.get_operators import get_operators
-from .utils.pool_methods import get_pool_name, get_custom_pool, get_official_pool
+from .utils.pool_methods import get_pool_name, get_custom_pool, get_official_pool, change_to_latest_pool
 from .utils.logger import debug_log
 
 curr_dir = os.path.dirname(__file__)
@@ -41,6 +41,9 @@ class GachaBuilder:
         else:
             debug_log(f'使用官方寻访池' + str(self.user_gacha.gacha_pool))
             pool: Pool = get_official_pool(self.user_gacha.gacha_pool)
+            if pool is None:
+                debug_log(f'卡池不存在，切换到最新卡池')
+                pool = change_to_latest_pool(data.user_id)
 
         self.pool = pool
 
