@@ -30,13 +30,15 @@
             <div>
                 <div style="font-size: 28px;">{{ data.status.name }}</div>
                 <info-span :value="charsNum()">干员招募总数量</info-span>
+                <info-span :value="totalScore(data.chars)">练度总分</info-span>
             </div>
         </div>
-        <template v-for="charsList in chars">
+        <template v-for="charsList in chars" v-if="charsList.rarity > 2">
             <div class="star-title" :class="'r' + charsList.rarity">
                 <div class="star"
                      :style="{ backgroundImage: 'url(./assets/rarity_star/' + charsList.rarity + '.png)' }"></div>
                 <div>{{ Number(charsList.rarity) + 1 }} 星干员练度 TOP 10</div>
+                <info-span style="margin-top: 10px" :value="totalScore(charsList.chars)">练度总分</info-span>
                 <table>
                     <tr>
                         <td>
@@ -159,24 +161,15 @@
         methods: {
             init(data) {
                 this.$set(this, 'data', data)
-                this.initChars(0, 3)
+                this.initChars(0, 0)
             },
             initChars(minEvolvePhase = 0, minRarity = 0) {
                 const chars = {}
                 const result = []
                 const counts = {}
 
-                const charWeight = (char) => {
-                    const x = this.data.limitChars.indexOf(char.charInfo.name) >= 0 ? 5 : 1
-                    const lv = char.level + (char.evolvePhase + 1) * 100
-                    const pr = char.potentialRank + 1
-                    const sp = char.skills.reduce((sum, n) => sum + n.specializeLevel * 20, 0)
-                    const eq = char.equip.reduce((max, n) => Math.max(max, n.level), 0) - 1
-
-                    return lv + (pr + sp + eq) * x
-                }
-
-                for (const item of this.data.chars) {
+                for (const k in this.data.chars) {
+                    const item = this.data.chars[k]
                     const info = this.data.charInfoMap[item.charId]
                     if (item.evolvePhase >= minEvolvePhase && info.rarity >= minRarity) {
 
@@ -210,18 +203,20 @@
                             counts[info.rarity].eq3count += Number(skill.level === 3)
                         }
 
+                        this.data.chars[k].score = this.charWeight(item, info)
+
                         chars[info.rarity].push(
                             {
                                 ...item,
                                 charInfo: info,
-                                equipMax: this.equip(item.defaultEquipId)
+                                equipMax: this.equip(item.defaultEquipId),
                             }
                         )
                     }
                 }
 
                 for (const r in chars) {
-                    chars[r].sort((a, b) => charWeight(b) - charWeight(a))
+                    chars[r].sort((a, b) => b.score - a.score)
                     result.push(
                         {
                             rarity: r,
@@ -232,6 +227,24 @@
                 }
 
                 this.$set(this, 'chars', result.sort((a, b) => b.rarity - a.rarity))
+            },
+            totalScore(chars) {
+                console.log(chars)
+                return chars.reduce((sum, n) => sum + n.score, 0)
+            },
+            charWeight(char, info) {
+                // 限定干员得分
+                const x = this.data.limitChars.indexOf(info.name) >= 0 ? 2 : 1
+                // 等级得分
+                const lv = char.level + (char.evolvePhase + 1) * 100
+                // 潜能得分（赠送干员除外）
+                const pr = char.potentialRank * (this.data.freeChars.indexOf(info.name) >= 0 ? 1 : info.rarity * 5)
+                // 技能练度得分
+                const sp = char.skills.reduce((sum, n) => sum + n.specializeLevel * 20, 0)
+                // 模组得分
+                const eq = char.equip.reduce((max, n) => Math.max(max, n.level), 0) - 1
+
+                return lv + sp + eq + pr * x
             },
             equip(equipId) {
                 if (!equipId) {

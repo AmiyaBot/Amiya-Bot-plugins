@@ -1,0 +1,32 @@
+{
+    "APP_CODE": "4ca99fa6b56cc2ba",
+    "GRANT_CODE_URL": "https://as.hypergryph.com/user/oauth2/v2/grant",
+    "GACHA_URL": "https://ak.hypergryph.com/user/api/inquiry/gacha",
+    "CRED_CODE_URL": "https://zonai.skland.com/web/v1/user/auth/generate_cred_by_code",
+    "REFRESH_URL": "https://zonai.skland.com/web/v1/auth/refresh",
+    "CRED_CHECK_URL": "https://zonai.skland.com/api/v1/user/check",
+    "SIGN_URL": "https://zonai.skland.com/api/v1/game/attendance",
+    "BINDING_URL": "https://zonai.skland.com/api/v1/game/player/binding",
+    "USER_INFO_URL": "https://zonai.skland.com/api/v1/game/player/info",
+    "PLAYER_URL": "https://zonai.skland.com/api/v1/game/cultivate/player",
+    "CHARACTER_URL": "https://zonai.skland.com/api/v1/game/cultivate/characte",
+    "REQUEST_HEADERS_BASE": {
+        "User-Agent": "Skland/1.0.1 (com.hypergryph.skland; build:100001014; Android 31; ) Okhttp/4.11.0",
+        "Accept-Encoding": "gzip",
+        "Connection": "close"
+    },
+    "SIGN_HEADERS_BASE": {
+        "platform": "",
+        "timestamp": "",
+        "dId": "",
+        "vName": ""
+    },
+    "SKLAND_SM_CONFIG": {
+        "organization": "UWXspnCCJN4sfYlNfqps",
+        "appId": "default",
+        "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCmxMNr7n8ZeT0tE1R9j/mPixoinPkeM+k4VGIn/s0k7N5rJAfnZ0eMER+QhwFvshzo0LNmeUkpR8uIlU/GEVr8mN28sKmwd2gpygqj0ePnBmOW4v0ZVwbSYK+izkhVFk2V/doLoMbWy6b+UnA8mkjvg0iYWRByfRsK2gdl7llqCwIDAQAB",
+        "protocol": "https",
+        "apiHost": "fp-it.portal101.cn",
+        "apiPath": "/deviceprofile/v4"
+    }
+}

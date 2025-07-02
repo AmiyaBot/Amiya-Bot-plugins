@@ -48,9 +48,8 @@
             </template>
             <div class="title">能力</div>
             <div>
-                <div v-for="item in data.info.abilityList" :class="'ability-' + item.textFormat">
-                    {{ item.text }}
-                </div>
+                <div v-for="item in data.info.abilityList" :class="'ability-' + item.textFormat"
+                     v-html="ability(item.text)"></div>
             </div>
             <div class="title">属性</div>
             <div class="attrs-content">
@@ -67,6 +66,8 @@
                         <div class="attr" title="重量等级">{{ item.massLevel }}</div>
                         <div class="attr" title="攻击距离">{{ item.rangeRadius }}</div>
                         <div class="attr" title="进点损失">{{ item.lifePointReduce }}</div>
+                    </div>
+                    <div class="attrs" style="margin-top: 10px">
                         <div class="attr" title="晕眩免疫" :class="{ on: item.stunImmune }">
                             <span>{{ item.stunImmune ? '有' : '无' }}</span>
                         </div>
@@ -87,6 +88,12 @@
                         </div>
                         <div class="attr" title="恐惧免疫" :class="{ on: item.fearedImmune }">
                             <span>{{ item.fearedImmune ? '有' : '无' }}</span>
+                        </div>
+                        <div class="attr" title="麻痹免疫" :class="{ on: item.palsyImmune }">
+                            <span>{{ item.palsyImmune ? '有' : '无' }}</span>
+                        </div>
+                        <div class="attr" title="诱导免疫" :class="{ on: item.attractImmune }">
+                            <span>{{ item.attractImmune ? '有' : '无' }}</span>
                         </div>
                     </div>
                 </div>
