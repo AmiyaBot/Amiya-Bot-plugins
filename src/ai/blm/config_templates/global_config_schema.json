@@ -18,6 +18,55 @@
                 "..."
             ]
         },
+        "OpenAISDKCompatible": {
+            "title": "OpenAI SDK兼容",
+            "description": "任何兼容OpenAI SDK的第三方模型",
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "title": "启用",
+                    "description": "启用后，将向其他插件提供模型列表。",
+                    "type": "boolean"
+                },
+                "models": {
+                    "title": "模型列表",
+                    "description": "提供一个模型列表",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "title": "模型名称",
+                                "description": "模型的名称。",
+                                "type": "string"
+                            },
+                            "description": {
+                                "title": "显示名称",
+                                "description": "模型在其他插件的显示名称。",
+                                "type": "string"
+                            },
+                            "base_url": {
+                                "title": "Url",
+                                "description": "API的基础路径，由服务提供商给您。",
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "key": {
+                                "title": "API Key",
+                                "description": "服务提供商给您的API Key。",
+                                "type": "string"
+                            },
+                            "extra_headers": {
+                                "title": "额外的HTTP头",
+                                "description": "可选的额外HTTP头，格式为JSON字符串，例如{\"HTTP-Referer\": \"<YOUR_SITE_URL>\"}。",
+                                "type": "string"
+                            }
+                        },
+                        "required": ["name"]
+                    }
+                }
+            }
+        },
         "DeepSeek": {
             "title": "DeepSeek",
             "description": "\"赛博珍珠港\"",
