@@ -5,12 +5,12 @@ import shutil
 import random
 import asyncio
 import platform
+import attridict
 
 from io import BytesIO
 from PIL import Image
 from jieba import posseg
 from typing import List
-from attrdict import AttrDict
 from itertools import combinations
 from amiyabot import event_bus
 from amiyabot.network.download import download_async
@@ -179,7 +179,7 @@ def get_baidu():
             'apiKey': bot.get_config('apiKey') or '',
             'secretKey': bot.get_config('secretKey') or '',
         }
-        baidu = BaiduCloud(AttrDict(conf))
+        baidu = BaiduCloud(idict(conf))
     else:
         baidu = BaiduCloud(read_yaml(config_path))
 
