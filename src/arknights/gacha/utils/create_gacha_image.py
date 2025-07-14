@@ -51,7 +51,7 @@ def create_gacha_image(result: list):
         x += 82
 
     x, y = image.size
-    image = image.resize((int(x * 0.8), int(y * 0.8)), Image.ANTIALIAS)
+    image = image.resize((int(x * 0.8), int(y * 0.8)), Image.LANCZOS)
 
     container = BytesIO()
     image.save(container, quality=80, format='PNG')
