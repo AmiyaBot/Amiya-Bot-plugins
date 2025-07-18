@@ -9,7 +9,8 @@ from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core.database.group import GroupSetting
 from core.database.messages import *
-from core.util import TimeRecorder, AttrDict, find_most_similar
+from attrdict import AttrDict
+from core.util import TimeRecorder, find_most_similar
 from core import send_to_console_channel, Message, Chain, AmiyaBotPluginInstance, bot as main_bot
 
 from .helper import WeiboUser
