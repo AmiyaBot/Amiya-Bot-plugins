@@ -25,7 +25,11 @@
                     "title": "图片缓存目录",
                     "description": "微博图片缓存的目录，可以为绝对路径",
                     "type": "string",
-                    "default": "log/weibo"
+                    "default": "logs/weibo"
+                },
+                "cookie": {
+                    "title": "Cookie",
+                    "type": "string"
                 }
             }
         },
