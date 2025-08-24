@@ -36,6 +36,7 @@ class WeiboUser:
             'Content-Type': 'application/json; charset=utf-8',
             'Referer': f'https://m.weibo.cn/u/{weibo_id}',
             'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Cookie': f'SUB={setting.cookie}'
         }
         self.url = 'https://m.weibo.cn/api/container/getIndex'
         self.weibo_id = weibo_id
