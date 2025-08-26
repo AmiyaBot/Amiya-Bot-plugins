@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from amiyabot.network.download import download_async
 from amiyabot.network.httpRequests import http_requests
 from core.util import remove_xml_tag, char_seat, create_dir
+from amiyabot.builtin.lib.browserService import basic_browser_service
 
 ua = None
 try:
@@ -26,6 +27,8 @@ class WeiboContent:
 
 
 class WeiboUser:
+    cookie = None  # 静态变量存储weibo cookie
+    
     def __init__(self, weibo_id, setting):
         self.headers = {
             'User-Agent': (
@@ -43,9 +46,26 @@ class WeiboUser:
         self.user_name = ''
 
     async def get_result(self, url):
+        if WeiboUser.cookie == None:
+            await WeiboUser.generate_cookie()
+        
+        # 更新或向headers中加入cookie
+        if WeiboUser.cookie:
+            cookie_str = '; '.join([f"{cookie['name']}={cookie['value']}" for cookie in WeiboUser.cookie])
+            self.headers['Cookie'] = cookie_str
         res = await http_requests.get(url, headers=self.headers)
         if res and res.response.status == 200:
             return res.json
+        
+        # 失败则重新获取cookie并更新headers
+        await WeiboUser.generate_cookie()
+        if WeiboUser.cookie:
+            cookie_str = '; '.join([f"{cookie['name']}={cookie['value']}" for cookie in WeiboUser.cookie])
+            self.headers['Cookie'] = cookie_str
+            # 重新请求
+            res = await http_requests.get(url, headers=self.headers)
+            if res and res.response.status == 200:
+                return res.json
 
     def __url(self, container_id=None):
         c_id = f'&containerid={container_id}' if container_id else ''
@@ -171,3 +191,29 @@ class WeiboUser:
             content.pics_urls.append(pic_url)
 
         return content
+
+    @staticmethod
+    async def generate_cookie() -> None:
+        browser = basic_browser_service.browser
+        context = await browser.new_context()
+        page = await context.new_page()
+        
+        try:
+            await page.goto("https://weibo.com")
+            # 等待页面加载5秒
+            await page.wait_for_timeout(5000)
+            
+            # 获取所有cookie
+            cookies = await context.cookies()
+            
+            # 过滤所有domain为weibo.com的cookie
+            weibo_cookies = [cookie for cookie in cookies if cookie.get('domain') == '.weibo.com' or cookie.get('domain') == 'weibo.com']
+            
+            # 存储到静态变量
+            WeiboUser.cookie = weibo_cookies
+        except Exception as e:
+            print(f"获取cookie时发生错误: {e}")
+            return None
+        finally:
+            await page.close()
+            await context.close()
