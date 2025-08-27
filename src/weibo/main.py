@@ -9,8 +9,13 @@ from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
 
 from core.database.group import GroupSetting
 from core.database.messages import *
-from core.util import TimeRecorder, AttrDict, find_most_similar
+from core.util import TimeRecorder, find_most_similar
 from core import send_to_console_channel, Message, Chain, AmiyaBotPluginInstance, bot as main_bot
+
+try:
+    from core.util import attridict
+except ImportError:
+    from core.util import AttrDict as attridict
 
 from .helper import WeiboUser
 
@@ -109,7 +114,7 @@ async def _(data: Message):
 @bot.on_message(group_id='weibo', keywords=['微博'])
 async def _(data: Message):
     listens: list = bot.get_config('listen')
-    setting = AttrDict(bot.get_config('setting'))
+    setting = attridict(bot.get_config('setting'))
 
     weibo: Optional[WeiboUser] = None
 
@@ -177,7 +182,7 @@ async def _(_):
     listens: list = bot.get_config('listen')
     for listen in listens:
         user = listen['uid']
-        weibo = WeiboUser(user, AttrDict(bot.get_config('setting')))
+        weibo = WeiboUser(user, attridict(bot.get_config('setting')))
         new_id = await weibo.get_weibo_id(0)
         if not new_id:
             continue
