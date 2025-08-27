@@ -6,11 +6,15 @@ import random
 import asyncio
 import platform
 
+try:
+    from core.util import attridict
+except ImportError:
+    from core.util import AttrDict as attridict
+
 from io import BytesIO
 from PIL import Image
 from jieba import posseg
 from typing import List
-from attrdict import AttrDict
 from itertools import combinations
 from amiyabot import event_bus
 from amiyabot.network.download import download_async
@@ -149,7 +153,7 @@ class RecruitPluginInstance(AmiyaBotPluginInstance):
 
 bot = RecruitPluginInstance(
     name='明日方舟公招查询',
-    version='2.9',
+    version='3.0',
     plugin_id='amiyabot-arknights-recruit',
     plugin_type='official',
     description='可通过指令或图像识别规划公招标签组合',
@@ -179,7 +183,7 @@ def get_baidu():
             'apiKey': bot.get_config('apiKey') or '',
             'secretKey': bot.get_config('secretKey') or '',
         }
-        baidu = BaiduCloud(AttrDict(conf))
+        baidu = BaiduCloud(attridict(conf))
     else:
         baidu = BaiduCloud(read_yaml(config_path))
 
