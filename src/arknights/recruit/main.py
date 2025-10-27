@@ -242,7 +242,7 @@ async def get_ocr_result(data: Message):
 
     if baidu.enable:
         res = await baidu.basic_accurate(data.image[0])
-        if not res:
+        if not res or 'words_result' not in res:
             res = await baidu.basic_general(data.image[0])
 
         if res and 'words_result' in res:
