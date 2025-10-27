@@ -15,7 +15,7 @@ from .database import ChannelRecord
 curr_dir = os.path.dirname(__file__)
 bot = AmiyaBotPluginInstance(
     name='功能管理',
-    version='2.6',
+    version='2.7',
     plugin_id='amiyabot-functions',
     plugin_type='official',
     description='管理已安装的插件功能',
@@ -63,11 +63,12 @@ async def _(data: Message, factory_name: str, _):
         else:
             disabled_remind[data.channel_id][factory_name] += 1
 
-        if disabled_remind[data.channel_id][factory_name] >= bot.get_config('disabledRemindRate'):
-            disabled_remind[data.channel_id][factory_name] = 0
-            plugin = main_bot.plugins[factory_name]
+        if bot.get_config('disabledRemind'):
+            if disabled_remind[data.channel_id][factory_name] >= bot.get_config('disabledRemindRate'):
+                disabled_remind[data.channel_id][factory_name] = 0
+                plugin = main_bot.plugins[factory_name]
 
-            await data.send(Chain(data).text(f'【{plugin.name}】功能已关闭，请管理员开启后再使用~'))
+                await data.send(Chain(data).text(f'【{plugin.name}】功能已关闭，请管理员开启后再使用~'))
 
     return not bool(disabled)
 

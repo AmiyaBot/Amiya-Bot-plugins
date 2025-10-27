@@ -1,4 +1,5 @@
 {
     "newChannelDisableAll": false,
+    "disabledRemind": true,
     "disabledRemindRate": 3
 }

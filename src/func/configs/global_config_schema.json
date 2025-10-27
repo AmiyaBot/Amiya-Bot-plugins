@@ -9,6 +9,12 @@
             "type": "boolean",
             "default": false
         },
+        "disabledRemind": {
+            "title": "功能关闭提醒",
+            "description": "在功能关闭后，试图使用这个功能时，发送一个提醒",
+            "type": "boolean",
+            "default": true
+        },
         "disabledRemindRate": {
             "title": "功能关闭提醒频率",
             "description": "在功能关闭后，试图使用这个功能数次时，发送一个提醒",
