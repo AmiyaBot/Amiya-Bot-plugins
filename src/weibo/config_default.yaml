@@ -2,6 +2,7 @@ setting:
     checkRate: 30
     sendGIF: false
     imagesCache: log/weibo
+    remote: false
 
 sendInterval: 0.2
 sendAsync: false

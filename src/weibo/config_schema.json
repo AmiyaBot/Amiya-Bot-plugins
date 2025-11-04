@@ -26,6 +26,12 @@
                     "description": "微博图片缓存的目录，可以为绝对路径",
                     "type": "string",
                     "default": "log/weibo"
+                },
+                "remote": {
+                    "title": "接口转发",
+                    "description": "使用CDN接口获取微博推送(可能会有延迟)。重要：本选项仅在本地拉取微博报错时开启！",
+                    "type": "boolean",
+                    "default": false
                 }
             }
         },

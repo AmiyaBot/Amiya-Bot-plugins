@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from amiyabot.network.download import download_async
 from amiyabot.network.httpRequests import http_requests
 from core.util import remove_xml_tag, char_seat, create_dir
+from core.resource import remote_config
 from amiyabot.builtin.lib.browserService import basic_browser_service
 
 ua = None
@@ -40,12 +41,27 @@ class WeiboUser:
             'Referer': f'https://m.weibo.cn/u/{weibo_id}',
             'Accept-Language': 'zh-CN,zh;q=0.9',
         }
+        self.query = remote_config.remote.plugin + '/api/v1/weibo'
         self.url = 'https://m.weibo.cn/api/container/getIndex'
         self.weibo_id = weibo_id
         self.setting = setting
         self.user_name = ''
 
-    async def get_result(self, url):
+    async def get_result(self, url: str) -> dict:
+        if self.setting.remote:
+            return await self.remote_get_result(url)
+        else:
+            return await self.local_get_result(url)
+        
+    async def remote_get_result(self, url: str) -> dict:
+        params = {
+            'url': f'{url}&timestamp={int(time.time())}'
+        }
+        res = await http_requests.get(self.query, params=params)
+        if res and res.response.status == 200:
+            return res.json 
+        
+    async def local_get_result(self, url: str) -> dict:
         if WeiboUser.cookie == None:
             await WeiboUser.generate_cookie()
         
