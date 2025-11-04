@@ -59,7 +59,7 @@ class WeiboUser:
         }
         res = await http_requests.get(self.query, params=params)
         if res and res.response.status == 200:
-            return res.json 
+            return res.json['data']
         
     async def local_get_result(self, url: str) -> dict:
         if WeiboUser.cookie == None:
