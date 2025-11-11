@@ -158,12 +158,14 @@
                         <div>{{ item.skill_name }}</div>
                     </div>
                     <div style="width: calc(100% - 240px);padding: 0 10px">
-                        <div class="skill-type">
+                        <div class="skill-type" style="margin-bottom: 5px">
                             <div :class="'t' + skillItem(item).sp_type">
                                 {{ spType[skillItem(item).sp_type] }}
                             </div>
                             <div>{{ skillType[skillItem(item).skill_type] }}</div>
-                            <div>技力 {{ skillItem(item).sp_init }}/{{ skillItem(item).sp_cost }}</div>
+                            <div v-if="skillItem(item).sp_cost">
+                                技力 {{ skillItem(item).sp_init }}/{{ skillItem(item).sp_cost }}
+                            </div>
                             <div v-if="skillItem(item).duration > 0">持续 {{ skillItem(item).duration }} 秒</div>
                         </div>
                         <div class="skill-desc" v-html="colorSpan(skillItem(item).description)"></div>

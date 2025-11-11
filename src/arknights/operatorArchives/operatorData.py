@@ -1,3 +1,5 @@
+import os
+import json
 import copy
 
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
@@ -212,3 +214,19 @@ class OperatorData:
             text += item['uniEquipDesc'].replace('\n', '<br>')
 
         return text
+
+
+class JsonData:
+    cache = {}
+
+    @classmethod
+    def get_json_data(cls, name: str, folder: str = 'excel'):
+        if name not in cls.cache:
+            path = f'resource/gamedata/gamedata/{folder}/{name}.json'
+            if os.path.exists(path):
+                with open(path, mode='r', encoding='utf-8') as src:
+                    cls.cache[name] = json.load(src)
+            else:
+                return {}
+
+        return cls.cache[name]

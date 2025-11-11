@@ -118,31 +118,49 @@ class OperatorImpl(Operator):
         return detail, self.data['favorKeyFrames'][-1]['data']
 
     def tokens(self):
-        token_list = []
+        skill_table = JsonData.get_json_data('skill_table')
+        character_table = JsonData.get_json_data('character_table')
 
-        if self.data.get('displayTokenDict'):
-            for key in self.data['displayTokenDict'].keys():
-                if key in Collection.tokens_map:
-                    token_list.append(Collection.tokens_map[key])
+        token_list = {}
 
-        if self.data.get('skills'):
-            for item in self.data['skills']:
-                if item['overrideTokenKey'] and item['overrideTokenKey'] in Collection.tokens_map:
-                    token_id = Collection.tokens_map[item['overrideTokenKey']]
-                    if token_id not in token_list:
-                        token_list.append(token_id)
+        def detail(item: Token):
+            data = character_table.get(item.id)
+            skills = {}
 
-        return [
-            {
+            for sk in data['skills']:
+                if sk['skillId'] not in skills:
+                    skills[sk['skillId']] = {**skill_table[sk['skillId']]}
+                    skills[sk['skillId']]['levels'] = [
+                        {**nn, 'description': parse_template(nn['blackboard'], nn['description'])}
+                        for nn in skills[sk['skillId']]['levels']
+                    ]
+
+            return {
                 'id': item.id,
                 'type': item.type,
                 'name': item.name,
                 'en_name': item.en_name,
                 'description': item.description,
                 'attr': item.attr,
+                'talents': data['talents'],
+                'skills': skills,
+                'data': data,
             }
-            for item in token_list
-        ]
+
+        if self.data.get('displayTokenDict'):
+            for key in self.data['displayTokenDict'].keys():
+                if key in Collection.tokens_map:
+                    token = Collection.tokens_map[key]
+                    token_list[token.id] = detail(token)
+
+        if self.data.get('skills'):
+            for skill in self.data['skills']:
+                if skill['overrideTokenKey'] and skill['overrideTokenKey'] in Collection.tokens_map:
+                    token = Collection.tokens_map[skill['overrideTokenKey']]
+                    if token.id not in token_list:
+                        token_list[token.id] = detail(token)
+
+        return token_list
 
     def talents(self):
         talents = []
@@ -335,6 +353,7 @@ class OperatorImpl(Operator):
 
             skins.append(
                 {
+                    'char_name': self.name,
                     'skin_id': skin_id,
                     'skin_key': skin_key,
                     'skin_name': skin_data['skinName'] or skin_name,
@@ -344,6 +363,8 @@ class OperatorImpl(Operator):
                     'skin_usage': skin_data['usage'] or skin_name + '立绘',
                     'skin_desc': skin_data['description'] or '',
                     'skin_source': skin_data['obtainApproach'] or '',
+                    'skin_voice': item['voiceId'],
+                    'skin_voice_type': item['voiceType'],
                 }
             )
 

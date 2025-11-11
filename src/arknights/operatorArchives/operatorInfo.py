@@ -98,7 +98,7 @@ class OperatorInfo:
                 if is_contain_digit(n):
                     cls.operator_contain_digit_list.append(n)
 
-            for group in [item.team, item.group]:
+            for group in [item.team, item.group, item.nation]:
                 if group and group != '未知':
                     if group not in cls.operator_group_map:
                         cls.operator_group_map[group] = []

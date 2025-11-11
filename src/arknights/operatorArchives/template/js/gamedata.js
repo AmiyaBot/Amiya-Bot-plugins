@@ -38,6 +38,7 @@ const skillLevel = {
 
 function colorSpan(text, tag = true) {
     text = text.replace('<', '&lt;').replace('>', '&gt;')
+    text = text.replace(/\\n/g, '<br/>')
     text = text.replace(/\n/g, '<br/>')
     text = text.replace(/\s/g, '')
     text = text.replace(/\[cl/g, tag ? '<span class="mark">' : '')

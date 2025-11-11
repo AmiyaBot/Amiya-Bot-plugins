@@ -1,18 +1,14 @@
 from typing import Optional
 from amiyabot import ChainBuilder
-from amiyabot.adapters.kook import KOOKBotInstance
 from amiyabot.adapters.mirai import MiraiBotInstance, MiraiForwardMessage
 from amiyabot.adapters.cqhttp import CQHttpBotInstance, CQHTTPForwardMessage
-from amiyabot.adapters.tencent.qqGuild import QQGuildBotInstance
-from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
-from amiyabot.adapters.tencent.qqGlobal import QQGlobalBotInstance
 
 from core import Chain, Message
 from core.resource.arknightsGameData import ArknightsGameData, ArknightsGameDataResource
 
 from .operatorCore import bot, default_level, get_index, search_info, FuncsVerify, OperatorSearchInfo
 from .operatorInfo import OperatorInfo, curr_dir
-from .operatorData import OperatorData
+from .operatorData import OperatorData, JsonData
 
 
 class WaitALLRequestsDone(ChainBuilder):
@@ -47,7 +43,7 @@ async def operator_archives_module_func(data: Message):
 
 @bot.on_message(group_id='operator', keywords=['语音'], level=default_level)
 async def operator_archives_voice_func(data: Message):
-    info = search_info(data, source_keys=['voice_key', 'name'])
+    info = search_info(data, source_keys=['voice_key', 'skin_key', 'name'])
 
     voice_type = ''
     voice_name = '日语'
@@ -73,6 +69,30 @@ async def operator_archives_voice_func(data: Message):
         voice_type = '_ita'
         voice_name = '意大利语'
 
+    skin_item = None
+    skin_key = ''
+    skin_name = ''
+    skin_voices = []
+    if info.skin_key:
+        skin_item = OperatorInfo.skins_map[info.skin_key]
+        skin_name = '时装《{skin_name}》'.format_map(skin_item)
+        info.name = skin_item['char_name']
+
+        if not skin_item['skin_voice']:
+            return Chain(data).text(f'博士，干员{info.name}{skin_name}不包含特殊语音')
+
+        word_key = skin_item['skin_id'].replace('@', '_')
+        charword_table = JsonData.get_json_data('charword_table')['charWords']
+        for item in charword_table.values():
+            if item['wordKey'] == word_key:
+                skin_voices.append(
+                    {
+                        'voice_title': item['voiceTitle'],
+                        'voice_text': item['voiceText'],
+                        'voice_no': item['voiceAsset'],
+                    }
+                )
+
     if not info.name:
         wait = await data.wait(Chain(data).text('博士，请说明需要查询的干员名'))
         if not wait or not wait.text:
@@ -85,12 +105,15 @@ async def operator_archives_voice_func(data: Message):
         return Chain(data).text(f'博士，没有找到干员"{info.name}"')
 
     opt = operators[info.name]
-    voices = opt.voices()
+    voices = skin_voices or opt.voices()
     voices_map = {item['voice_title']: item for item in voices}
     index = get_index(data.text_digits, voices)
 
+    if skin_voices:
+        skin_key = skin_item['skin_id'].replace(opt.id, '').replace('@', '_').replace('#', '__')
+
     if not info.voice_key and index is None:
-        text = f'博士，这是干员{opt.name}的{voice_name}语音列表\n请回复【<span style="color: red">序号</span>】查询对应的语音资料\n\n'
+        text = f'博士，这是干员{opt.name}{skin_name}的{voice_name}语音列表\n请回复【<span style="color: red">序号</span>】查询对应的语音资料\n\n'
         text += '|序号&标题|内容|\n|----|----|\n'
 
         for i, item in enumerate(voices):
@@ -122,7 +145,7 @@ async def operator_archives_voice_func(data: Message):
 
         reply = Chain(data).text(text)
 
-        file = await ArknightsGameDataResource.get_voice_file(opt, info.voice_key, voice_type)
+        file = await ArknightsGameDataResource.get_voice_file(opt, info.voice_key, voice_type, skin_key)
         if file:
             reply.voice(file)
         else:
@@ -189,7 +212,11 @@ async def operator_archives_story_func(data: Message):
 async def operator_archives_skin_func(data: Message):
     info = search_info(data, source_keys=['skin_key', 'name'])
 
+    operators = ArknightsGameData.operators
+
+    opt = None
     skin_item = None
+
     if info.skin_key:
         skin_item = OperatorInfo.skins_map[info.skin_key]
     else:
@@ -198,8 +225,6 @@ async def operator_archives_skin_func(data: Message):
             if not wait or not wait.text:
                 return None
             info.name = wait.text
-
-        operators = ArknightsGameData.operators
 
         if info.name not in operators:
             return Chain(data).text(f'博士，没有找到干员"{info.name}"')
@@ -223,8 +248,10 @@ async def operator_archives_skin_func(data: Message):
             skin_item = skins[index]
 
     if skin_item:
+        if not opt:
+            opt = operators[skin_item['char_name']]
         skin_data = {
-            'name': info.name,
+            'name': opt.name,
             'data': skin_item,
             'path': await ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True),
         }
@@ -339,13 +366,24 @@ async def operator_archives_group_query_1(data: Message):
 
 @bot.on_message(group_id='operator', keywords='阵营', level=default_level)
 async def operator_archives_group_query_2(data: Message):
+    def char(name):
+        opt = ArknightsGameData.operators.get(name)
+        colors = {
+            6: '#FF4343',
+            5: '#FEA63A',
+            4: '#A288B5',
+        }
+        if opt.rarity in colors:
+            return f'<span style="color: {colors[opt.rarity]}">{name}</span>'
+        return name
+
     operator_group = OperatorInfo.operator_group_map
 
     text = '|阵营名|干员|\n|----|----|\n'
 
     for item in sorted(operator_group.keys()):
         group = operator_group[item]
-        text += f'|{item}|%s|\n' % ('、'.join([n.name for n in group]))
+        text += f'|{item}|%s|\n' % ('、'.join([char(n.name) for n in group]))
 
     return Chain(data).markdown(text)
 

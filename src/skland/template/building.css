@@ -238,7 +238,6 @@ body {
     height: 57px;
     padding: 4px;
     margin-left: 10px;
-    background: rgb(118 118 118 / 40%);
     display: flex;
     align-items: flex-end;
 }

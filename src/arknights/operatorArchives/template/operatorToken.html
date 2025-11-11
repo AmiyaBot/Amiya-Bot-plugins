@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link type="text/css" rel="styleSheet" href="font.css"/>
     <link type="text/css" rel="styleSheet" href="operatorToken.css"/>
+    <link type="text/css" rel="styleSheet" href="./css/skillType.css"/>
     <title>template</title>
 </head>
 <body>
@@ -30,23 +31,62 @@
                 </div>
                 <div style="margin-top: 10px">{{ item.description }}</div>
             </div>
-            <div style="margin-left: 20px" v-html="range(item.attr[0].range)"></div>
+        </div>
+        <div style="margin: 20px 0">
+            <div class="tag">攻击范围</div>
+            <div v-html="range(item.attr[0].range)"></div>
+        </div>
+        <div style="margin: 20px 0" v-if="item.talents">
+            <div class="tag">天赋</div>
         </div>
         <div>
-            <table>
+            <table style="font-size: 14px">
                 <tr>
-                    <th v-if="data.id">阶段</th>
-                    <th>等级</th>
-                    <th v-for="(title, key) in attrsDict">{{ title }}</th>
+                    <td>最大生命值</td>
+                    <td>{{ maxAttrs(item).atk }}</td>
+                    <td>攻击力</td>
+                    <td>{{ maxAttrs(item).def }}</td>
                 </tr>
-                <template v-for="n in item.attr">
-                    <tr v-for="attr in n.attr">
-                        <td v-if="data.id">精英{{ n.evolve }}</td>
-                        <td>{{ attr.level }}</td>
-                        <td v-for="(title, key) in attrsDict">{{ attr.data[key] }}</td>
-                    </tr>
-                </template>
+                <tr>
+                    <td>防御力</td>
+                    <td>{{ maxAttrs(item).magicResistance }}</td>
+                    <td>魔法抗性</td>
+                    <td>{{ maxAttrs(item).maxHp }}</td>
+                </tr>
+                <tr>
+                    <td>攻击间隔</td>
+                    <td>{{ maxAttrs(item).baseAttackTime }}</td>
+                    <td>阻挡数</td>
+                    <td>{{ maxAttrs(item).blockCnt }}</td>
+                </tr>
+                <tr>
+                    <td>部署费用</td>
+                    <td>{{ maxAttrs(item).cost }}</td>
+                    <td>再部署时间</td>
+                    <td>{{ maxAttrs(item).respawnTime }}</td>
+                </tr>
             </table>
+        </div>
+        <div style="margin-top: 20px">
+            <div class="tag">技能</div>
+            <div v-for="(skill, name) in item['skills']" style="margin-bottom: 20px">
+                <div style="margin-bottom: 5px; display: flex; align-items: center;">
+                    <div style="margin-right: 20px">{{ maxSkill(skill).name }}</div>
+                    <div class="skill-type">
+                        <div :class="'t' + maxSkill(skill).spData.spType">
+                            {{ spType[maxSkill(skill).spData.spType] }}
+                        </div>
+                        <div>{{ skillType[maxSkill(skill).skillType] }}</div>
+                        <div v-if="maxSkill(skill).spData.spCost">
+                            技力 {{ maxSkill(skill).spData.initSp }}/{{ maxSkill(skill).spData.spCost }}
+                        </div>
+                        <div v-if="maxSkill(skill).spData.duration > 0">
+                            持续 {{ maxSkill(skill).spData.duration }} 秒
+                        </div>
+                    </div>
+                </div>
+                <div v-html="colorSpan(maxSkill(skill).description)"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -63,6 +103,13 @@
         methods: {
             init(data) {
                 this.$set(this, 'data', data)
+            },
+            maxAttrs(item) {
+                item = item.attr[item.attr.length - 1]
+                return item.attr[item.attr.length - 1].data
+            },
+            maxSkill(item) {
+                return item.levels[item.levels.length - 1]
             },
             range(text) {
                 let lines = []
@@ -94,7 +141,6 @@
                     def: '防御力',
                     magicResistance: '魔法抗性',
                     maxHp: '最大生命值',
-                    attackSpeed: '攻击速度',
                     baseAttackTime: '攻击间隔',
                     blockCnt: '阻挡数',
                     cost: '部署费用',

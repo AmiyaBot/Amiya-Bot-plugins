@@ -46,10 +46,15 @@ class PRTS:
         '信赖触摸': 'CN_036',
         '标题': 'CN_037',
         '问候': 'CN_042',
+        '新年祝福': 'CN_038',
+        '生日': 'CN_043',
+        '周年庆典': 'CN_044',
     }
 
     @classmethod
-    def get_voice_path(cls, source: str, operator: Operator, voice_key: str, voice_type: str, is_url: bool = False):
+    def get_voice_path(
+        cls, source: str, operator: Operator, voice_key: str, voice_type: str, skin_key: str, is_url: bool = False
+    ):
         tail = ''
         char_id = operator.id
         char_name = operator.wiki_name
@@ -63,18 +68,21 @@ class PRTS:
             tail = '_ita'
 
         if is_url:
-            return f'{source}/voice{voice_type}/{char_id}{tail}/{cn_key}.wav?filename={voice_key}.wav'.lower()
+            return f'{source}/voice{voice_type}/{char_id}{tail}{skin_key}/{cn_key}.wav?filename={voice_key}.wav'.lower()
 
-        return f'{source}/voice{voice_type}/{char_id}{tail}/{char_name}_{voice_key}.wav'
+        return f'{source}/voice{voice_type}/{char_id}{tail}{skin_key}/{char_name}_{voice_key}.wav'
 
     @classmethod
-    async def download_operator_voices(cls, filepath: str, operator: Operator, voice_key: str, voice_type: str = ''):
+    async def download_operator_voices(
+        cls, filepath: str, operator: Operator, voice_key: str, voice_type: str = '', skin_key: str = ''
+    ):
         async with log.catch('voices download error:'):
             url = cls.get_voice_path(
                 'https://torappu.prts.wiki/assets/audio',
                 operator,
                 voice_key,
                 voice_type,
+                skin_key,
                 is_url=True,
             )
             res = await download_async(url)

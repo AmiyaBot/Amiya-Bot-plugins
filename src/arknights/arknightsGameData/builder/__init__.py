@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='3.6',
+    version='3.7',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -364,11 +364,11 @@ async def get_skin_file(skin_data: dict, encode_url: bool = False):
         return skin_path
 
 
-async def get_voice_file(operator: OperatorImpl, voice_key: str, voice_type: str = ''):
-    file = PRTS.get_voice_path(PRTS.voices_source, operator, voice_key, voice_type)
+async def get_voice_file(operator: OperatorImpl, voice_key: str, voice_type: str = '', skin_key: str = ''):
+    file = PRTS.get_voice_path(PRTS.voices_source, operator, voice_key, voice_type, skin_key)
 
     if not os.path.exists(file):
-        file = await PRTS.download_operator_voices(file, operator, voice_key, voice_type)
+        file = await PRTS.download_operator_voices(file, operator, voice_key, voice_type, skin_key)
         if not file:
             return None
 

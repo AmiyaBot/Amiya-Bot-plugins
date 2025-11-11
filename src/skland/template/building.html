@@ -145,7 +145,7 @@
             <div class="rate">
                 <div class="progress normal">
                     <div style="background-color: #f44336;"
-                         :style="{ width: (1 - building.training.remainSecs / building.training.remainPoint) * 100 + '%' }"></div>
+                         :style="{ width: Math.ceil((1 - building.training.remainSecs / building.training.remainPoint) * 100) + '%' }"></div>
                 </div>
                 <div>
                     <template v-if="trainee && trainee.targetSkill !== -1">
@@ -161,9 +161,10 @@
                                 :max-chars="1" char-width="43px"></resident-chars>
                 <div class="trainee" v-if="trainee">
                     <img :src="avatar(trainee.charId)" :alt="trainee.charId">
-                    <div v-if="trainee.skill" style="margin-left: 5px;">
+                    <div v-if="trainee.skill" style="margin-left: 15px;">
                         <img :src="skill(trainee.skill.id)"
                              :alt="trainee.skill.skillId">
+                        <img :src="'./assets/skillsLevel/master' + (trainee.skill.specializeLevel + 1) + '.png'" alt="">
                         <div style="font-size: 12px;">
                             专精 {{ trainee.skill.specializeLevel }}
                             <span style="color: #f44336; font-size: 12px;">>></span>

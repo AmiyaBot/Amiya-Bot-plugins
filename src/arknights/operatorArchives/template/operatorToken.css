@@ -30,7 +30,7 @@ body {
 }
 
 .tokenItem:not(:last-child) {
-    margin-bottom: 30px;
+    margin-bottom: 50px;
 }
 
 .tokenInfo {
@@ -79,4 +79,16 @@ table td {
 table th {
     white-space: nowrap;
     text-align: left;
+}
+
+.tag {
+    width: fit-content;
+    background: white;
+    color: black;
+    padding: 0 10px;
+    margin-bottom: 10px;
+}
+
+.mark {
+    color: #00b3ff;
 }
