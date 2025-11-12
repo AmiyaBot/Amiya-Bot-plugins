@@ -1,6 +1,7 @@
 import json
 import asyncio
 import websockets
+from websockets.protocol import State
 
 from typing import Dict, List
 from amiyabot.log import LoggerManager
@@ -16,7 +17,6 @@ class WeiboWebSocketManager:
         self.config_provider = config_provider
         self.ws_url = 'wss://cdn.amiyabot.com/api/v1/weibo/ws'  # 默认URL
         self.token = ''
-        self.connected = False
         self.reconnect_attempts = 0
         self.max_reconnect_attempts = 5
         self.reconnect_delay = 5
@@ -28,6 +28,11 @@ class WeiboWebSocketManager:
 
         # 从配置中加载WebSocket设置
         self._load_config()
+
+    @property
+    def is_connected(self) -> bool:
+        """检查WebSocket是否已连接并可用"""
+        return self.websocket is not None and self.websocket.state == State.OPEN
 
     def _load_config(self):
         """从配置中加载WebSocket设置"""
@@ -52,61 +57,111 @@ class WeiboWebSocketManager:
             except Exception as e:
                 logger.error(f"加载WebSocket配置失败: {e}")
 
-    async def connect(self):
-        """连接到WebSocket服务器"""
+    async def connect(self, skip: bool = False):
+        """连接到WebSocket服务器
+
+        Args:
+            skip: 如果为True，当锁被其他进程持有时跳过本次连接，默认为False
+        """
         # 在获取锁之前先检查连接状态，避免不必要的等待
         listen: List[Dict[str, str]] = (
                 self.config_provider.get_config('listen') or []
             )
         user_ids = [item['uid'] for item in listen if 'uid' in item]
 
-        if self.connected:
+        if self.is_connected:
             if set(user_ids) == set(self.user_ids):
                 return  # 已连接且订阅用户未变，无需重新连接
             else:
                 # 只在需要修改订阅时获取锁
                 async with self._connection_lock:
-                    if self.connected and set(user_ids) != set(self.user_ids):
+                    if self.is_connected and set(user_ids) != set(self.user_ids):
                         self.user_ids = user_ids
                         await self.subscribe_users(user_ids)
                 return
 
         # 如果未连接，获取锁进行连接
-        async with self._connection_lock:
-            # 再次检查，可能在等待锁的过程中其他协程已经建立了连接
-            if self.connected:
-                if set(user_ids) == set(self.user_ids):
-                    return
-                else:
-                    self.user_ids = user_ids
-                    await self.subscribe_users(user_ids)
-                    return
-            await self._do_connect(user_ids)
+        if skip:
+            # 检查锁是否被持有，如果被持有则跳过
+            if self._connection_lock.locked():
+                logger.debug("锁被其他进程持有，跳过本次连接")
+                return
 
-    async def _do_connect(self, user_ids):
-        """实际执行连接的内部方法"""
+            # 使用 asyncio.wait_for 的极短超时来实现非阻塞
+            try:
+                await asyncio.wait_for(self._connection_lock.acquire(), timeout=0.01)
+            except asyncio.TimeoutError:
+                logger.debug("无法立即获取锁，跳过本次连接")
+                return
+
+            try:
+                # 再次检查，可能在获取锁的过程中其他协程已经建立了连接
+                if self.is_connected:
+                    if set(user_ids) == set(self.user_ids):
+                        return
+                    else:
+                        self.user_ids = user_ids
+                        await self.subscribe_users(user_ids)
+                        return
+                await self._do_connect(user_ids)
+            finally:
+                self._connection_lock.release()
+        else:
+            # 正常等待获取锁
+            async with self._connection_lock:
+                # 再次检查，可能在等待锁的过程中其他协程已经建立了连接
+                if self.is_connected:
+                    if set(user_ids) == set(self.user_ids):
+                        return
+                    else:
+                        self.user_ids = user_ids
+                        await self.subscribe_users(user_ids)
+                        return
+                await self._do_connect(user_ids)
+
+    async def _do_connect_internal(self, user_ids=None):
+        """内部连接方法，执行实际连接但不处理重连"""
+        if user_ids is None:
+            user_ids = self.user_ids
+
         try:
             token = self.config_provider.get_config('websocket').get('token', '') if self.config_provider else ''
             if token:
                 self.token = token
                 # 使用token作为查询参数
                 url = f"{self.ws_url}?token={self.token}"
+                logger.info(f"正在连接WebSocket: {url}")
             else:
+                logger.warning("WebSocket token未配置，跳过连接")
                 return  # 如果没有token，直接返回不连接
 
             self.websocket = await websockets.connect(url)
-            self.connected = True
-            self.reconnect_attempts = 0
+            logger.info(f"WebSocket连接成功: {self.ws_url}")
+            self.reconnect_attempts = 0  # 重置重连计数器
             self.user_ids = user_ids
 
             # 启动消息监听任务
             asyncio.create_task(self._listen_messages())
+            logger.info("WebSocket消息监听任务已启动")
+
             if user_ids:
+                logger.info(f"开始订阅用户: {user_ids}")
                 await self.subscribe_users(user_ids)
+            else:
+                logger.info("未指定订阅用户")
 
         except Exception as e:
             logger.error(f"WebSocket连接失败: {e}")
-            await self._handle_reconnect()
+            # 不再调用重连，由调用者处理
+            raise
+
+    async def _do_connect(self, user_ids):
+        """实际执行连接的内部方法"""
+        try:
+            await self._do_connect_internal(user_ids)
+        except Exception as e:
+            # 在锁外部处理重连，避免死锁
+            asyncio.create_task(self._handle_reconnect())
 
     async def _listen_messages(self):
         """监听WebSocket消息，按type分发到对应回调"""
@@ -125,32 +180,55 @@ class WeiboWebSocketManager:
 
         except websockets.exceptions.ConnectionClosed:
             logger.info("WebSocket连接关闭，尝试重连...")
-            self.connected = False
             await self._handle_reconnect()
         except Exception as e:
             logger.error(f"WebSocket监听出错: {e}")
-            self.connected = False
             await self._handle_reconnect()
 
     async def _handle_reconnect(self):
         """处理重连逻辑"""
-        if self.reconnect_attempts < self.max_reconnect_attempts:
+        while self.reconnect_attempts < self.max_reconnect_attempts:
             self.reconnect_attempts += 1
             logger.info(f"尝试重连 {self.reconnect_attempts}/{self.max_reconnect_attempts}...")
+
+            # 先等待一段时间再尝试连接
             await asyncio.sleep(self.reconnect_delay)
-            await self.connect()
-        else:
-            logger.error("重连次数已达上限，停止重连")
+
+            try:
+                # 使用内部连接方法，避免重复加锁
+                await self._reconnect_attempt()
+                logger.info(f"重连成功，已重新建立WebSocket连接")
+                return  # 成功连接，退出重连循环
+            except asyncio.TimeoutError as e:
+                logger.error(f"重连超时: {e}")
+                # 继续下一次重连
+            except ConnectionRefusedError as e:
+                logger.error(f"连接被拒绝: {e}")
+                # 继续下一次重连
+            except Exception as e:
+                logger.error(f"重连失败: {e}")
+                # 继续下一次重连
+
+        logger.error("重连次数已达上限，停止重连")
+
+    async def _reconnect_attempt(self):
+        """尝试重新连接，用于重连过程中"""
+        async with self._connection_lock:
+            # 再次检查连接状态，可能在重连等待期间其他地方已经建立了连接
+            if self.is_connected:
+                return
+
+            await self._do_connect_internal()
 
     async def subscribe_users(self, user_ids):
         """订阅特定用户"""
-        if not self.connected:
+        if not self.is_connected:
             await self.connect()
         else:
             # 发送订阅消息
-            if self.websocket:
-                subscribe_msg = {"type": "subscribe", "user_ids": user_ids}
-                await self.websocket.send(json.dumps(subscribe_msg))
+            subscribe_msg = {"type": "subscribe", "user_ids": user_ids}
+            await self.websocket.send(json.dumps(subscribe_msg))
+            logger.info(f"已发送订阅请求，用户: {user_ids}")
 
     def register_message_handler(self, type=None):
         """装饰器：注册消息回调函数，可指定type类型
@@ -175,4 +253,3 @@ class WeiboWebSocketManager:
         """关闭WebSocket连接"""
         if self.websocket:
             await self.websocket.close()
-        self.connected = False

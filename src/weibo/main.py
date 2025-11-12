@@ -387,4 +387,4 @@ async def _(data: Message):
 
 @bot.timed_task(each=10)
 async def _(_: BotHandlerFactory):
-    await ws_manager.connect()
+    await ws_manager.connect(skip=True)
