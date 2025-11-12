@@ -4,20 +4,12 @@
     "required": [],
     "properties": {
         "setting": {
-            "title": "监听设置",
+            "title": "推送设置",
             "type": "object",
-            "required": [
-                "checkRate"
-            ],
             "properties": {
-                "checkRate": {
-                    "title": "监听频率",
-                    "description": "每隔一定时间刷新一下微博列表的频率，单位秒",
-                    "type": "integer",
-                    "default": 30
-                },
                 "sendGIF": {
                     "title": "是否发送GIF图",
+                    "description": "是否在微博中发送GIF动图",
                     "type": "boolean",
                     "default": false
                 },
@@ -25,42 +17,41 @@
                     "title": "图片缓存目录",
                     "description": "微博图片缓存的目录，可以为绝对路径",
                     "type": "string",
-                    "default": "log/weibo"
-                },
-                "remote": {
-                    "title": "接口转发",
-                    "description": "使用CDN接口获取微博推送(可能会有延迟)。重要：本选项仅在本地拉取微博报错时开启！",
-                    "type": "boolean",
-                    "default": false
+                    "default": "logs/weibo"
                 }
             }
         },
         "websocket": {
-            "title": "WebSocket",
+            "title": "订阅设置",
             "type": "object",
             "properties": {
                 "url": {
-                    "title": "url",
+                    "title": "订阅地址",
+                    "description": "WebSocket订阅服务的连接地址",
                     "type": "string",
                     "default": "wss://cdn.amiyabot.com/api/v1/weibo/ws"
                 },
                 "token": {
                     "title": "访问令牌",
-                    "description": "您的WebSocket访问令牌",
-                    "type": "string",
-                    "default": ""
+                    "description": "WebSocket连接的认证令牌",
+                    "type": "string"
                 },
                 "reconnectAttempts": {
                     "title": "重连次数",
+                    "description": "连接失败时的最大重连次数",
                     "type": "integer",
                     "default": 5
                 },
                 "reconnectDelay": {
-                    "title": "重连延迟时间",
+                    "title": "重连延迟",
+                    "description": "重连之间的延迟时间（秒）",
                     "type": "integer",
                     "default": 5
                 }
-            }
+            },
+            "required": [
+                "token"
+            ]
         },
         "sendAsync": {
             "title": "是否同时推送",
@@ -70,35 +61,44 @@
         },
         "sendInterval": {
             "title": "发送间隔",
-            "description": "如果不是同时发送，每隔一定时间向下一个群推送",
+            "description": "如果不是同时发送，每隔一定时间向下一个群推送（秒）",
             "type": "number",
             "default": 0.2
         },
         "listen": {
-            "title": "监听列表",
-            "description": "监听的微博ID的列表",
+            "title": "订阅用户列表",
+            "description": "需要实时监控的微博用户ID列表",
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "uid": {
                         "title": "微博 ID",
-                        "description": "一般在微博首页的 url 可以得到：https://weibo.com/u/xxxxxxxxx",
+                        "description": "微博用户ID，一般在微博首页的 url 可以得到：https://weibo.com/u/xxxxxxxxx",
                         "type": "string"
                     },
                     "name": {
-                        "title": "备注",
+                        "title": "备注名称",
+                        "description": "用户的备注名称，便于识别",
                         "type": "string"
                     }
-                }
+                },
+                "required": [
+                    "uid",
+                    "name"
+                ]
             }
         },
         "block": {
             "title": "规则屏蔽",
             "description": "正文触发列表中任一规则匹配（包括正则表达式和搜索）的微博将不会推送（即使仍然会被记录）",
             "type": "array",
-            "default": [
-            ]
+            "default": [],
+            "items": {
+                "title": "屏蔽规则",
+                "type": "string",
+                "description": "支持正则表达式"
+            }
         }
     }
 }

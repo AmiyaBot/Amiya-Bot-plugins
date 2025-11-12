@@ -23,6 +23,8 @@ class WeiboWebSocketManager:
         # 回调字典：key为消息type，value为对应回调函数列表；None表示接收所有类型
         self.message_callbacks = {}
         self.user_ids = []
+        # 连接锁，防止重复连接
+        self._connection_lock = asyncio.Lock()
 
         # 从配置中加载WebSocket设置
         self._load_config()
@@ -52,6 +54,11 @@ class WeiboWebSocketManager:
 
     async def connect(self):
         """连接到WebSocket服务器"""
+        async with self._connection_lock:
+            await self._do_connect()
+
+    async def _do_connect(self):
+        """实际执行连接的内部方法"""
         listen: List[Dict[str, str]] = (
                 self.config_provider.get_config('listen') or []
             )
@@ -122,7 +129,7 @@ class WeiboWebSocketManager:
     async def subscribe_users(self, user_ids):
         """订阅特定用户"""
         if not self.connected:
-            await self.connect(user_ids)
+            await self.connect()
         else:
             # 发送订阅消息
             if self.websocket:
