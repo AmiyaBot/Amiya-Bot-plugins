@@ -35,6 +35,33 @@
                 }
             }
         },
+        "websocket": {
+            "title": "WebSocket",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "title": "url",
+                    "type": "string",
+                    "default": "wss://cdn.amiyabot.com/api/v1/weibo/ws"
+                },
+                "token": {
+                    "title": "访问令牌",
+                    "description": "您的WebSocket访问令牌",
+                    "type": "string",
+                    "default": ""
+                },
+                "reconnectAttempts": {
+                    "title": "重连次数",
+                    "type": "integer",
+                    "default": 5
+                },
+                "reconnectDelay": {
+                    "title": "重连延迟时间",
+                    "type": "integer",
+                    "default": 5
+                }
+            }
+        },
         "sendAsync": {
             "title": "是否同时推送",
             "description": "同时向所有群推送，否则排队推送。",

@@ -37,7 +37,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='3.6',
+    version='3.7',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
@@ -371,7 +371,7 @@ async def _(data: Message):
 
         md = f'博士，这是【{blog_list[0].user_name}】的历史微博列表，回复【序号】来获取详情吧\n\n|序号|时间|内容|\n|----|----|----|\n'
         for idx, item in enumerate(blog_list, 1):  # 使用enumerate获取序号
-            content = item.content.replace('\n', ' ').replace('|', '｜')            
+            content = item.content.replace('\n', ' ').replace('|', '｜')
             content_preview = content[:20] + ('...' if len(content) > 20 else '')
             md += f'|{idx}|{item.created_at.replace("T", " ") or "未知时间"}|{content_preview}\n'  # 使用属性访问
 

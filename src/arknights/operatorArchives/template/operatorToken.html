@@ -43,15 +43,15 @@
             <table style="font-size: 14px">
                 <tr>
                     <td>最大生命值</td>
-                    <td>{{ maxAttrs(item).atk }}</td>
+                    <td>{{ maxAttrs(item).maxHp }}</td>
                     <td>攻击力</td>
-                    <td>{{ maxAttrs(item).def }}</td>
+                    <td>{{ maxAttrs(item).atk }}</td>
                 </tr>
                 <tr>
                     <td>防御力</td>
-                    <td>{{ maxAttrs(item).magicResistance }}</td>
+                    <td>{{ maxAttrs(item).def }}</td>
                     <td>魔法抗性</td>
-                    <td>{{ maxAttrs(item).maxHp }}</td>
+                    <td>{{ maxAttrs(item).magicResistance }}</td>
                 </tr>
                 <tr>
                     <td>攻击间隔</td>
@@ -67,7 +67,7 @@
                 </tr>
             </table>
         </div>
-        <div style="margin-top: 20px">
+        <div style="margin-top: 20px" v-if="item['skills'] && item['skills'].length">
             <div class="tag">技能</div>
             <div v-for="(skill, name) in item['skills']" style="margin-bottom: 20px">
                 <div style="margin-bottom: 5px; display: flex; align-items: center;">

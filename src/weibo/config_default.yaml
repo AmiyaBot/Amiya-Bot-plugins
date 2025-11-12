@@ -1,10 +1,12 @@
 setting:
+    checkRate: 30
     sendGIF: false
     imagesCache: logs/weibo
+    remote: false
 
 websocket:
     url: wss://cdn.amiyabot.com/api/v1/weibo/ws
-    token: ''  # 请在此处填入您的WebSocket访问令牌
+    token: ''
     reconnectAttempts: 5
     reconnectDelay: 5
 

@@ -128,10 +128,18 @@ class OperatorImpl(Operator):
             skills = {}
 
             for sk in data['skills']:
+                if not sk['skillId']:
+                    continue
+
                 if sk['skillId'] not in skills:
                     skills[sk['skillId']] = {**skill_table[sk['skillId']]}
                     skills[sk['skillId']]['levels'] = [
-                        {**nn, 'description': parse_template(nn['blackboard'], nn['description'])}
+                        {
+                            **nn,
+                            'description': (
+                                parse_template(nn['blackboard'], nn['description']) if nn['description'] else ''
+                            ),
+                        }
                         for nn in skills[sk['skillId']]['levels']
                     ]
 
