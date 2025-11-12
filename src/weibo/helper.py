@@ -54,23 +54,37 @@ class WeiboWebSocketManager:
 
     async def connect(self):
         """连接到WebSocket服务器"""
-        async with self._connection_lock:
-            await self._do_connect()
-
-    async def _do_connect(self):
-        """实际执行连接的内部方法"""
+        # 在获取锁之前先检查连接状态，避免不必要的等待
         listen: List[Dict[str, str]] = (
                 self.config_provider.get_config('listen') or []
             )
         user_ids = [item['uid'] for item in listen if 'uid' in item]
+
         if self.connected:
             if set(user_ids) == set(self.user_ids):
                 return  # 已连接且订阅用户未变，无需重新连接
             else:
-                self.user_ids = user_ids
-                await self.subscribe_users(user_ids)
-            return
+                # 只在需要修改订阅时获取锁
+                async with self._connection_lock:
+                    if self.connected and set(user_ids) != set(self.user_ids):
+                        self.user_ids = user_ids
+                        await self.subscribe_users(user_ids)
+                return
 
+        # 如果未连接，获取锁进行连接
+        async with self._connection_lock:
+            # 再次检查，可能在等待锁的过程中其他协程已经建立了连接
+            if self.connected:
+                if set(user_ids) == set(self.user_ids):
+                    return
+                else:
+                    self.user_ids = user_ids
+                    await self.subscribe_users(user_ids)
+                    return
+            await self._do_connect(user_ids)
+
+    async def _do_connect(self, user_ids):
+        """实际执行连接的内部方法"""
         try:
             token = self.config_provider.get_config('websocket').get('token', '') if self.config_provider else ''
             if token:
@@ -83,6 +97,7 @@ class WeiboWebSocketManager:
             self.websocket = await websockets.connect(url)
             self.connected = True
             self.reconnect_attempts = 0
+            self.user_ids = user_ids
 
             # 启动消息监听任务
             asyncio.create_task(self._listen_messages())
@@ -90,6 +105,7 @@ class WeiboWebSocketManager:
                 await self.subscribe_users(user_ids)
 
         except Exception as e:
+            logger.error(f"WebSocket连接失败: {e}")
             await self._handle_reconnect()
 
     async def _listen_messages(self):
