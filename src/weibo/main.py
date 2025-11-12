@@ -371,7 +371,9 @@ async def _(data: Message):
 
         md = f'博士，这是【{blog_list[0].user_name}】的历史微博列表，回复【序号】来获取详情吧\n\n|序号|时间|内容|\n|----|----|----|\n'
         for idx, item in enumerate(blog_list, 1):  # 使用enumerate获取序号
-            md += f'|{idx}|{item.created_at.replace("T", " ") or "未知时间"}|{item.content[:20]}\n'  # 使用属性访问
+            content = item.content.replace('\n', ' ').replace('|', '｜')            
+            content_preview = content[:20] + ('...' if len(content) > 20 else '')
+            md += f'|{idx}|{item.created_at.replace("T", " ") or "未知时间"}|{content_preview}\n'  # 使用属性访问
 
         reply = Chain(data).markdown(md)
 
