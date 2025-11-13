@@ -2,7 +2,7 @@ import time
 import asyncio
 import re
 import json
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 
 from amiyabot import QQGuildBotInstance
@@ -37,7 +37,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='3.8',
+    version='4.0',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
@@ -85,139 +85,151 @@ async def handle_weibo(data: dict):
     if not recent_weibos:
         return
 
-    # 查询开启微博推送的群（后面可能需要推送新增的历史微博）
-    target_groups: List[GroupSetting] = list(
-        GroupSetting.select().where(GroupSetting.send_weibo == 1)
-    )
+    # 创建异步任务来处理微博数据，不等待处理完成
+    asyncio.create_task(process_weibo_data(recent_weibos))
 
-    setting = attridict(bot.get_config('setting'))
-    push_async = bot.get_config('sendAsync')
-    send_interval = bot.get_config('sendInterval')
-    block_rules = bot.get_config('block') or []
 
-    inserted_records = []  # 保存本次新增的微博（结构：dict）
-    for uid, items in recent_weibos.items():
-        if not items:
-            continue
-        for wb in items:
-            blog_id = wb.get('id') or wb.get('bid')
-            if not blog_id:
+async def process_weibo_data(recent_weibos: dict):
+    """异步处理微博数据的函数，避免阻塞websocket"""
+    try:
+        # 查询开启微博推送的群（后面可能需要推送新增的历史微博）
+        target_groups: List[GroupSetting] = list(
+            GroupSetting.select().where(GroupSetting.send_weibo == 1)
+        )
+
+        setting = attridict(bot.get_config('setting'))
+        push_async = bot.get_config('sendAsync')
+        send_interval = bot.get_config('sendInterval')
+        block_rules = bot.get_config('block') or []
+
+        inserted_records = []  # 保存本次新增的微博（结构：dict）
+        for uid, items in recent_weibos.items():
+            if not items:
                 continue
-            if WeiboRecord.get_or_none(blog_id=blog_id):
-                continue  # 已存在，跳过
+            for wb in items:
+                blog_id = wb.get('id') or wb.get('bid')
+                if not blog_id:
+                    continue
+                if WeiboRecord.get_or_none(blog_id=blog_id):
+                    continue  # 已存在，跳过
 
-            pics_files = []
-            for p in wb.get('pics', []) or []:
-                file = p.get('file')
-                if file:
-                    suffix = file.split('.')[-1]
-                    if (
-                        setting.get('sendGIF', False) is False
-                        and suffix.lower() == 'gif'
-                    ):
-                        continue
-                    try:
-                        pic_index = p.get('index', '')
-                        cdn_url = f"https://cdn.amiyabot.com/api/v1/weibo/pic/{pic_index}/{file}"
-
-                        # 创建cache目录（使用运行路径）
-                        cache_dir = Path.cwd() / setting.get(
-                            'imagesCache', 'logs/weibo'
-                        )
-                        cache_dir.mkdir(parents=True, exist_ok=True)
-
-                        # 判断文件是否已经存在
-                        local_file_path = cache_dir / file
-                        if local_file_path.exists():
-                            pics_files.append(str(local_file_path))
+                pics_files = []
+                for p in wb.get('pics', []) or []:
+                    file = p.get('file')
+                    if file:
+                        suffix = file.split('.')[-1]
+                        if (
+                            setting.get('sendGIF', False) is False
+                            and suffix.lower() == 'gif'
+                        ):
                             continue
-                        # 下载文件
-                        file_content = await download_async(cdn_url)
-                        if file_content:
-                            # 保存文件到cache目录
-                            local_file_path.write_bytes(file_content)
-                            pics_files.append(str(local_file_path))
-                    except Exception as _:
-                        continue
+                        try:
+                            pic_index = p.get('index', '')
+                            cdn_url = f"https://cdn.amiyabot.com/api/v1/weibo/pic/{pic_index}/{file}"
 
-            images_json = json.dumps(pics_files) if pics_files else ''
+                            # 创建cache目录（使用运行路径）
+                            cache_dir = Path.cwd() / setting.get(
+                                'imagesCache', 'logs/weibo'
+                            )
+                            cache_dir.mkdir(parents=True, exist_ok=True)
 
-            record = WeiboRecord.create(
-                user_id=uid,
-                blog_id=blog_id,
-                record_time=int(time.time()),
-                user_name=wb.get('screen_name', ''),
-                content=wb.get('text', ''),
-                images=images_json,
-                detail_url=f"https://weibo.com/{uid}/{blog_id}",
-                created_at=wb.get('created_at', ''),
-            )
-            inserted_records.append((uid, wb, record))
+                            # 判断文件是否已经存在
+                            local_file_path = cache_dir / file
+                            if local_file_path.exists():
+                                pics_files.append(str(local_file_path))
+                                continue
+                            # 下载文件
+                            file_content = await download_async(cdn_url)
+                            if file_content:
+                                # 保存文件到cache目录
+                                local_file_path.write_bytes(file_content)
+                                pics_files.append(str(local_file_path))
+                        except Exception as _:
+                            continue
 
-    if not inserted_records:
-        return
+                images_json = json.dumps(pics_files) if pics_files else ''
 
-    if not target_groups:
-        return  # 没有需要推送的群
+                record = WeiboRecord.create(
+                    user_id=uid,
+                    blog_id=blog_id,
+                    record_time=int(time.time()),
+                    user_name=wb.get('screen_name', ''),
+                    content=wb.get('text', ''),
+                    images=images_json,
+                    detail_url=f"https://weibo.com/{uid}/{blog_id}",
+                    created_at=wb.get('created_at', ''),
+                )
+                inserted_records.append((uid, wb, record))
 
-    # 推送新增的历史微博（简单文本+详情+图片文件名列表）
-    async_tasks = []
-    time_rec = TimeRecorder()
+        if not inserted_records:
+            return
 
-    for uid, wb, record in inserted_records:
-        # 屏蔽规则匹配正文
-        skip = False
-        text_content = wb.get('text', '')
-        for regex in block_rules:
-            try:
-                if re.match(regex, text_content) or re.search(regex, text_content):
-                    skip = True
-                    break
-            except re.error:
+        if not target_groups:
+            return  # 没有需要推送的群
+
+        # 推送新增的历史微博（简单文本+详情+图片文件名列表）
+        async_tasks = []
+        time_rec = TimeRecorder()
+
+        for uid, wb, record in inserted_records:
+            # 屏蔽规则匹配正文
+            skip = False
+            text_content = wb.get('text', '')
+            for regex in block_rules:
+                try:
+                    if re.match(regex, text_content) or re.search(regex, text_content):
+                        skip = True
+                        break
+                except re.error:
+                    continue
+            if skip:
+                await send_to_console_channel(
+                    Chain().text(f"微博触发屏蔽规则，跳过推送: {record.blog_id}")
+                )
                 continue
-        if skip:
-            await send_to_console_channel(
-                Chain().text(f"微博触发屏蔽规则，跳过推送: {record.blog_id}")
-            )
-            continue
 
-        # 构建消息内容（按需求格式）
-        header = f"来自 {wb.get('screen_name','')} 的最新微博\n\n{text_content}"
-        images = json.loads(record.images) if record.images else []
-        url = record.detail_url
+            # 构建消息内容（按需求格式）
+            header = f"来自 {wb.get('screen_name','')} 的最新微博\n\n{text_content}"
+            images = json.loads(record.images) if record.images else []
+            url = record.detail_url
+
+            await send_to_console_channel(
+                Chain().text(
+                    f"开始推送微博\nUSER: {record.user_name}\nID: {record.blog_id}\n目标数: {len(target_groups)}"
+                )
+            )
+            for group in target_groups:
+                bot_instance = main_bot[group.bot_id]
+                if not bot_instance:
+                    continue
+                chain = Chain().text(header)
+
+                if isinstance(bot_instance.instance, QQGuildBotInstance):
+                    chain.image(images)
+                else:
+                    chain.image(images).text(f'\n\n{url}')
+
+                if push_async:
+                    async_tasks.append(
+                        bot_instance.send_message(chain, channel_id=group.group_id)
+                    )
+                else:
+                    await bot_instance.send_message(chain, channel_id=group.group_id)
+                    await asyncio.sleep(send_interval)
+
+        if async_tasks:
+            await asyncio.wait(async_tasks)
 
         await send_to_console_channel(
             Chain().text(
-                f"开始推送微博\nUSER: {record.user_name}\nID: {record.blog_id}\n目标数: {len(target_groups)}"
+                f"微博推送完成：{len(inserted_records)} 条 耗时 {time_rec.total()}"
             )
         )
-        for group in target_groups:
-            bot_instance = main_bot[group.bot_id]
-            if not bot_instance:
-                continue
-            chain = Chain().text(header)
-
-            if isinstance(bot_instance.instance, QQGuildBotInstance):
-                chain.image(images)
-            else:
-                chain.image(images).text(f'\n\n{url}')
-
-            if push_async:
-                async_tasks.append(
-                    bot_instance.send_message(chain, channel_id=group.group_id)
-                )
-            else:
-                await bot_instance.send_message(chain, channel_id=group.group_id)
-                await asyncio.sleep(send_interval)
-
-    if async_tasks:
-        await asyncio.wait(async_tasks)
-
-    await send_to_console_channel(
-        Chain().text(
-            f"微博推送完成：{len(inserted_records)} 条 耗时 {time_rec.total()}"
+    except Exception as e:
+        # 捕获并记录异常，避免未处理的异常导致任务崩溃
+        await send_to_console_channel(
+            Chain().text(f"处理微博数据时发生错误: {str(e)}")
         )
-    )
 
 
 async def send_by_index(index: int, weibo: str, data: Message, blog_list=None):
