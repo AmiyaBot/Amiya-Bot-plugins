@@ -36,8 +36,11 @@
             <div class="tag">攻击范围</div>
             <div v-html="range(item.attr[0].range)"></div>
         </div>
-        <div style="margin: 20px 0" v-if="item.talents">
-            <div class="tag">天赋</div>
+        <div style="margin: 20px 0" v-if="item.talents && item.talents.length">
+            <template v-for="(n, k) in item.talents" :key="k" v-if="n.candidates && n.candidates[0].name">
+                <div class="tag">{{ n.candidates[0].name }}</div>
+                <div>{{ n.candidates[0].description }}</div>
+            </template>
         </div>
         <div>
             <table style="font-size: 14px">
@@ -67,7 +70,7 @@
                 </tr>
             </table>
         </div>
-        <div style="margin-top: 20px" v-if="item['skills'] && item['skills'].length">
+        <div style="margin-top: 20px" v-if="item['skills'] && Object.keys(item['skills']).length">
             <div class="tag">技能</div>
             <div v-for="(skill, name) in item['skills']" style="margin-bottom: 20px">
                 <div style="margin-bottom: 5px; display: flex; align-items: center;">
