@@ -129,7 +129,7 @@ class WaitALLRequestsDone(ChainBuilder):
 
 bot = SKLandPluginInstance(
     name='森空岛',
-    version='5.5',
+    version='5.6',
     plugin_id='amiyabot-skland',
     plugin_type='official',
     description='通过森空岛 API 查询玩家信息展示游戏数据',

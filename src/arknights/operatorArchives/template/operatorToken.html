@@ -37,7 +37,7 @@
             <div v-html="range(item.attr[0].range)"></div>
         </div>
         <div style="margin: 20px 0" v-if="item.talents && item.talents.length">
-            <template v-for="(n, k) in item.talents" :key="k" v-if="n.candidates && n.candidates[0].name">
+            <template v-for="(n, k) in item.talents" :key="k" v-if="n.candidates && n.candidates[0].name && n.candidates[0].description">
                 <div class="tag">{{ n.candidates[0].name }}</div>
                 <div>{{ n.candidates[0].description }}</div>
             </template>
