@@ -5,6 +5,8 @@ import json
 from typing import Optional, List
 from pathlib import Path
 
+from PIL import Image
+
 from amiyabot import QQGuildBotInstance
 from amiyabot.factory import BotHandlerFactory
 from amiyabot.adapters.tencent.qqGroup import QQGroupBotInstance
@@ -75,6 +77,59 @@ class WeiboRecord(MessageBaseModel):
 ws_manager = WeiboWebSocketManager(config_provider=bot)
 
 
+def clean_image_cache(cache_dir: Path, retention_days: int):
+    """Remove cached files older than retention_days (days)."""
+
+    if retention_days <= 0:
+        return
+
+    cutoff = time.time() - retention_days * 86400
+
+    for path in cache_dir.rglob('*'):
+        if path.is_dir():
+            continue
+        try:
+            if path.stat().st_mtime < cutoff:
+                path.unlink(missing_ok=True)
+        except Exception:
+            continue
+
+
+def build_nine_grid(
+    image_paths: List[str], cache_dir: Path, blog_id: str
+) -> Optional[str]:
+    """Combine first nine images into a 3x3 grid with Pillow, return output path or None."""
+
+    if len(image_paths) < 9:
+        return None
+
+    valid_images = []
+    for path in image_paths[:9]:
+        try:
+            with Image.open(path) as img:
+                valid_images.append(img.convert('RGB'))
+        except Exception:
+            return None
+
+    try:
+        cell_size = min(640, min(min(img.size) for img in valid_images))
+        if cell_size <= 0:
+            return None
+
+        grid = Image.new('RGB', (cell_size * 3, cell_size * 3), color=(0, 0, 0))
+
+        for idx, img in enumerate(valid_images):
+            resized = img.resize((cell_size, cell_size), Image.LANCZOS)
+            row, col = divmod(idx, 3)
+            grid.paste(resized, (col * cell_size, row * cell_size))
+
+        output_path = cache_dir / f"{blog_id}_grid.jpg"
+        grid.save(output_path, format='JPEG', quality=90)
+        return str(output_path)
+    except Exception:
+        return None
+
+
 @ws_manager.register_message_handler("historical_weibos")
 async def handle_weibo(data: dict):
     """处理订阅建立后返回的微博列表"""
@@ -113,6 +168,9 @@ async def process_weibo_data(recent_weibos: dict):
                 if WeiboRecord.get_or_none(blog_id=blog_id):
                     continue  # 已存在，跳过
 
+                cache_dir = Path.cwd() / setting.get('imagesCache', 'logs/weibo')
+                cache_dir.mkdir(parents=True, exist_ok=True)
+
                 pics_files = []
                 for p in wb.get('pics', []) or []:
                     file = p.get('file')
@@ -126,12 +184,6 @@ async def process_weibo_data(recent_weibos: dict):
                         try:
                             pic_index = p.get('index', '')
                             cdn_url = f"https://cdn.amiyabot.com/api/v1/weibo/pic/{pic_index}/{file}"
-
-                            # 创建cache目录（使用运行路径）
-                            cache_dir = Path.cwd() / setting.get(
-                                'imagesCache', 'logs/weibo'
-                            )
-                            cache_dir.mkdir(parents=True, exist_ok=True)
 
                             # 判断文件是否已经存在
                             local_file_path = cache_dir / file
@@ -191,6 +243,12 @@ async def process_weibo_data(recent_weibos: dict):
             # 构建消息内容（按需求格式）
             header = f"来自 {wb.get('screen_name','')} 的最新微博\n\n{text_content}"
             images = json.loads(record.images) if record.images else []
+            if setting.get('autoImageGrid', False) and len(images) >= 9:
+                # 在发送时九宫格合成：首图为九宫格，其余第10张起依次发送
+                cache_dir = Path.cwd() / setting.get('imagesCache', 'logs/weibo')
+                grid_path = build_nine_grid(images, cache_dir, record.blog_id)
+                if grid_path:
+                    images = [grid_path] + images[9:]
             url = record.detail_url
 
             await send_to_console_channel(
@@ -227,9 +285,7 @@ async def process_weibo_data(recent_weibos: dict):
         )
     except Exception as e:
         # 捕获并记录异常，避免未处理的异常导致任务崩溃
-        await send_to_console_channel(
-            Chain().text(f"处理微博数据时发生错误: {str(e)}")
-        )
+        await send_to_console_channel(Chain().text(f"处理微博数据时发生错误: {str(e)}"))
 
 
 async def send_by_index(index: int, weibo: str, data: Message, blog_list=None):
@@ -258,11 +314,19 @@ async def send_by_index(index: int, weibo: str, data: Message, blog_list=None):
             return Chain(data).text('博士...暂时无法获取这条微博的内容呢...')
 
         # 构建回复
+        setting = attridict(bot.get_config('setting'))
+        images = json.loads(result.images) if result.images else []
+        if setting.get('autoImageGrid', False) and len(images) >= 9:
+            cache_dir = Path.cwd() / setting.get('imagesCache', 'logs/weibo')
+            grid_path = build_nine_grid(images, cache_dir, result.blog_id)
+            if grid_path:
+                images = [grid_path] + images[9:]
+
         chain = (
             Chain(data)
             .text(result.user_name + '\n')
             .text(result.content + '\n')
-            .image(json.loads(result.images) if result.images else [])
+            .image(images)
         )
 
         if not isinstance(data.instance, QQGuildBotInstance):
@@ -400,3 +464,18 @@ async def _(data: Message):
 @bot.timed_task(each=10)
 async def _(_: BotHandlerFactory):
     await ws_manager.connect(skip=True)
+
+
+@bot.timed_task(trigger='cron', hour=0)
+async def clean_cache_task(_: BotHandlerFactory):
+    setting = attridict(bot.get_config('setting'))
+    retention = int(setting.get('cacheRetentionDays', 0) or 0)
+    if retention <= 0:
+        return
+
+    cache_dir = Path.cwd() / setting.get('imagesCache', 'logs/weibo')
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    clean_image_cache(cache_dir, retention)
+    await send_to_console_channel(
+        Chain().text(f'微博缓存清理完成，保留 {retention} 天以内文件')
+    )

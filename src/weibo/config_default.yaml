@@ -1,10 +1,12 @@
 setting:
     sendGIF: false
     imagesCache: logs/weibo
+    autoImageGrid: false
+    cacheRetentionDays: 7
 
 websocket:
     url: wss://cdn.amiyabot.com/api/v1/weibo/ws
-    token: ''  # 请在此处填入您的WebSocket访问令牌
+    token: "" # 请在此处填入您的WebSocket访问令牌
     reconnectAttempts: 5
     reconnectDelay: 5
 
@@ -12,17 +14,17 @@ sendInterval: 0.2
 sendAsync: false
 
 listen:
-    -   uid: '6279793937'
-        name: '明日方舟'
-    -   uid: '6441489862'
-        name: '明日方舟朝陇山'
-    -   uid: '7745672941'
-        name: '明日方舟终末地'
-    -   uid: '7697896274'
-        name: '来自星尘'
-    -   uid: '7499841383'
-        name: '泰拉记事社'
-    -   uid: '7840846173'
-        name: '泡姆泡姆'
+    - uid: "6279793937"
+      name: "明日方舟"
+    - uid: "6441489862"
+      name: "明日方舟朝陇山"
+    - uid: "7745672941"
+      name: "明日方舟终末地"
+    - uid: "7697896274"
+      name: "来自星尘"
+    - uid: "7499841383"
+      name: "泰拉记事社"
+    - uid: "7840846173"
+      name: "泡姆泡姆"
 
-block: [ ]
+block: []
