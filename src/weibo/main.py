@@ -95,36 +95,113 @@ def clean_image_cache(cache_dir: Path, retention_days: int):
             continue
 
 
-def build_nine_grid(
-    image_paths: List[str], cache_dir: Path, blog_id: str
-) -> Optional[str]:
-    """Combine first nine images into a 3x3 grid with Pillow, return output path or None."""
-
-    if len(image_paths) < 9:
+def _read_image_sizes(image_paths: List[str], count: int) -> Optional[List[tuple]]:
+    """Read sizes of the first `count` images. Return list of (w,h) or None on failure."""
+    if len(image_paths) < count:
+        return None
+    sizes = []
+    try:
+        for p in image_paths[:count]:
+            with Image.open(p) as im:
+                sizes.append(im.size)
+        return sizes
+    except Exception:
         return None
 
-    valid_images = []
-    for path in image_paths[:9]:
-        try:
-            with Image.open(path) as img:
-                valid_images.append(img.convert('RGB'))
-        except Exception:
+
+def _select_uniform_count(image_paths: List[str]) -> int:
+    """Return the largest count among 9,6,3 where first `count` images share identical sizes."""
+    for c in (9, 6, 3):
+        sizes = _read_image_sizes(image_paths, c)
+        if not sizes:
+            continue
+        if len(set(sizes)) == 1:
+            return c
+    return 0
+
+
+def _build_three_strip(images: List[Image.Image]) -> Optional[Image.Image]:
+    """Compose 3 PIL images into a single horizontal strip (1 row, 3 columns)."""
+    if len(images) != 3:
+        return None
+    try:
+        cell_size = min(640, min(min(img.size) for img in images))
+        if cell_size <= 0:
             return None
+        strip = Image.new('RGB', (cell_size * 3, cell_size), color=(0, 0, 0))
+        for idx, img in enumerate(images):
+            resized = img.convert('RGB').resize((cell_size, cell_size), Image.LANCZOS)
+            strip.paste(resized, (idx * cell_size, 0))
+        return strip
+    except Exception:
+        return None
+
+
+def build_three_strips_for_prefix(
+    image_paths: List[str], cache_dir: Path, blog_id: str
+) -> Optional[List[str]]:
+    """
+    According to requirement: to avoid 6-image layouts, check first 3n images' sizes.
+    If first 3/6/9 images have identical sizes, only merge those into 1-row-3-cols strips.
+    Return list of generated strip file paths, or None if not applicable.
+    """
+    count = _select_uniform_count(image_paths)
+    if count == 0:
+        return None
+
+    paths = []
+    try:
+        for i in range(0, count, 3):
+            imgs = []
+            for p in image_paths[i : i + 3]:
+                with Image.open(p) as im:
+                    imgs.append(im.copy().convert('RGB'))
+            strip = _build_three_strip(imgs)
+            if not strip:
+                return None
+            output_path = cache_dir / f"{blog_id}_strip_{i // 3 + 1}.jpg"
+            strip.save(output_path, format='JPEG', quality=90)
+            paths.append(str(output_path))
+        return paths
+    except Exception:
+        return None
+
+
+def build_square_uniform_grid(
+    image_paths: List[str], cache_dir: Path, blog_id: str
+) -> Optional[str]:
+    """
+    If first 3/6/9 images are square and have identical sizes, merge them into
+    a single grid image with rows = count/3 and columns = 3. Return output path.
+    """
+    count = _select_uniform_count(image_paths)
+    if count == 0:
+        return None
+    sizes = _read_image_sizes(image_paths, count)
+    if not sizes:
+        return None
+    # ensure all are squares
+    if any(w != h for (w, h) in sizes):
+        return None
 
     try:
-        cell_size = min(640, min(min(img.size) for img in valid_images))
+        # determine cell size
+        cell_size = min(640, min(min(w, h) for (w, h) in sizes))
         if cell_size <= 0:
             return None
 
-        grid = Image.new('RGB', (cell_size * 3, cell_size * 3), color=(0, 0, 0))
+        rows, cols = count // 3, 3
+        grid_img = Image.new('RGB', (cell_size * cols, cell_size * rows), color=(0, 0, 0))
 
-        for idx, img in enumerate(valid_images):
-            resized = img.resize((cell_size, cell_size), Image.LANCZOS)
-            row, col = divmod(idx, 3)
-            grid.paste(resized, (col * cell_size, row * cell_size))
+        for idx in range(count):
+            p = image_paths[idx]
+            with Image.open(p) as im:
+                im_rgb = im.convert('RGB').resize((cell_size, cell_size), Image.LANCZOS)
+            r, c = divmod(idx, 3)
+            grid_img.paste(im_rgb, (c * cell_size, r * cell_size))
 
-        output_path = cache_dir / f"{blog_id}_grid.jpg"
-        grid.save(output_path, format='JPEG', quality=90)
+        output_path = cache_dir / f"{blog_id}_grid_{count}.jpg"
+        grid_img.save(output_path, format='JPEG', quality=90)
         return str(output_path)
     except Exception:
         return None
@@ -243,12 +320,13 @@ async def process_weibo_data(recent_weibos: dict):
             # 构建消息内容（按需求格式）
             header = f"来自 {wb.get('screen_name','')} 的最新微博\n\n{text_content}"
             images = json.loads(record.images) if record.images else []
-            if setting.get('autoImageGrid', False) and len(images) >= 9:
-                # 在发送时九宫格合成：首图为九宫格，其余第10张起依次发送
+            if setting.get('autoImageGrid', False) and images:
                 cache_dir = Path.cwd() / setting.get('imagesCache', 'logs/weibo')
-                grid_path = build_nine_grid(images, cache_dir, record.blog_id)
+                # 仅在前3/6/9张为正方形且同尺寸时进行合并（1×3、2×3、3×3）
+                grid_path = build_square_uniform_grid(images, cache_dir, record.blog_id)
                 if grid_path:
-                    images = [grid_path] + images[9:]
+                    merged_count = int(grid_path.split('_grid_')[-1].split('.jpg')[0])
+                    images = [grid_path] + images[merged_count:]
             url = record.detail_url
 
             await send_to_console_channel(
@@ -316,11 +394,13 @@ async def send_by_index(index: int, weibo: str, data: Message, blog_list=None):
         # 构建回复
         setting = attridict(bot.get_config('setting'))
         images = json.loads(result.images) if result.images else []
-        if setting.get('autoImageGrid', False) and len(images) >= 9:
+        if setting.get('autoImageGrid', False) and images:
             cache_dir = Path.cwd() / setting.get('imagesCache', 'logs/weibo')
-            grid_path = build_nine_grid(images, cache_dir, result.blog_id)
+            # 仅在前3/6/9张为正方形且同尺寸时进行合并（1×3、2×3、3×3）
+            grid_path = build_square_uniform_grid(images, cache_dir, result.blog_id)
             if grid_path:
-                images = [grid_path] + images[9:]
+                merged_count = int(grid_path.split('_grid_')[-1].split('.jpg')[0])
+                images = [grid_path] + images[merged_count:]
 
         chain = (
             Chain(data)
