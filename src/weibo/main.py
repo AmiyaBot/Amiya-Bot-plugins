@@ -39,7 +39,7 @@ class WeiboPluginInstance(AmiyaBotPluginInstance): ...
 
 bot = WeiboPluginInstance(
     name='明日方舟微博推送',
-    version='4.0',
+    version='4.1',
     plugin_id='amiyabot-weibo',
     plugin_type='official',
     description='在明日方舟相关官微更新时自动推送到群',
