@@ -298,6 +298,8 @@ def init_stages():
             level = '_easy'
         if 'tough' in stage_id:
             level = '_tough'
+        if '#s' in stage_id:
+            level = '_sixstar'
 
         stage_key = item['code'] + level
         stage_key_name = remove_punctuation(item['name']) + level
