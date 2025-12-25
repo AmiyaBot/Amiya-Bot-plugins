@@ -18,6 +18,19 @@
                     "description": "微博图片缓存的目录，可以为绝对路径",
                     "type": "string",
                     "default": "logs/weibo"
+                },
+                "autoImageGrid": {
+                    "title": "自动九宫格",
+                    "description": "当微博图片多于 9 张时，自动将前 9 张拼接成一张九宫格发送",
+                    "type": "boolean",
+                    "default": false
+                },
+                "cacheRetentionDays": {
+                    "title": "缓存保留天数",
+                    "description": "定期清理超过该天数的微博图片缓存，0 表示不清理",
+                    "type": "integer",
+                    "default": 7,
+                    "minimum": 0
                 }
             }
         },
