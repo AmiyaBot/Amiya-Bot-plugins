@@ -9,6 +9,7 @@
     <link type="text/css" rel="styleSheet" href="operatorToken.css"/>
     <link type="text/css" rel="styleSheet" href="./css/skillType.css"/>
     <title>template</title>
+    <script src="../../../../../logs/testData.js"></script>
 </head>
 <body>
 <div id="template" v-if="Object.keys(data).length">
@@ -29,18 +30,8 @@
                     <span style="padding: 3px 10px; border-radius: 4px"
                           :style="{ backgroundColor: type[item.type] }">{{ item.type }}</span>
                 </div>
-                <div style="margin-top: 10px">{{ item.description }}</div>
+                <div style="color: #FFEB3B; margin-top: 10px">{{ item.description }}</div>
             </div>
-        </div>
-        <div style="margin: 20px 0">
-            <div class="tag">攻击范围</div>
-            <div v-html="range(item.attr[0].range)"></div>
-        </div>
-        <div style="margin: 20px 0" v-if="item.talents && item.talents.length">
-            <template v-for="(n, k) in item.talents" :key="k" v-if="n.candidates && n.candidates[0].name && n.candidates[0].description">
-                <div class="tag">{{ n.candidates[0].name }}</div>
-                <div>{{ n.candidates[0].description }}</div>
-            </template>
         </div>
         <div>
             <table style="font-size: 14px">
@@ -70,11 +61,23 @@
                 </tr>
             </table>
         </div>
+        <div style="margin: 20px 0">
+            <div class="tag">攻击范围</div>
+            <div v-html="range(item.attr[0].range)"></div>
+        </div>
+        <div style="margin: 20px 0" v-if="item.talents && item.talents.length">
+            <div class="tag">天赋</div>
+            <div style="margin-bottom: 10px" v-for="(n, k) in item.talents" :key="k"
+                 v-if="n.candidates && n.candidates[0].name">
+                <div style="color: #ff9800; margin-bottom: 5px">{{ n.candidates[0].name }}</div>
+                <div>{{ n.candidates[0].description }}</div>
+            </div>
+        </div>
         <div style="margin-top: 20px" v-if="item['skills'] && Object.keys(item['skills']).length">
             <div class="tag">技能</div>
-            <div v-for="(skill, name) in item['skills']" style="margin-bottom: 20px">
+            <div v-for="(skill, name) in item['skills']" style="margin-bottom: 20px" v-if="maxSkill(skill).description">
                 <div style="margin-bottom: 5px; display: flex; align-items: center;">
-                    <div style="margin-right: 20px">{{ maxSkill(skill).name }}</div>
+                    <div style="color: #00BCD4; margin-bottom: 5px; margin-right: 20px">{{ maxSkill(skill).name }}</div>
                     <div class="skill-type">
                         <div :class="'t' + maxSkill(skill).spData.spType">
                             {{ spType[maxSkill(skill).spData.spType] }}
@@ -158,6 +161,8 @@
         },
         mounted() {
             window.init = this.init
+
+            this.init(testData)
         }
     })
 </script>
