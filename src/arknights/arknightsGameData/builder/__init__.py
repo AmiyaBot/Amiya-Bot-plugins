@@ -302,7 +302,7 @@ def init_stages():
             level = '_sixstar'
 
         stage_key = item['code'] + level
-        stage_key_name = remove_punctuation(item['name']) + level
+        stage_key_name = remove_punctuation(item['name'].strip()) + level
 
         if level_data:
             enemies = {}
