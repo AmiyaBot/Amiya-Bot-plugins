@@ -14,7 +14,11 @@ from core.resource.arknightsGameData import ArknightsGameData
 curr_dir = os.path.dirname(__file__)
 cache_dir = 'resource/plugins/stages'
 
-multiple_zone_stage = {'CF-9': 2}
+multiple_zone_stage = {
+    'CF-9': 2,
+    'CF-EX-8': 2,
+    'CF-S-1': 2
+}
 
 
 class Stage:
@@ -99,6 +103,9 @@ async def _(data: Message):
     if any_match(data.text, ['困难', '磨难']):
         level = '_tough'
         level_str = '（磨难）'
+    if any_match(data.text, ['险地']):
+        level = '_sixstar'
+        level_str = '（险地）'
 
     stage_id = None
     stage_ids = []

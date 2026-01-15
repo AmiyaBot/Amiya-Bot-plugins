@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='3.9',
+    version='4.0',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -298,20 +298,27 @@ def init_stages():
             level = '_easy'
         if 'tough' in stage_id:
             level = '_tough'
+        if '#s' in stage_id:
+            level = '_sixstar'
 
         stage_key = item['code'] + level
-        stage_key_name = remove_punctuation(item['name']) + level
+        stage_key_name = remove_punctuation(item['name'].strip()) + level
 
         if level_data:
             enemies = {}
             for wave in level_data['waves']:
                 for fragment in wave['fragments']:
                     for action in fragment['actions']:
-                        if action['key'] not in enemies_info['enemyData'] or action['actionType'] != 'SPAWN':
+                        if action['actionType'] != 'SPAWN':
                             continue
 
                         if action['key'] not in enemies:
-                            enemies[action['key']] = {**enemies_info['enemyData'][action['key']], 'count': 0}
+                            if action['key'] in enemies_info['enemyData']:
+                                enemies[action['key']] = {**enemies_info['enemyData'][action['key']], 'count': 0}
+                            elif action['key'][:-2] in enemies_info['enemyData']:
+                                enemies[action['key']] = {**enemies_info['enemyData'][action['key'][:-2]], 'count': 0}
+                            else:
+                                continue
 
                         enemies[action['key']]['count'] += action['count']
 
