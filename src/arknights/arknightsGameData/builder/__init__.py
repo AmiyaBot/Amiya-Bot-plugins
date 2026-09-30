@@ -38,7 +38,7 @@ class ArknightsGameDataPluginInstance(AmiyaBotPluginInstance):
 
 bot = ArknightsGameDataPluginInstance(
     name='明日方舟数据解析',
-    version='4.1',
+    version='4.2',
     plugin_id='amiyabot-arknights-gamedata',
     plugin_type='official',
     description='明日方舟游戏数据解析，为内置的静态类提供数据。',
@@ -273,6 +273,12 @@ def init_stages():
             return False
         if item['type'] == 'MINISTORY':
             return True
+        # 生于黑夜、遗尘漫步、覆潮之下
+        if item['displayType'] == 'BRANCHLINE':
+            return True
+        # 战地秘闻、烘炉示岁、午间逸话
+        if item['displayType'] == 'MINISTORY':
+            return True
         return item['type'].endswith('SIDE') or ('displayType' in item and item['displayType'] == 'SIDESTORY')
 
     side_story = [item for key, item in activity_table.items() if is_ss(key, item)]
@@ -309,7 +315,7 @@ def init_stages():
             for wave in level_data['waves']:
                 for fragment in wave['fragments']:
                     for action in fragment['actions']:
-                        if action['actionType'] != 'SPAWN':
+                        if action['actionType'] not in ('SPAWN', 0):# 兼容不同数据源
                             continue
 
                         if action['key'] not in enemies:

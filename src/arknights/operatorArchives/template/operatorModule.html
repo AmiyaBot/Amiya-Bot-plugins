@@ -35,8 +35,6 @@
                         <span class="mark">{{ equip.unlockEvolvePhase }}</span>
                         等级
                         <span class="mark">{{ equip.unlockLevel }}</span>
-                        信赖值
-                        <span class="mark">{{ parseInt(equip.unlockFavorPoint / 100) }}%</span>
                     </div>
                     <div v-for="(mission, index) in equip.missions">
                         {{ index + 2 }}. {{ mission.desc }}
