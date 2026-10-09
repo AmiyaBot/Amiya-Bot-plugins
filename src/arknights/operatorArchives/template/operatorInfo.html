@@ -122,12 +122,12 @@
         <div class="right">
             <div>
                 <div class="title">干员印象</div>
-                <div class="exInfo">{{ data.info.profile }}</div>
-                <i class="exInfo">「{{ data.info.impression }}」</i>
+                <div class="exInfo" v-html="data.info.profile"></div>
+                <i class="exInfo">「<span v-html="data.info.impression"></span>」</i>
             </div>
             <div v-if="data.info.potential_item">
                 <div class="title">信物</div>
-                <div class="exInfo">{{ data.info.potential_item }}</div>
+                <div class="exInfo" v-html="data.info.potential_item"></div>
             </div>
             <div>
                 <div class="title">天赋</div>

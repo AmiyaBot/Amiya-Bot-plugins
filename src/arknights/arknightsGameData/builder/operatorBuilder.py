@@ -51,12 +51,12 @@ class OperatorImpl(Operator):
         self.nation = team_table[self.nation_id]['powerName'] if self.nation_id in team_table else '未知'
         self.birthday = '未知'
 
-        self.profile = data['itemUsage'] or '无'
-        self.impression = data['itemDesc'] or '无'
+        self.profile = html_tag_format(data['itemUsage']) or '无'
+        self.impression = html_tag_format(data['itemDesc']) or '无'
 
         self.potential_item = ''
         if data['potentialItemId'] in item_table:
-            self.potential_item = item_table[data['potentialItemId']]['description']
+            self.potential_item = html_tag_format(item_table[data['potentialItemId']]['description'])
 
         self.limit = self.name in ArknightsConfig.limit
         self.unavailable = self.name in ArknightsConfig.unavailable

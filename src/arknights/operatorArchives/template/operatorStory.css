@@ -1,0 +1,41 @@
+* {
+    font-size: 18px;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#template {
+    width: 1280px;
+    min-height: 720px;
+    padding: 30px 40px;
+    color: #161616;
+    background: #fff;
+    position: relative;
+}
+
+.story-item {
+    margin-bottom: 30px;
+}
+
+.story-item:last-child {
+    margin-bottom: 0;
+}
+
+.story-title {
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-left: 15px;
+    border-left: 10px solid #ff9800;
+}
+
+.story-text {
+    font-size: 26px;
+    line-height: 1.6;
+    /* 游戏数据中的换行已在解析阶段转为 <br>，此处不启用 pre 以免产生双倍行距 */
+    white-space: normal;
+    word-break: break-word;
+}

@@ -62,7 +62,7 @@
 | `operatorInfo.py` | 索引与词典构建：`operator_list`、`skins_map`、`operator_group_map`、`voice_keywords`、`stories_keywords`、jieba 词典 |
 | `operatorData.py` | 数据组装：`OperatorData` 各 `@classmethod` 与 `JsonData` 读表（`operatorData.py:11`、`:219`） |
 | `main.py` | 9 个 `on_message` 处理器与 `WaitALLRequestsDone` |
-| `template/` | 6 套 HTML/CSS：`operatorInfo`、`operatorCost`、`skillsDetail`、`operatorSkin`、`operatorModule`、`operatorToken`，另有 `css/skillType.css`、`font.css`、`js/character.js`、`js/gamedata.js`、字体与背景图 |
+| `template/` | 7 套 HTML/CSS：`operatorInfo`、`operatorCost`、`skillsDetail`、`operatorSkin`、`operatorModule`、`operatorToken`、`operatorStory`（档案/模组故事共用），另有 `css/skillType.css`、`font.css`、`js/character.js`、`js/gamedata.js`、字体与背景图 |
 | `classify/` | 8 个职业图标 PNG |
 | `level/` | 精英化/专精等级图标（`evolve1`、`evolve2`、`master1-3`） |
 | `rank/` | 稀有度图标 1–6 星 |
@@ -105,16 +105,19 @@
 
 ### 各处理器
 
-- **模组查询**（`main.py:20-41`）：`OperatorData.find_operator_module(info, is_story)`；含「故事」时走
-  `markdown` 文本返回，否则渲染 `template/operatorModule.html`；无模组时提示（`main.py:37`）。
+- **模组查询**（`main.py:20-41`）：`OperatorData.find_operator_module(info, is_story)`；含「故事」时由
+  `find_operator_module_story` 返回 `[{'name','text'}]` 结构化列表，渲染 `template/operatorStory.html`；
+  否则渲染 `template/operatorModule.html`；无模组时提示（`main.py:37`）。
 - **语音查询**（`main.py:44-156`）：支持中日英韩俄德方言意大利共 8 种语言分支，映射为 `voice_type` 后缀
   （`_cn` / `_en` / `_kr` / `_custom` / `_ita`，`main.py:48-70`）。带 `skin_key` 时从
   `JsonData.get_json_data('charword_table')['charWords']` 中按 `wordKey`（由 skin_id 的 `@` 替换为 `_`
   得到）筛出皮肤专属语音（`main.py:84-94`）。未指定语音时列出全部语音的 Markdown 表格并等待序号
   （`main.py:115-131`）；命中后调用 `ArknightsGameDataResource.get_voice_file(opt, voice_key, voice_type,
   skin_key)` 取语音文件并 `reply.voice(file)`（`main.py:148-152`）。
-- **档案查询**（`main.py:159-208`）：`opt.stories()` 取全部档案，列出标题表格等待序号，命中后以
-  `markdown` 返回，换行转 `<br>`（`main.py:205`）。
+- **档案查询**（`main.py:159-212`）：`opt.stories()` 取全部档案，列出标题表格等待序号。命中后先经
+  `ArknightsGameDataResource.parse_template([], story_text)` 把游戏原始富文本标签转成 HTML，再渲染
+  `template/operatorStory.html`（`main.py:201-210`）——**不能走 `.markdown()`**，它生成的是 Markdown
+  图片，会把 `<span>` 当普通字符绘制。
 - **皮肤查询**（`main.py:211-264`）：`opt.skins()` 列立绘，命中后组装 `skin_data`（含 `name` / `data` /
   `path`），`path` 来自 `ArknightsGameDataResource.get_skin_file(skin_item, encode_url=True)`；渲染
   `template/operatorSkin.html`；配置 `operatorSkin.showImage` 为真时额外直接发送图片（`main.py:261-263`）。

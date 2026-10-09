@@ -206,14 +206,17 @@ class OperatorData:
 
         return modules
 
-    @staticmethod
-    def find_operator_module_story(modules):
-        text = ''
+    @classmethod
+    def find_operator_module_story(cls, modules):
+        stories = []
         for item in modules:
-            text += '\n\n## %s\n\n' % item['uniEquipName']
-            text += item['uniEquipDesc'].replace('\n', '<br>')
+            # 模组故事为游戏原始数据，含 <@cc.g> 等富文本标签，需先转成 HTML 再渲染
+            text = ArknightsGameDataResource.parse_template([], item['uniEquipDesc'] or '').strip()
+            if not text:
+                continue
+            stories.append({'name': item['uniEquipName'], 'text': text})
 
-        return text
+        return stories
 
 
 class JsonData:

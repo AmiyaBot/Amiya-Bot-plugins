@@ -36,7 +36,7 @@ async def operator_archives_module_func(data: Message):
     if not result:
         return Chain(data).text(f'博士，干员{info.name}尚未拥有模组')
     if is_story:
-        return Chain(data).markdown(result)
+        return Chain(data).html(f'{curr_dir}/template/operatorStory.html', result)
     else:
         return Chain(data, chain_builder=WaitALLRequestsDone()).html(f'{curr_dir}/template/operatorModule.html', result)
 
@@ -199,10 +199,17 @@ async def operator_archives_story_func(data: Message):
         return None
 
     if info.story_key in stories_map:
+        story_text = stories_map[info.story_key].strip()
+        if not story_text:
+            return Chain(data).text(f'博士，干员{info.name}《{info.story_key}》的档案内容为空')
+
+        # 档案为游戏原始数据，含 <@cc.g> 等富文本标签，需先转成 HTML 再交由模板渲染
+        story_text = ArknightsGameDataResource.parse_template([], story_text)
+
         return (
             Chain(data)
             .text(f'博士，这是干员{info.name}《{info.story_key}》的档案')
-            .markdown(stories_map[info.story_key].replace('\n', '<br>'))
+            .html(f'{curr_dir}/template/operatorStory.html', [{'name': '', 'text': story_text}])
         )
     else:
         return Chain(data).text(f'博士，没有找到干员{info.name}《{info.story_key}》的档案')
