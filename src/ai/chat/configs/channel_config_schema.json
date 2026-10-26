@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "enable": {
+            "title": "启用",
+            "description": "是否在该频道启用 AI 对话。",
+            "type": "boolean"
+        },
+        "at_only": {
+            "title": "仅AT响应",
+            "description": "开启后，该群聊中只有 AT 机器人或包含昵称触发词的消息才会获得 AI 回复，普通闲聊不再兜底响应（私聊不受影响）。",
+            "type": "boolean"
+        },
+        "model": {
+            "title": "对话模型",
+            "description": "该频道使用的模型，留空则使用全局配置。",
+            "type": "string"
+        },
+        "system_prompt": {
+            "title": "人设提示词",
+            "description": "该频道使用的人设，留空则使用全局配置。",
+            "type": "string"
+        },
+        "proactive_reply": {
+            "title": "主动插话",
+            "description": "该频道是否允许 AI 主动插话，留空或与全局一致。",
+            "type": "boolean"
+        },
+        "proactive_probability": {
+            "title": "插话概率",
+            "description": "该频道的主动插话概率。",
+            "type": "number"
+        },
+        "proactive_cooldown_seconds": {
+            "title": "插话冷却(秒)",
+            "description": "该频道的主动插话冷却时间。",
+            "type": "number"
+        },
+        "lore_retrieval": {
+            "title": "剧情资料检索",
+            "description": "该频道是否启用剧情资料检索注入。",
+            "type": "boolean"
+        }
+    }
+}

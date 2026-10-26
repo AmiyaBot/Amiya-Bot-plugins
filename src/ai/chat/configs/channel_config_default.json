@@ -1,0 +1,10 @@
+{
+    "enable": true,
+    "at_only": false,
+    "model": "",
+    "system_prompt": "",
+    "proactive_reply": false,
+    "proactive_probability": 0.03,
+    "proactive_cooldown_seconds": 300,
+    "lore_retrieval": true
+}

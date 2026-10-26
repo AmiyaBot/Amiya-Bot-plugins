@@ -1,0 +1,100 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [],
+    "properties": {
+        "allow_mode": {
+            "title": "生效范围",
+            "description": "AI 对话在哪些群聊生效。「全部频道」即全局开放；「仅白名单」则只对下方白名单内的群聊开放（私聊不受限），适合控制 API 成本或仅对部分群提供服务。",
+            "type": "string",
+            "enum": ["全部频道", "仅白名单"]
+        },
+        "channel_whitelist": {
+            "title": "群聊白名单",
+            "description": "生效范围选择「仅白名单」时生效，填入允许使用 AI 对话的频道（群聊）ID，可向机器人发送「频道信息」获取当前频道 ID。",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "model": {
+            "title": "对话模型",
+            "description": "用于 AI 对话的模型，需先在大语言模型调用库（amiyabot-blm-library）中配置好模型提供商。留空则使用调用库的默认模型。如果在这里看不到你添加的模型，请先保存调用库的配置，然后刷新控制台。",
+            "type": "string",
+            "enum": [""]
+        },
+        "system_prompt": {
+            "title": "人设提示词",
+            "description": "AI 对话使用的人设（system 提示词）。留空则使用内置的阿米娅人设。",
+            "type": "string"
+        },
+        "reply_priority": {
+            "title": "兜底优先级",
+            "description": "AI 对话的触发权重，默认 -1。框架总是优先选择权重更高的响应，所有插件功能的权重均不低于 0，因此保持 -1 可以保证只有没有任何功能命中时才由 AI 回复，一般无需修改。",
+            "type": "number"
+        },
+        "at_reply": {
+            "title": "回复时@用户",
+            "description": "响应 AT 消息时是否在回复中@对方。",
+            "type": "boolean"
+        },
+        "max_reply_length": {
+            "title": "最大回复长度",
+            "description": "AI 单次回复的最大字数，超出时会在合适的标点处截断。",
+            "type": "number"
+        },
+        "context_max_messages": {
+            "title": "上下文条数",
+            "description": "每个频道保留的最近聊天记录条数，修改后重启生效。",
+            "type": "number"
+        },
+        "context_timeout_minutes": {
+            "title": "上下文时效(分钟)",
+            "description": "超过该时长的聊天记录不再作为上下文，修改后重启生效。",
+            "type": "number"
+        },
+        "mention_keywords": {
+            "title": "昵称触发词",
+            "description": "群聊中消息包含这些关键词时视为在呼唤机器人，将触发 AI 回复（无需 AT）。",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "followup_window_seconds": {
+            "title": "连续对话窗口(秒)",
+            "description": "AI 回复后的该时间窗口内，同一位用户继续发言会被视为在延续与机器人的对话，从而获得回复。设为 0 关闭连续对话。",
+            "type": "number"
+        },
+        "min_reply_interval_seconds": {
+            "title": "最小回复间隔(秒)",
+            "description": "两次 AI 回复之间的最小间隔，用于防止刷屏。",
+            "type": "number"
+        },
+        "proactive_reply": {
+            "title": "主动插话",
+            "description": "群聊开启接收全部消息后，AI 是否以一定概率主动加入闲聊。关闭时，AI 只响应 AT、昵称提及、私聊与连续对话。",
+            "type": "boolean"
+        },
+        "proactive_probability": {
+            "title": "插话概率",
+            "description": "每次群聊消息触发主动插话判断的概率，0~1 之间。建议保持较低值（如 0.03）以免刷屏。",
+            "type": "number"
+        },
+        "proactive_cooldown_seconds": {
+            "title": "插话冷却(秒)",
+            "description": "两次主动插话（以及主动插话与 AI 回复）之间的最小间隔。",
+            "type": "number"
+        },
+        "lore_retrieval": {
+            "title": "剧情资料检索",
+            "description": "聊天时自动检索干员/NPC 档案语料（需已安装「明日方舟数据解析」插件并完成资源初始化），把相关剧情资料注入提示词，让 AI 回答世界观类问题有据可依。",
+            "type": "boolean"
+        },
+        "lore_max_chars": {
+            "title": "资料注入上限(字符)",
+            "description": "单次回复最多注入的剧情资料字符数。",
+            "type": "number"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "allow_mode": "全部频道",
+    "channel_whitelist": [],
+    "model": "",
+    "system_prompt": "",
+    "reply_priority": -1,
+    "at_reply": true,
+    "max_reply_length": 200,
+    "context_max_messages": 20,
+    "context_timeout_minutes": 30,
+    "mention_keywords": ["阿米娅", "兔兔", "Amiya", "amiya"],
+    "followup_window_seconds": 120,
+    "min_reply_interval_seconds": 3,
+    "proactive_reply": false,
+    "proactive_probability": 0.03,
+    "proactive_cooldown_seconds": 300,
+    "lore_retrieval": true,
+    "lore_max_chars": 2400
+}
