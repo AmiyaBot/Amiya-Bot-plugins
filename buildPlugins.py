@@ -14,7 +14,7 @@ sys.path += [os.path.dirname(os.path.abspath(__file__)) + '/../']
 remote = 'plugins/official'
 
 
-def build(dist, upload=False, secret_id=None, secret_key=None):
+def build(dist, upload=False, secret_id=None, secret_key=None, bucket=None, region=None):
     if os.path.exists(dist):
         shutil.rmtree(dist)
 
@@ -94,11 +94,13 @@ def build(dist, upload=False, secret_id=None, secret_key=None):
         for root, _, files in os.walk(dist):
             upload_list += [(os.path.join(root, file), f'{remote}/{file}') for file in files]
 
-        upload_all_plugins(upload_list, secret_id, secret_key)
+        upload_all_plugins(upload_list, secret_id, secret_key, bucket, region)
 
 
-def upload_all_plugins(upload_list: list, secret_id: str = None, secret_key: str = None):
-    from build.uploadFile import COSUploader
+def upload_all_plugins(
+    upload_list: list, secret_id: str = None, secret_key: str = None, bucket: str = None, region: str = None
+):
+    from build.uploadFile import COSUploader, official_bucket
 
     # `--secretid` 结尾不带值时会解析为 True，需视为未提供
     if not isinstance(secret_id, str):
@@ -114,7 +116,14 @@ def upload_all_plugins(upload_list: list, secret_id: str = None, secret_key: str
         print('缺少腾讯云密钥：请用 --secretid <id> --secretkey <key>，或设置 SECRETID / SECRETKEY 环境变量')
         return
 
-    cos = COSUploader(secret_id, secret_key, logger_level=logging.ERROR)
+    cos = COSUploader(
+        secret_id,
+        secret_key,
+        region=region or 'ap-guangzhou',
+        # 发布固定指向官方桶，避免误传到账号下的其他桶
+        bucket=bucket or official_bucket,
+        logger_level=logging.ERROR,
+    )
 
     cos.delete_folder(remote)
     for item in upload_progress(upload_list):
