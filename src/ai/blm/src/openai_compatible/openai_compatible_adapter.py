@@ -5,8 +5,6 @@ import time
 import traceback
 from typing import List, Optional, Union
 
-from openai import AsyncOpenAI, BadRequestError, RateLimitError
-
 from core import AmiyaBotPluginInstance
 from core.util.threadPool import run_in_thread_pool
 
@@ -21,13 +19,28 @@ from ..common.extract_json import extract_json
 
 logger = LoggerManager('OpenAICompat')
 
+# openai 为可选依赖：未安装时本适配器不可用（install 阶段跳过装配），但不阻断插件加载
+enabled = False
+AsyncOpenAI = None
+BadRequestError = RateLimitError = Exception
+try:
+    from openai import AsyncOpenAI, BadRequestError, RateLimitError
+
+    enabled = True
+except ImportError as e:
+    logger.info(f'未安装python库openai（pip install openai），OpenAI兼容适配器不可用，错误消息：{e}')
+
 
 class OpenAICompatibleAdapter(BLMAdapter):
+    # 支持直接传入 OpenAI 标准格式的消息（{"role": ..., "content": ...}）
+    supports_role_messages = True
+
     def __init__(self, plugin):
         super().__init__()
         self.plugin: AmiyaBotPluginInstance = plugin
         self.context_holder = {}
-        self.quota_checker : QuotaController = QuotaController(logger,plugin)
+        self.quota_checker: QuotaController = QuotaController(logger, plugin)
+        self._clients = {}
 
     def debug_log(self, msg):
         show_log = self.plugin.get_config("show_log")
@@ -39,6 +52,34 @@ class OpenAICompatibleAdapter(BLMAdapter):
         if model_config and model_config["enable"] and key in model_config:
             return model_config[key]
         return None
+
+    def get_client(self, model_conf: dict) -> AsyncOpenAI:
+        # 按 base_url + key 复用客户端，避免每次调用都重建
+        key = (model_conf.get("base_url"), model_conf.get("key"))
+        client = self._clients.get(key)
+        if client is None:
+            client = AsyncOpenAI(api_key=model_conf.get("key"), base_url=model_conf.get("base_url"), timeout=60)
+            self._clients[key] = client
+        return client
+
+    def trim_context(self, messages: list) -> list:
+        # 限制 context_id 模式下的历史长度，防止无限增长
+        max_messages = self.get_config("max_context_messages")
+        try:
+            max_messages = int(max_messages) if max_messages else 40
+        except (TypeError, ValueError):
+            max_messages = 40
+
+        if max_messages <= 0 or len(messages) <= max_messages:
+            return messages
+
+        trimmed = messages[-max_messages:]
+        # 首条 system 消息不因裁剪丢失
+        first = messages[0]
+        if isinstance(first, dict) and first.get("role") == "system" and (not trimmed or trimmed[0] is not first):
+            trimmed = [first] + trimmed
+
+        return trimmed
 
     def get_model_quota_left(self, model_name: str) -> int:
         # 根据__quota_check来计算
@@ -61,7 +102,6 @@ class OpenAICompatibleAdapter(BLMAdapter):
             }
 
             model_list_response.append(model_info)
-
 
         return model_list_response
 
@@ -95,21 +135,18 @@ class OpenAICompatibleAdapter(BLMAdapter):
             return None
 
         model_list_configuration = self.get_config("models")
-        model_conf : dict = next(
-            (m for m in model_list_configuration if m["name"] == model_info["model_name"]), None
-        )
+        model_conf: dict = next((m for m in model_list_configuration if m["name"] == model_info["model_name"]), None)
         if model_conf is None:
             self.debug_log(f"Model {model_info['model_name']} not found in configuration.")
             return None
 
-        client = AsyncOpenAI(api_key=model_conf.get("key"), base_url=model_conf.get("base_url"),timeout=60)
+        client = self.get_client(model_conf)
 
-        extra_headers=model_conf.get("extra_headers", None)
+        extra_headers = model_conf.get("extra_headers", None)
         if extra_headers:
             extra_headers = json.loads(extra_headers)
         else:
             extra_headers = {}
-
 
         self.debug_log(f"model: {model_info}")
 
@@ -124,6 +161,9 @@ class OpenAICompatibleAdapter(BLMAdapter):
             if isinstance(prompt[i], str):
                 prompt[i] = {"role": "user", "content": [{"type": "text", "text": prompt[i]}]}
             elif isinstance(prompt[i], dict):
+                if "role" in prompt[i] and "content" in prompt[i]:
+                    # OpenAI 标准消息格式直传，content 为字符串或分段列表均可
+                    continue
                 if "type" not in prompt[i]:
                     raise ValueError("无效的prompt")
                 if prompt[i]["type"] == "text":
@@ -145,9 +185,12 @@ class OpenAICompatibleAdapter(BLMAdapter):
 
         def prompt_filter(item):
             if not model_info["supported_feature"].__contains__("vision"):
-                if isinstance(item["content"], dict) and item["content"][0]["type"] == "image_url":
+                content = item.get("content")
+                if isinstance(content, list) and any(
+                    isinstance(part, dict) and part.get("type") == "image_url" for part in content
+                ):
                     self.debug_log(f"image_url not supported in {model_info['model_name']}")
-                    return False          
+                    return False
             return True
 
         prompt = list(filter(prompt_filter, prompt))
@@ -158,7 +201,11 @@ class OpenAICompatibleAdapter(BLMAdapter):
             # 扁平化prompt的content为str
             for i in range(len(exec_prompt)):
                 if isinstance(exec_prompt[i]["content"], list):
-                    exec_prompt[i]["content"] = exec_prompt[i]["content"][0]["text"]
+                    exec_prompt[i]["content"] = "\n".join(
+                        part.get("text", "")
+                        for part in exec_prompt[i]["content"]
+                        if isinstance(part, dict) and part.get("type") == "text"
+                    )
                 elif isinstance(exec_prompt[i]["content"], dict):
                     exec_prompt[i]["content"] = exec_prompt[i]["content"]["text"]
                 elif isinstance(exec_prompt[i]["content"], str):
@@ -186,7 +233,7 @@ class OpenAICompatibleAdapter(BLMAdapter):
                         formated_exec_prompt[-1]["content"] += "\n" + exec_prompt[i]["content"]
                     else:
                         formated_exec_prompt.append(exec_prompt[i])
-            
+
             exec_prompt = formated_exec_prompt
 
         try:
@@ -200,8 +247,10 @@ class OpenAICompatibleAdapter(BLMAdapter):
                     call_param["response_format"] = {"type": "json_object"}
 
             if (
-                (model_info["supported_feature"].__contains__("function_call")
-                  or model_info["supported_feature"].__contains__("tools"))
+                (
+                    model_info["supported_feature"].__contains__("function_call")
+                    or model_info["supported_feature"].__contains__("tools")
+                )
                 and functions is not None
                 and len(functions) > 0
             ):
@@ -237,7 +286,6 @@ class OpenAICompatibleAdapter(BLMAdapter):
                                 # ✅ 交由 MCPClientManager 执行
                                 await self.plugin.mcp_manager.execute_tool_call(tool_call, call_param["messages"])
                                 continue  # MCP 工具已处理，跳过后续原生 function_call 逻辑
-
 
                         func_call = next(
                             (func for func in functions if func.function_schema["name"] == function_name), None
@@ -300,7 +348,7 @@ class OpenAICompatibleAdapter(BLMAdapter):
 
         text: str = completions.choices[0].message.content
         # 判断是否有reasoning_content这个属性
-        reason_text : str= None
+        reason_text: str = None
         if hasattr(completions.choices[0].message, "reasoning_content"):
             reason_text = completions.choices[0].message.reasoning_content
             self.debug_log(f'Reasoning Content{reason_text}')
@@ -308,7 +356,9 @@ class OpenAICompatibleAdapter(BLMAdapter):
             self.debug_log('No Reasoning Content')
         # role: str = completions.choices[0].message.role
 
-        self.debug_log(f'{model_info["model_name"]} Raw: \n{exec_prompt}\n------------------------\n{completions.choices[0].message}')
+        self.debug_log(
+            f'{model_info["model_name"]} Raw: \n{exec_prompt}\n------------------------\n{completions.choices[0].message}'
+        )
 
         id = completions.id
         usage = completions.usage
@@ -328,7 +378,7 @@ class OpenAICompatibleAdapter(BLMAdapter):
 
         if context_id is not None:
             prompt.append({"role": "assistant", "content": text})
-            self.context_holder[context_id] = prompt
+            self.context_holder[context_id] = self.trim_context(prompt)
 
         ret_str = f"{text}".strip()
 
@@ -343,18 +393,16 @@ class OpenAICompatibleAdapter(BLMAdapter):
                     ret_str = json.dumps(json_obj)
                 else:
                     ret_str = None
-            
+
             if self.get_config("deep_think") == True:
+                # json_mode 下不能把思考内容混入返回值，否则会破坏 JSON 结构
                 self.debug_log(f'deep_think enabled: {reason_text}')
-                if reason_text is not None:
-                    ret_str["reasoning_content"] = reason_text
 
             return ret_str
         else:
             if self.get_config("deep_think") == True:
                 self.debug_log(f'deep_think enabled: {reason_text}')
-                if reason_text is not None:                
+                if reason_text is not None:
                     ret_str = f"({reason_text.strip()})\n{ret_str}"
 
             return ret_str
-

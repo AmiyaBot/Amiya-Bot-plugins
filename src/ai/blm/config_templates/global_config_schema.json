@@ -64,6 +64,11 @@
                         },
                         "required": ["name"]
                     }
+                },
+                "max_context_messages": {
+                    "title": "上下文上限",
+                    "description": "使用 context_id 维护会话时，最多保留的消息条数，超出后丢弃最早的消息。",
+                    "type": "number"
                 }
             }
         },

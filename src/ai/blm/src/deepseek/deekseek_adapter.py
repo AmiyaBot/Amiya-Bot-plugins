@@ -5,8 +5,6 @@ import time
 import traceback
 from typing import List, Optional, Union
 
-from openai import AsyncOpenAI, BadRequestError, RateLimitError
-
 from core import AmiyaBotPluginInstance
 from core.util.threadPool import run_in_thread_pool
 
@@ -21,13 +19,27 @@ from ..common.extract_json import extract_json
 
 logger = LoggerManager('DEEPSEEK')
 
+# openai 为可选依赖：未安装时本适配器不可用（install 阶段跳过装配），但不阻断插件加载
+enabled = False
+AsyncOpenAI = None
+BadRequestError = RateLimitError = Exception
+try:
+    from openai import AsyncOpenAI, BadRequestError, RateLimitError
+
+    enabled = True
+except ImportError as e:
+    logger.info(f'未安装python库openai（pip install openai），DeepSeek适配器不可用，错误消息：{e}')
+
 
 class DeepSeekAdapter(BLMAdapter):
+    # 支持直接传入 OpenAI 标准格式的消息（{"role": ..., "content": ...}）
+    supports_role_messages = True
+
     def __init__(self, plugin):
         super().__init__()
         self.plugin: AmiyaBotPluginInstance = plugin
         self.context_holder = {}
-        self.quota_checker : QuotaController = QuotaController(logger,plugin)
+        self.quota_checker: QuotaController = QuotaController(logger, plugin)
 
     def debug_log(self, msg):
         show_log = self.plugin.get_config("show_log")
@@ -42,7 +54,26 @@ class DeepSeekAdapter(BLMAdapter):
 
     def get_model_quota_left(self, model_name: str) -> int:
         # 根据__quota_check来计算
-        return self.quota_checker.check(peek=True)
+        return self.quota_checker.check(self.get_config('high_cost_quota'), peek=True)
+
+    def trim_context(self, messages: list) -> list:
+        # 限制 context_id 模式下的历史长度，防止无限增长
+        max_messages = self.get_config("max_context_messages")
+        try:
+            max_messages = int(max_messages) if max_messages else 40
+        except (TypeError, ValueError):
+            max_messages = 40
+
+        if max_messages <= 0 or len(messages) <= max_messages:
+            return messages
+
+        trimmed = messages[-max_messages:]
+        # 首条 system 消息不因裁剪丢失
+        first = messages[0]
+        if isinstance(first, dict) and first.get("role") == "system" and (not trimmed or trimmed[0] is not first):
+            trimmed = [first] + trimmed
+
+        return trimmed
 
     def model_list(self) -> List[dict]:
         model_list_response = [
@@ -61,7 +92,7 @@ class DeepSeekAdapter(BLMAdapter):
                 "max_token": 4000,
                 "max-token": 4000,
                 "supported_feature": ["completion_flow", "chat_flow"],
-            }
+            },
         ]
         return model_list_response
 
@@ -94,7 +125,8 @@ class DeepSeekAdapter(BLMAdapter):
             self.debug_log('model not supported chat_flow')
             return None
         if model_info["type"] == "high-cost":
-            quota = self.__quota_check()
+            # 非 peek 调用会记录本次使用，从而真正产生限流效果
+            quota = self.quota_checker.check(self.get_config('high_cost_quota'))
             if quota <= 0:
                 self.debug_log('quota not enough')
                 return None
@@ -114,6 +146,9 @@ class DeepSeekAdapter(BLMAdapter):
             if isinstance(prompt[i], str):
                 prompt[i] = {"role": "user", "content": [{"type": "text", "text": prompt[i]}]}
             elif isinstance(prompt[i], dict):
+                if "role" in prompt[i] and "content" in prompt[i]:
+                    # OpenAI 标准消息格式直传，content 为字符串或分段列表均可
+                    continue
                 if "type" not in prompt[i]:
                     raise ValueError("无效的prompt")
                 if prompt[i]["type"] == "text":
@@ -135,9 +170,12 @@ class DeepSeekAdapter(BLMAdapter):
 
         def prompt_filter(item):
             if not model_info["supported_feature"].__contains__("vision"):
-                if isinstance(item["content"], dict) and item["content"][0]["type"] == "image_url":
+                content = item.get("content")
+                if isinstance(content, list) and any(
+                    isinstance(part, dict) and part.get("type") == "image_url" for part in content
+                ):
                     self.debug_log(f"image_url not supported in {model_info['model_name']}")
-                    return False          
+                    return False
             return True
 
         prompt = list(filter(prompt_filter, prompt))
@@ -148,7 +186,11 @@ class DeepSeekAdapter(BLMAdapter):
             # 扁平化prompt的content为str
             for i in range(len(exec_prompt)):
                 if isinstance(exec_prompt[i]["content"], list):
-                    exec_prompt[i]["content"] = exec_prompt[i]["content"][0]["text"]
+                    exec_prompt[i]["content"] = "\n".join(
+                        part.get("text", "")
+                        for part in exec_prompt[i]["content"]
+                        if isinstance(part, dict) and part.get("type") == "text"
+                    )
                 elif isinstance(exec_prompt[i]["content"], dict):
                     exec_prompt[i]["content"] = exec_prompt[i]["content"]["text"]
                 elif isinstance(exec_prompt[i]["content"], str):
@@ -176,7 +218,7 @@ class DeepSeekAdapter(BLMAdapter):
                         formated_exec_prompt[-1]["content"] += "\n" + exec_prompt[i]["content"]
                     else:
                         formated_exec_prompt.append(exec_prompt[i])
-            
+
             exec_prompt = formated_exec_prompt
 
         try:
@@ -278,7 +320,7 @@ class DeepSeekAdapter(BLMAdapter):
 
         text: str = completions.choices[0].message.content
         # 判断是否有reasoning_content这个属性
-        reason_text : str= None
+        reason_text: str = None
         if hasattr(completions.choices[0].message, "reasoning_content"):
             reason_text = completions.choices[0].message.reasoning_content
             self.debug_log(f'Reasoning Content{reason_text}')
@@ -286,7 +328,9 @@ class DeepSeekAdapter(BLMAdapter):
             self.debug_log('No Reasoning Content')
         # role: str = completions.choices[0].message.role
 
-        self.debug_log(f'{model_info["model_name"]} Raw: \n{exec_prompt}\n------------------------\n{completions.choices[0].message}')
+        self.debug_log(
+            f'{model_info["model_name"]} Raw: \n{exec_prompt}\n------------------------\n{completions.choices[0].message}'
+        )
 
         id = completions.id
         usage = completions.usage
@@ -306,7 +350,7 @@ class DeepSeekAdapter(BLMAdapter):
 
         if context_id is not None:
             prompt.append({"role": "assistant", "content": text})
-            self.context_holder[context_id] = prompt
+            self.context_holder[context_id] = self.trim_context(prompt)
 
         ret_str = f"{text}".strip()
 
@@ -321,18 +365,16 @@ class DeepSeekAdapter(BLMAdapter):
                     ret_str = json.dumps(json_obj)
                 else:
                     ret_str = None
-            
+
             if self.get_config("deep_think") == True:
+                # json_mode 下不能把思考内容混入返回值，否则会破坏 JSON 结构
                 self.debug_log(f'deep_think enabled: {reason_text}')
-                if reason_text is not None:
-                    ret_str["reasoning_content"] = reason_text
 
             return ret_str
         else:
             if self.get_config("deep_think") == True:
                 self.debug_log(f'deep_think enabled: {reason_text}')
-                if reason_text is not None:                
+                if reason_text is not None:
                     ret_str = f"({reason_text.strip()})\n{ret_str}"
 
             return ret_str
-

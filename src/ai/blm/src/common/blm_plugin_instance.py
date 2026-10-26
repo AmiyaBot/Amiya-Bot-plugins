@@ -3,18 +3,21 @@ import functools
 import json
 from typing import Any, Dict, List, Optional, Union
 
-from core import AmiyaBotPluginInstance, Requirement
+from core import AmiyaBotPluginInstance, Requirement, log
 from core.plugins.customPluginInstance.amiyaBotPluginInstance import CONFIG_TYPE, DYNAMIC_CONFIG_TYPE
 
 from ..common.blm_types import BLMAdapter, BLMFunctionCall
 from ..common.database import AmiyaBotBLMLibraryTokenConsumeModel, AmiyaBotBLMLibraryMetaStorageModel
 
+from ..chat_gpt import chat_gpt_adapter, gpt_assistant_adapter
 from ..chat_gpt.chat_gpt_adapter import ChatGPTAdapter
 from ..chat_gpt.gpt_assistant_adapter import ChatGPTAssistantAdapter
 
 from ..ernie.ernie_adapter import ERNIEAdapter
 from ..ernie.qianfan_adapter import QianFanAdapter
+from ..deepseek import deekseek_adapter
 from ..deepseek.deekseek_adapter import DeepSeekAdapter
+from ..openai_compatible import openai_compatible_adapter
 from ..openai_compatible.openai_compatible_adapter import OpenAICompatibleAdapter
 
 from ..mcp.mcp_client_manager import MCPClientManager
@@ -22,6 +25,14 @@ from ..mcp.mcp_client_manager import MCPClientManager
 from .extract_json import extract_json
 
 from ..functions.core import parse_docstring
+
+# 依赖 openai/httpx 的适配器：模块导入失败（可选依赖缺失）时 enabled 为 False
+optional_adapters = {
+    'ChatGPT': (chat_gpt_adapter.enabled, ChatGPTAdapter),
+    'GPTAssistant': (gpt_assistant_adapter.enabled, ChatGPTAssistantAdapter),
+    'DeepSeek': (deekseek_adapter.enabled, DeepSeekAdapter),
+    'OpenAISDKCompatible': (openai_compatible_adapter.enabled, OpenAICompatibleAdapter),
+}
 
 
 class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
@@ -63,39 +74,63 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         self.assistant_map: Dict[str, BLMAdapter] = {}
         self.thread_map: Dict[str, BLMAdapter] = {}
         self.functions_registry: Dict[str, BLMFunctionCall] = {}
+        # MCP 未启用时保持为 None，供适配器安全判断
+        self.mcp_manager: Optional[MCPClientManager] = None
+        # 当前已装配的提供商配置键，用于 refresh_adapters 的变化检测
+        self._assembled_keys: set = set()
 
     def install(self):
         AmiyaBotBLMLibraryTokenConsumeModel.create_table(safe=True)
         AmiyaBotBLMLibraryMetaStorageModel.create_table(safe=True)
 
-        # 读取配置文件来确定各个模型是不是启用
-        chatgpt_config = self.get_config("ChatGPT")
-        if chatgpt_config and chatgpt_config["enable"]:
-            self.adapters.append(ChatGPTAdapter(self))
-        gpt_assistant_config = self.get_config("GPTAssistant")
-        if gpt_assistant_config and gpt_assistant_config["enable"]:
-            self.adapters.append(ChatGPTAssistantAdapter(self))
-
-        ernie_config = self.get_config("ERNIE")
-        if ernie_config and ernie_config["enable"]:
-            self.adapters.append(ERNIEAdapter(self))
-        qianfan_config = self.get_config("QianFan")
-        if qianfan_config and qianfan_config["enable"]:
-            self.adapters.append(QianFanAdapter(self))
-
-        deepseek_config = self.get_config("DeepSeek")
-        if deepseek_config and deepseek_config["enable"]:
-            self.adapters.append(DeepSeekAdapter(self))
-
-        openai_compatible_config = self.get_config("OpenAISDKCompatible")
-        if openai_compatible_config and openai_compatible_config["enable"]:
-            self.adapters.append(OpenAICompatibleAdapter(self))
+        self.refresh_adapters()
 
         mcp_config = self.get_config("MCP")
         if mcp_config and mcp_config["enable"]:
             self.mcp_manager = MCPClientManager(self)
 
         self.model_list()
+
+    def refresh_adapters(self):
+        """按当前配置重建适配器装配（配置里启用状态变化后无需重启即可生效）。
+
+        仍启用的适配器复用原实例（保留会话上下文与配额状态），仅增删变化的提供商。
+        控制台请求配置 schema 时会调用本方法，实现「保存后刷新即出现」。
+        """
+        # (配置键, 依赖是否可用, 适配器类)；
+        # OpenAI 系适配器依赖可选库 openai/httpx：缺失时跳过装配而不是让调用在运行期崩溃
+        candidates = [(key, enabled, cls) for key, (enabled, cls) in optional_adapters.items()]
+        candidates += [
+            ('ERNIE', True, ERNIEAdapter),
+            ('QianFan', True, QianFanAdapter),
+        ]
+
+        target: Dict[str, BLMAdapter] = {}
+        for config_key, enabled, adapter_cls in candidates:
+            config = self.get_config(config_key)
+            if not (config and config.get('enable')):
+                continue
+            if not enabled:
+                log.warning(
+                    f'{config_key} 已启用，但缺少可选依赖 openai/httpx（pip install openai），该提供商暂时不可用'
+                )
+                continue
+            # 复用仍在启用列表中的旧实例
+            existing = next((a for a in self.adapters if isinstance(a, adapter_cls)), None)
+            target[config_key] = existing or adapter_cls(self)
+
+        assembled = set(target.keys())
+        if assembled == self._assembled_keys:
+            # 装配未变化（含首次为空后的空装配对比），无需重建
+            return
+
+        self.adapters = list(target.values())
+        self._assembled_keys = assembled
+
+        self.model_map.clear()
+        self.assistant_map.clear()
+        self.model_list()
+        self.assistant_list()
 
     def register_blm_function(self, func) -> callable:
         """
@@ -172,7 +207,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         if isinstance(model, dict):
             model = model["model_name"]
 
-        adapter = self.model_map[model]
+        adapter = self.model_map.get(model)
         if not adapter:
             return None
         return await adapter.completion_flow(prompt, model, context_id, channel_id)
@@ -192,7 +227,7 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
         if isinstance(model, dict):
             model = model["model_name"]
 
-        adapter = self.model_map[model]
+        adapter = self.model_map.get(model)
         if not adapter:
             return None
         return await adapter.chat_flow(prompt, model, context_id, channel_id, functions, json_mode)
@@ -206,7 +241,6 @@ class BLMLibraryPluginInstance(AmiyaBotPluginInstance, BLMAdapter):
             for assistant in adapter_models:
                 self.assistant_map[assistant["id"]] = adapter
         return assistant_list
-
 
     def get_assistant(self, assistant_id: str) -> dict:
         assistant_dict_list = self.assistant_list()

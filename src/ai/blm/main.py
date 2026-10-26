@@ -20,6 +20,10 @@ def dynamic_get_global_config_schema_data():
             log.info(f'Failed to load JSON from {filepath}.')
             return None
 
+        # 控制台请求配置时按当前配置刷新适配器装配，
+        # 使「保存启用状态后刷新控制台」即可看到新模型，无需重启
+        bot.refresh_adapters()
+
         model_list = bot.model_list()
 
         new_values = ['...']
@@ -33,7 +37,7 @@ def dynamic_get_global_config_schema_data():
         assistant_list = bot.assistant_list()
 
         new_values = ['...']
-        new_values.extend([assistant['name']+"["+assistant["id"]+"]" for assistant in assistant_list])
+        new_values.extend([assistant['name'] + "[" + assistant["id"] + "]" for assistant in assistant_list])
 
         try:
             data['properties']['default_assistant']['enum'] = new_values
@@ -47,7 +51,7 @@ def dynamic_get_global_config_schema_data():
 
 bot = BLMLibraryPluginInstance(
     name='大语言模型调用库',
-    version='1.4.0',
+    version='1.5.2',
     plugin_id='amiyabot-blm-library',
     plugin_type='official',
     description='为其他插件提供大语音模型调用库',

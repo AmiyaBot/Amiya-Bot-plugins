@@ -2,6 +2,12 @@
 
 大语言模型调用库：为其他插件提供统一的多厂商 LLM 适配层，支持函数调用与 MCP。
 
+> 1.5.0 变更：OpenAICompatible / DeepSeek 适配器支持 OpenAI 标准角色消息直传（`{"role","content"}`，类属性 `supports_role_messages` 标记能力，`pluginsDev/src/ai/blm/src/openai_compatible/openai_compatible_adapter.py:27`、`pluginsDev/src/ai/blm/src/deepseek/deekseek_adapter.py:27`）；`context_id` 会话历史增加滑动窗口裁剪（`trim_context`，默认 40 条，可用 `OpenAISDKCompatible.max_context_messages` 配置）；修复 MCP 未启用时 `mcp_manager` 未初始化的 AttributeError（`pluginsDev/src/ai/blm/src/common/blm_plugin_instance.py:67`）、DeepSeek 配额调用缺参、`deep_think`+`json_mode` 下对字符串下标赋值的 TypeError；AsyncOpenAI 客户端按 base_url+key 复用（`get_client`）。`chat_flow`/`completion_flow` 对未知模型名由 KeyError 改为返回 None。
+>
+> 1.5.1 变更：**`openai`（及其依赖 `httpx`）彻底可选化**。此前 DeepSeek / OpenAICompatible 适配器在模块顶层裸 `from openai import ...`，未安装 openai 的环境整个插件加载失败（ModuleNotFoundError）。现在四个 OpenAI 系适配器（ChatGPT / GPTAssistant / DeepSeek / OpenAISDKCompatible）统一采用「try import + 模块级 `enabled` 标志」降级（`blm_plugin_instance.py:29-35` 的 `optional_adapters` 表），`install()` 装配前检查依赖：缺失时打 WARNING 并跳过该提供商，其余适配器（ERNIE / QianFan，不依赖 openai）不受影响。需要使用 OpenAI 系提供商时需自行 `pip install openai`。
+>
+> 1.5.2 变更：新增 `refresh_adapters()`（`blm_plugin_instance.py`）——按当前配置重建适配器装配并做变化检测，仍启用的适配器复用原实例（保留会话/配额状态）。blm 与 ai/chat 的动态 schema 函数在控制台请求配置时调用它，提供商启用/停用后**保存配置并刷新控制台即可**（旧版需要重启机器人才能看到新模型）。
+
 ## 使用指引
 
 - [README.md](README.md) — 面向用户的功能说明，由 `pluginsDev/src/ai/blm/main.py:54` 的 `document=` 参数加载。
@@ -35,7 +41,7 @@
 | `src/deepseek/deekseek_adapter.py` | DeepSeek 适配器（文件名拼写为 `deekseek`） |
 | `src/openai_compatible/openai_compatible_adapter.py` | OpenAI SDK 兼容适配器 |
 | `src/mcp/mcp_client_manager.py` | `MCPClientManager`：MCP 服务连接与工具调用 |
-| `config_templates/global_config_default.json` | 全局配置默认值：6 个适配器的 `enable` 与凭据、`show_log` |
+| `config_templates/global_config_default.json` | 全局配置默认值：6 个适配器的 `enable` 与凭据、`OpenAISDKCompatible.max_context_messages`、`show_log` |
 | `config_templates/global_config_schema.json` | 全局配置 JSON Schema（含 `default_model`、`default_assistant` 动态枚举） |
 | `images/chino_logo_comment.png` | 额外素材 |
 | `README.md` | 对用户展示的使用指引 |
@@ -95,7 +101,7 @@
 | 项 | 值 |
 |----|----|
 | plugin_id | `amiyabot-blm-library` |
-| version | `1.4.0` |
-| 产物 | `amiyabot-blm-library-1.4.0.zip` |
+| version | `1.5.2` |
+| 产物 | `amiyabot-blm-library-1.5.2.zip` |
 
 元数据定义于 `pluginsDev/src/ai/blm/main.py:48-57`。打包用 `python run_build.py --type plugins`，产出到 `plugins/`。

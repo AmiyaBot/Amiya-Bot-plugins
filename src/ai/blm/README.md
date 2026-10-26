@@ -20,10 +20,10 @@
 
 4. **max_token参数更名**
    model_info字典中的`max-token`更名为`max_token`，使用下划线替代连字符，从而和其他字段保持一致。
-   当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来的1.5版本移除支持，请开发者及时调整代码。
+   当前版本同时提供`max-token`和`max_token`，但是连字符的版本将在未来版本移除支持，请开发者及时调整代码。
 
 5. **extract_json函数废弃**
-   因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来的1.5版本移除支持，请开发者及时调整代码。
+   因为新增了json_mode，extract_json函数已被废弃。当前版本仍然提供extract_json函数，但是将在未来版本移除支持，请开发者及时调整代码。
 
 # 使用方法
 
@@ -475,3 +475,6 @@ Logo是用StableDiffusion插件跑出来的。
 | 1.2.6 | 分开GPT的基础模型部分配置和Assistant配置 |
 | 1.3.0 | 删除了一些GPT不再提供的模型。新增DeepSeek支持 |
 | 1.4.0 | 新增OpenAI兼容模型 |
+| 1.5.0 | OpenAI兼容与DeepSeek适配器支持OpenAI标准角色消息（`{"role","content"}`）直传；context_id会话历史增加滑动窗口裁剪（可用`max_context_messages`配置）；修复MCP未启用时的AttributeError、DeepSeek配额调用与deep_think/json_mode组合的异常；客户端按base_url+key复用 |
+| 1.5.1 | `openai`库彻底可选：未安装时插件可正常加载，OpenAI系提供商（ChatGPT/GPTAssistant/DeepSeek/OpenAI兼容）自动跳过并提示，文心等其余提供商不受影响。使用OpenAI系请自行`pip install openai` |
+| 1.5.2 | 提供商启用/停用后无需重启：控制台保存配置并刷新即可看到模型列表变化（装配按配置自动重建，仍启用的适配器保留会话状态） |

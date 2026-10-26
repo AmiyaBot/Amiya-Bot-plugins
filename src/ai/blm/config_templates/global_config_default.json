@@ -1,7 +1,8 @@
 {
     "OpenAISDKCompatible": {
         "enable": false,
-        "models":[]
+        "models": [],
+        "max_context_messages": 40
     },
     "DeepSeek":{
         "enable": false
