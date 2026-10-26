@@ -90,7 +90,7 @@ class AIChatPluginInstance(AmiyaBotPluginInstance):
 
 bot = AIChatPluginInstance(
     name='AI 对话',
-    version='1.3.2',
+    version='1.3.3',
     plugin_id='amiyabot-ai-chat',
     plugin_type='official',
     description='兜底 AI 对话：其他插件功能优先触发，无人响应时由大语言模型参与聊天',
@@ -262,9 +262,37 @@ def _strip_reasoning_prefix(text: str) -> str:
         text = rest
 
 
+def _collapse_repetition(text: str) -> str:
+    """折叠整段重复的回复（如「X\\nX\\nX」→「X」）。
+
+    上下文若混入了重复的自身发言，模型会模仿这种重复；此处在输出侧兜底压成一份。
+    仅在全文由完全相同的若干段构成时才折叠，不会影响正常的排比或重复用词。
+    """
+    stripped = text.strip()
+    if len(stripped) < 20:
+        return text
+
+    # 按行重复（最常见形态：同一句被逐行重复）
+    lines = [line.strip() for line in stripped.split('\n') if line.strip()]
+    if len(lines) >= 2 and len(set(lines)) == 1:
+        return lines[0]
+
+    # 无缝块重复（同一段文字直接拼接多次）
+    length = len(stripped)
+    for count in range(2, 6):
+        if length % count:
+            continue
+        unit = stripped[: length // count]
+        if unit.strip() and unit * count == stripped:
+            return unit
+
+    return text
+
+
 def clean_reply(text: str, max_length: int) -> str:
     text = re.sub(r'<think>.*?</think>', '', text or '', flags=re.S).strip()
     text = _strip_reasoning_prefix(text)
+    text = _collapse_repetition(text)
     # 去掉模型自我标注的前缀与包裹引号
     text = re.sub(r'^(阿米娅|Amiya|amiya)\s*[:：]\s*', '', text).strip()
     if len(text) >= 2 and text[0] in "'\"“”‘’「」【】" and text[-1] in "'\"“”‘’「】":
@@ -359,7 +387,9 @@ async def _(data: Message, _):
 
 @bot.message_after_send
 async def _(data: Chain, factory_name: str, _):
-    # 机器人（含其他插件）发出的回复同样进入上下文，让 AI 知道大家聊到了哪
+    # 机器人（含本插件与其他插件）发出的回复进入上下文，让 AI 知道大家聊到了哪。
+    # 这是机器人发言进入上下文的唯一入口：handler 生成回复后不再重复记录，
+    # 否则每条回复会在上下文里出现两遍，模型看到后模仿重复，形成 2→4→8 的递增劣化。
     if not data.data:
         return
 
@@ -367,8 +397,15 @@ async def _(data: Chain, factory_name: str, _):
     if not text:
         return
 
+    key = context_key(data.data)
+    entries = bot.store.recent(key)
+
+    # 幂等保护：同一句回复在短时间内被重复投递（部分适配器/多账号会重复触发）时只记一次
+    if entries and entries[-1].is_bot and entries[-1].text == text and time.time() - entries[-1].time < 5:
+        return
+
     bot.store.record(
-        context_key(data.data),
+        key,
         ChatEntry(time=time.time(), user_id='', nickname='阿米娅', text=text, is_bot=True),
     )
 
@@ -410,10 +447,7 @@ async def _(data: Message):
 
     state.last_reply_ts = now
     state.last_reply_user = data.user_id
-    bot.store.record(
-        channel_id,
-        ChatEntry(time=time.time(), user_id='', nickname='阿米娅', text=reply, is_bot=True),
-    )
+    # 回复本身由 message_after_send 在发送后记入上下文，此处不再记录（避免重复）
 
     at = bool(get_config('at_reply', data)) and trigger == 'at'
     return Chain(data, at=at).text(reply)

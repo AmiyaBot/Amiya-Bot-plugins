@@ -66,7 +66,7 @@ handler 中 `followup` / `proactive` 触发还受 `min_reply_interval_seconds` �
    - `resolve_model` 先取频道/全局 `model` 配置（不存在则告警回退），再回退到 blm 的 `default_model`；通过 `blm.model_map` 拿到适配器实例。
    - 适配器具有 `supports_role_messages = True`（见 blm 库的 OpenAICompatible / DeepSeek 适配器）时传 OpenAI 多轮消息（system + 按昵称标注的多轮 user/assistant，连续同角色合并）；否则传纯文本转写。
    - **不传 `context_id`**——上下文完全由本插件管理，避免与 blm 的会话机制重复存储。
-3. **回复清洗 `clean_reply`**（含 `_strip_reasoning_prefix`：剥离回复开头的思考/导演注释括号段——推理模型的 reasoning 泄漏、blm `deep_think` 拼接的 `(思考)
+3. **回复清洗 `clean_reply`**（含 `_collapse_repetition`：折叠整段重复的回复；含 `_strip_reasoning_prefix`：剥离回复开头的思考/导演注释括号段——推理模型的 reasoning 泄漏、blm `deep_think` 拼接的 `(思考)
 正文` 格式；按特征词判别避免误伤动作类短括号，`<think>` 标签残留亦在此剥离）（`pluginsDev/src/ai/chat/main.py:183-202`）：剔除 `<think>` 思考段、`阿米娅：` 自标注前缀、成对包裹引号；超过 `max_reply_length` 时在换行/标点处截断。
 4. **回复后状态更新**：写入 `state.last_reply_ts` / `state.last_reply_user`（支撑连续对话），并把回复以 `is_bot=True` 记入上下文。
 5. **动态 schema**（`pluginsDev/src/ai/chat/main.py:26-46` `generate_schema`）：与 blm 相同的模式——运行时把 blm 的模型列表注入 `model` 的 enum。
@@ -139,8 +139,8 @@ handler 中 `followup` / `proactive` 触发还受 `min_reply_interval_seconds` �
 | 项 | 值 |
 |----|----|
 | plugin_id | `amiyabot-ai-chat` |
-| version | `1.3.2` |
-| 产物 | `amiyabot-ai-chat-1.3.2.zip` |
+| version | `1.3.3` |
+| 产物 | `amiyabot-ai-chat-1.3.3.zip` |
 
 打包用 `python run_build.py --type plugins`（`buildPlugins.py` 只扫描 `pluginsDev/src`，`bak/` 不参与打包），产出到 `plugins/`。
 
