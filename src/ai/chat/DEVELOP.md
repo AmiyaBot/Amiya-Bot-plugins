@@ -139,8 +139,8 @@ handler 中 `followup` / `proactive` 触发还受 `min_reply_interval_seconds` �
 | 项 | 值 |
 |----|----|
 | plugin_id | `amiyabot-ai-chat` |
-| version | `1.3.3` |
-| 产物 | `amiyabot-ai-chat-1.3.3.zip` |
+| version | `1.3.4` |
+| 产物 | `amiyabot-ai-chat-1.3.4.zip` |
 
 打包用 `python run_build.py --type plugins`（`buildPlugins.py` 只扫描 `pluginsDev/src`，`bak/` 不参与打包），产出到 `plugins/`。
 

@@ -90,7 +90,7 @@ class AIChatPluginInstance(AmiyaBotPluginInstance):
 
 bot = AIChatPluginInstance(
     name='AI 对话',
-    version='1.3.3',
+    version='1.3.4',
     plugin_id='amiyabot-ai-chat',
     plugin_type='official',
     description='兜底 AI 对话：其他插件功能优先触发，无人响应时由大语言模型参与聊天',
